@@ -1,0 +1,35 @@
+<section class="border border-gold rounded-lg overflow-hidden">
+    <button
+      (click)="toggle.emit()"
+      class="w-full flex items-center justify-between px-4 py-3 bg-parchment-dark font-display text-lg text-wine"
+    >
+      <span>{{ localeService.t('races_title') }} ({{ races().length }})</span>
+      <span>{{ expanded ? '▾' : '▸' }}</span>
+    </button>
+  
+    @if (expanded) {
+      <div class="p-4">
+        @if (races().length === 0) {
+          <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
+        } @else {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (race of races(); track race.id) {
+              <div class="flex bg-white/60 border border-gold rounded-lg overflow-hidden">
+                <div class="w-1.5 bg-forest shrink-0"></div>
+                <div class="p-3 flex-1">
+                  <h3 class="font-display text-base text-ink">{{ race.name }}</h3>
+                  <p class="text-xs text-slate-arcane mb-1">
+                    {{ localeService.t('speed_label') }}: {{ race.raw.speed }}
+                  </p>
+                  @if (traitsSummary(race)) {
+                    <p class="text-xs italic opacity-80">{{ traitsSummary(race) }}</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </section>
+  

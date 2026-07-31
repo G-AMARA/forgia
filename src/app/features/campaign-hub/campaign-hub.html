@@ -1,0 +1,92 @@
+@if (!campaignStore.current()) {
+    <p class="text-slate-arcane italic">{{ localeService.t('no_active_campaign') }}</p>
+  } @else {
+    <section class="space-y-6">
+      <!-- Intestazione -->
+      <div class="border-2 border-gold rounded-lg overflow-hidden">
+        <div class="h-40 bg-gradient-to-br" [class]="cover()?.gradient">
+          @if (cover()) {
+            <img [src]="getCoverImagePath(cover()!)" [alt]="cover()!.label" class="w-full h-full object-cover" />
+          }
+        </div>
+        <div class="p-5 bg-white/60 space-y-2">
+          <h2 class="font-display text-2xl text-wine">{{ campaignStore.current()?.name }}</h2>
+          @if (campaignStore.current()?.description) {
+            <p class="text-sm italic opacity-80">{{ campaignStore.current()?.description }}</p>
+          }
+  
+          <div class="flex flex-wrap gap-2 pt-2">
+            @if (isOwner()) {
+              <button
+                (click)="goToManage()"
+                class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-ink transition-colors"
+              >
+                {{ localeService.t('manage_campaign_button') }}
+              </button>
+              @if (!hasOwnCharacter()) {
+                <button
+                  (click)="goToCharacters()"
+                  class="text-sm px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+                >
+                  {{ localeService.t('create_my_character_button') }}
+                </button>
+              }
+            } @else if (!hasOwnCharacter()) {
+              <button
+                (click)="goToCharacters()"
+                class="text-sm px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+              >
+                {{ localeService.t('create_character_button') }}
+              </button>
+            } @else {
+              <button
+                (click)="goToCharacters()"
+                class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-ink transition-colors"
+              >
+                {{ localeService.t('view_my_character_button') }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+  
+      <!-- Roster -->
+      <div>
+        <h3 class="font-display text-lg text-ink mb-3">{{ localeService.t('roster_title') }}</h3>
+        @if (characterStore.characters().length === 0) {
+          <p class="text-slate-arcane italic">{{ localeService.t('no_characters_yet') }}</p>
+        } @else {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            @for (character of characterStore.characters(); track character.id) {
+              <div class="bg-white/60 border border-gold rounded-lg p-3">
+                <p class="font-display text-base text-ink">{{ character.name }}</p>
+                <p class="text-xs text-slate-arcane">
+                  {{ localeService.t('level_label') }} {{ character.level }} · {{ character.race_name }} · {{ character.class_name }}
+                </p>
+                <p class="text-xs opacity-70">
+                  {{ localeService.t('player_label') }}: {{ character.owner_nickname }}
+                </p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+  
+      <!-- Sezioni future -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
+          <p class="font-display text-sm text-ink">📖 {{ localeService.t('session_log_title') }}</p>
+          <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
+        </div>
+        <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
+          <p class="font-display text-sm text-ink">🐲 {{ localeService.t('bestiary_title') }}</p>
+          <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
+        </div>
+        <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
+          <p class="font-display text-sm text-ink">🗺️ {{ localeService.t('maps_title') }}</p>
+          <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
+        </div>
+      </div>
+    </section>
+  }
+  

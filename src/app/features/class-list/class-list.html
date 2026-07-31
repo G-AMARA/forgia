@@ -1,0 +1,32 @@
+<section class="border border-gold rounded-lg overflow-hidden">
+    <button
+      (click)="toggle.emit()"
+      class="w-full flex items-center justify-between px-4 py-3 bg-parchment-dark font-display text-lg text-wine"
+    >
+      <span>{{ localeService.t('classes_title') }} ({{ classes().length }})</span>
+      <span>{{ expanded ? '▾' : '▸' }}</span>
+    </button>
+  
+    @if (expanded) {
+      <div class="p-4">
+        @if (classes().length === 0) {
+          <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
+        } @else {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (cls of classes(); track cls.id) {
+              <div class="flex bg-white/60 border border-gold rounded-lg overflow-hidden">
+                <div class="w-1.5 bg-wine shrink-0"></div>
+                <div class="p-3 flex-1">
+                  <h3 class="font-display text-base text-ink">{{ cls.name }}</h3>
+                  <p class="text-xs text-slate-arcane">
+                    {{ localeService.t('hit_die_label') }}: d{{ cls.raw.hit_die }}
+                  </p>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </section>
+  

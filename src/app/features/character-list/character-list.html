@@ -1,0 +1,51 @@
+<section class="space-y-4">
+  <h2 class="font-display text-2xl text-wine">{{ localeService.t('characters_title') }}</h2>
+
+  @if (!campaignStore.current()) {
+    <p class="text-slate-arcane italic">{{ localeService.t('no_active_campaign') }}</p>
+  } @else if (characterStore.loading()) {
+    <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
+  } @else if (characterStore.characters().length === 0) {
+    <p class="text-slate-arcane italic">{{ localeService.t('no_characters_yet') }}</p>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (character of characterStore.characters(); track character.id) {
+        <div class="relative bg-stone-textured panel-carved border-2 border-gold rounded-lg p-4 text-parchment">
+          <span class="absolute w-2.5 h-2.5 rivet rounded-full -top-1 -left-1"></span>
+          <span class="absolute w-2.5 h-2.5 rivet rounded-full -top-1 -right-1"></span>
+          <span class="absolute w-2.5 h-2.5 rivet rounded-full -bottom-1 -left-1"></span>
+          <span class="absolute w-2.5 h-2.5 rivet rounded-full -bottom-1 -right-1"></span>
+
+          @if (auth.user()?.id === character.owner_id) {
+            <button
+              (click)="deleteCharacter($event, character.id, character.name)"
+              class="absolute top-2 right-2 text-xs px-2 py-1 bg-red-900/80 text-white rounded hover:bg-red-800 transition-colors"
+            >
+              {{ localeService.t('delete_button') }}
+            </button>
+          }
+
+          <h3 class="font-display text-lg text-gold-bright mb-1">{{ character.name }}</h3>
+          <p class="text-xs uppercase tracking-wide text-gold mb-3">
+            {{ localeService.t('level_label') }} {{ character.level }}
+          </p>
+
+          <dl class="text-sm space-y-1">
+            <div class="flex justify-between">
+              <dt class="opacity-70">{{ localeService.t('race_label') }}</dt>
+              <dd class="font-semibold">{{ character.race_name }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="opacity-70">{{ localeService.t('class_label') }}</dt>
+              <dd class="font-semibold">{{ character.class_name }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="opacity-70">{{ localeService.t('background_label') }}</dt>
+              <dd class="font-semibold">{{ character.background_name }}</dd>
+            </div>
+          </dl>
+        </div>
+      }
+    </div>
+  }
+</section>

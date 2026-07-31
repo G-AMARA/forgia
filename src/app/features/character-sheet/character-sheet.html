@@ -1,0 +1,283 @@
+@if (character(); as c) {
+    <section class="space-y-4">
+      <!-- Intestazione: avatar + identità -->
+      <div class="bg-stone-textured panel-carved border-2 border-gold rounded-lg p-5 text-parchment flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-24 h-24 rounded-full border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-3xl">
+            @if (c.avatar_url) {
+              <img [src]="c.avatar_url" alt="" class="w-full h-full object-cover" />
+            } @else {
+              🧙
+            }
+          </div>
+          <label class="text-xs px-2 py-1 border border-gold rounded cursor-pointer hover:bg-gold hover:text-ink transition-colors">
+            {{ localeService.t('upload_photo_button') }}
+            <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" />
+          </label>
+        </div>
+  
+        <div class="flex-1 text-center sm:text-left">
+          <h2 class="font-display text-2xl text-gold-bright">{{ c.name }}</h2>
+          <p class="text-sm opacity-80">
+            {{ localeService.t('level_label') }} {{ c.level }} · {{ c.race_name }} · {{ c.class_name }}
+            @if (c.subclass_name) { ({{ c.subclass_name }}) }
+          </p>
+          <p class="text-xs opacity-70">
+            {{ c.background_name }} · {{ localeService.t('alignment_' + c.alignment) }} · {{ c.experience_points }} XP
+          </p>
+        </div>
+      </div>
+  
+      <!-- Sotto-schede -->
+      <div class="flex gap-1 border-b border-gold overflow-x-auto whitespace-nowrap">
+        <button
+          class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+          [class.border-wine]="activeSubTab() === 'general'"
+          [class.border-transparent]="activeSubTab() !== 'general'"
+          (click)="setSubTab('general')"
+        >
+          {{ localeService.t('subtab_general') }}
+        </button>
+        <button
+          class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+          [class.border-wine]="activeSubTab() === 'combat'"
+          [class.border-transparent]="activeSubTab() !== 'combat'"
+          (click)="setSubTab('combat')"
+        >
+          {{ localeService.t('subtab_combat') }}
+        </button>
+        <button
+          class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+          [class.border-wine]="activeSubTab() === 'inventory'"
+          [class.border-transparent]="activeSubTab() !== 'inventory'"
+          (click)="setSubTab('inventory')"
+        >
+          {{ localeService.t('subtab_inventory') }}
+        </button>
+        @if (c.class_name) {
+          <button
+            class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+            [class.border-wine]="activeSubTab() === 'spells'"
+            [class.border-transparent]="activeSubTab() !== 'spells'"
+            (click)="setSubTab('spells')"
+          >
+            {{ localeService.t('subtab_spells') }}
+          </button>
+        }
+      </div>
+  
+      @if (savedMsg()) {
+        <p class="text-sm text-forest font-semibold">✓ {{ savedMsg() }}</p>
+      }
+  
+      <!-- GENERALE -->
+      @if (activeSubTab() === 'general') {
+        <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-3">
+          <label class="text-sm font-semibold">{{ localeService.t('backstory_label') }}</label>
+          <textarea
+            [(ngModel)]="backstory" rows="8"
+            class="w-full px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine resize-none"
+          ></textarea>
+          <button
+            (click)="saveBackstory()"
+            class="px-4 py-2 bg-wine text-parchment font-display rounded border border-gold hover:bg-wine-dark transition-colors"
+          >
+            {{ localeService.t('save_button') }}
+          </button>
+        </div>
+      }
+  
+      <!-- COMBATTIMENTO -->
+      @if (activeSubTab() === 'combat') {
+        <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-5">
+          <!-- PF / CA -->
+          <div class="grid grid-cols-3 gap-4 max-w-md">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">{{ localeService.t('current_hp_label') }}</label>
+              <input type="number" [(ngModel)]="currentHp" class="px-2 py-1 rounded border border-gold text-center" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">{{ localeService.t('max_hp_label') }}</label>
+              <input type="number" [(ngModel)]="maxHp" class="px-2 py-1 rounded border border-gold text-center" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">{{ localeService.t('armor_class_label') }}</label>
+              <input type="number" [(ngModel)]="armorClass" class="px-2 py-1 rounded border border-gold text-center" />
+            </div>
+          </div>
+  
+          <!-- Punteggi caratteristica -->
+          <div>
+            <label class="text-sm font-semibold block mb-2">{{ localeService.t('ability_scores_label') }}</label>
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              @for (key of abilityKeys; track key) {
+                <div class="flex flex-col items-center gap-1 border border-gold rounded p-2">
+                  <span class="text-xs uppercase">{{ localeService.t('ability_' + key) }}</span>
+                  <input
+                    type="number" [(ngModel)]="abilityScores[key]"
+                    class="w-14 px-1 py-1 rounded border border-gold text-center"
+                  />
+                  <span class="text-xs opacity-70">{{ formatModifier(abilityModifier(abilityScores[key])) }}</span>
+                </div>
+              }
+            </div>
+          </div>
+  
+          <!-- Tiri salvezza (di sola lettura, dalla classe) -->
+          @if (c.saving_throw_proficiencies.length > 0) {
+            <div>
+              <label class="text-sm font-semibold block mb-1">{{ localeService.t('saving_throws_label') }}</label>
+              <p class="text-sm opacity-80">{{ c.saving_throw_proficiencies.join(', ') }}</p>
+            </div>
+          }
+  
+          <!-- Competenze -->
+          <div>
+            <label class="text-sm font-semibold block mb-2">{{ localeService.t('skills_label') }}</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1">
+              @for (skill of skills; track skill.key) {
+                <label class="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    [checked]="isSkillChecked(skill.key)"
+                    (change)="toggleSkill(skill.key)"
+                  />
+                  {{ localeService.t('skill_' + skill.key) }}
+                  <span class="text-xs opacity-60">({{ localeService.t('ability_' + skill.ability) }})</span>
+                </label>
+              }
+            </div>
+          </div>
+  
+          <!-- Resistenze / immunità -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">{{ localeService.t('resistances_label') }}</label>
+              <input
+                type="text" [(ngModel)]="damageResistancesText" [placeholder]="localeService.t('comma_separated_hint')"
+                class="px-2 py-1 rounded border border-gold text-sm"
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">{{ localeService.t('immunities_label') }}</label>
+              <input
+                type="text" [(ngModel)]="damageImmunitiesText" [placeholder]="localeService.t('comma_separated_hint')"
+                class="px-2 py-1 rounded border border-gold text-sm"
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold">{{ localeService.t('condition_immunities_label') }}</label>
+              <input
+                type="text" [(ngModel)]="conditionImmunitiesText" [placeholder]="localeService.t('comma_separated_hint')"
+                class="px-2 py-1 rounded border border-gold text-sm"
+              />
+            </div>
+          </div>
+  
+          <button
+            (click)="saveCombat()"
+            class="px-4 py-2 bg-wine text-parchment font-display rounded border border-gold hover:bg-wine-dark transition-colors"
+          >
+            {{ localeService.t('save_button') }}
+          </button>
+        </div>
+      }
+  
+      <!-- INVENTARIO -->
+      @if (activeSubTab() === 'inventory') {
+        <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-4">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <select [(ngModel)]="selectedEquipmentId" class="flex-1 px-3 py-2 rounded border border-gold">
+              <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+              @for (item of availableEquipment(); track item.id) {
+                <option [value]="item.id">{{ item.name }}</option>
+              }
+            </select>
+            <input type="number" min="1" [(ngModel)]="addQuantity" class="w-20 px-2 py-2 rounded border border-gold text-center" />
+            <button
+              (click)="addItem()"
+              class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+            >
+              {{ localeService.t('add_button') }}
+            </button>
+          </div>
+  
+          @if (c.inventory.length === 0) {
+            <p class="text-slate-arcane italic text-sm">{{ localeService.t('empty_inventory') }}</p>
+          } @else {
+            <ul class="space-y-1">
+              @for (item of c.inventory; track item.rowId) {
+                <li class="flex items-center justify-between gap-2 text-sm border-b border-gold/30 pb-1">
+                  <span>{{ item.name }} × {{ item.quantity }}</span>
+                  <div class="flex items-center gap-2">
+                    <label class="flex items-center gap-1 text-xs">
+                      <input
+                        type="checkbox" [checked]="item.equipped"
+                        (change)="toggleEquip(item.rowId, item.equipped)"
+                      />
+                      {{ localeService.t('equipped_label') }}
+                    </label>
+                    <button (click)="removeItem(item.rowId)" class="text-xs text-red-700 underline">
+                      {{ localeService.t('remove_button') }}
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+  
+      <!-- INCANTESIMI -->
+      @if (activeSubTab() === 'spells' && c.class_name) {
+        <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-4">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <select [(ngModel)]="selectedSpellIdToAdd" class="flex-1 px-3 py-2 rounded border border-gold">
+              <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+              @for (spell of availableClassSpells(); track spell.id) {
+                <option [value]="spell.id">{{ spell.name }}</option>
+              }
+            </select>
+            <button
+              (click)="addSpell()"
+              class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+            >
+              {{ localeService.t('add_button') }}
+            </button>
+          </div>
+  
+          @if (c.spells.length === 0) {
+            <p class="text-slate-arcane italic text-sm">{{ localeService.t('no_spells_known') }}</p>
+          } @else {
+            <ul class="space-y-1">
+              @for (spell of c.spells; track spell.rowId) {
+                <li class="flex items-center justify-between gap-2 text-sm border-b border-gold/30 pb-1">
+                  <span>
+                    {{ spell.name }}
+                    <span class="text-xs opacity-60">
+                      ({{ spell.level === 0 ? localeService.t('cantrip_short') : 'Lv.' + spell.level }})
+                    </span>
+                  </span>
+                  <div class="flex items-center gap-2">
+                    <label class="flex items-center gap-1 text-xs">
+                      <input
+                        type="checkbox" [checked]="spell.prepared"
+                        (change)="toggleSpellPrepared(spell.rowId, spell.prepared)"
+                      />
+                      {{ localeService.t('prepared_label') }}
+                    </label>
+                    <button (click)="removeSpell(spell.rowId)" class="text-xs text-red-700 underline">
+                      {{ localeService.t('remove_button') }}
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    </section>
+  } @else {
+    <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
+  }
+  

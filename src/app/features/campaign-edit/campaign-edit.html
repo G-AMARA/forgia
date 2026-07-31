@@ -1,0 +1,68 @@
+@if (!campaignStore.current()) {
+    <p class="text-slate-arcane italic">{{ localeService.t('no_active_campaign') }}</p>
+  } @else {
+    <section class="bg-white/60 border-2 border-gold rounded-lg p-5 space-y-4 max-w-2xl">
+      <h2 class="font-display text-2xl text-wine">{{ localeService.t('edit_campaign_title') }}</h2>
+  
+      <form (ngSubmit)="submit()" class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold">{{ localeService.t('campaign_name_label') }}</label>
+          <input
+            type="text" name="name" [(ngModel)]="name" required
+            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+          />
+        </div>
+  
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold">{{ localeService.t('campaign_description_label') }}</label>
+          <textarea
+            name="description" [(ngModel)]="description" rows="5" [maxlength]="maxDescriptionLength"
+            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine resize-none"
+          ></textarea>
+          <span class="text-xs text-slate-arcane self-end">
+            {{ description.length }} / {{ maxDescriptionLength }}
+          </span>
+        </div>
+  
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-semibold">{{ localeService.t('cover_label') }}</label>
+          <div class="flex flex-wrap gap-2">
+            @for (cover of covers; track cover.key) {
+              <button
+                type="button"
+                (click)="coverKey = cover.key"
+                class="w-16 h-16 rounded-lg overflow-hidden border-2 transition-transform"
+                [class.border-wine]="coverKey === cover.key"
+                [class.border-gold]="coverKey !== cover.key"
+                [class.scale-110]="coverKey === cover.key"
+                [title]="cover.label"
+              >
+                <img [src]="getCoverImagePath(cover)" [alt]="cover.label" class="w-full h-full object-cover" />
+              </button>
+            }
+          </div>
+        </div>
+  
+        <div class="flex gap-3">
+          <button
+            type="submit" [disabled]="loading()"
+            class="px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+          >
+            {{ localeService.t('save_changes_button') }}
+          </button>
+  
+          <button
+            type="button" (click)="deleteCampaign()"
+            class="px-5 py-2 border border-red-800 text-red-800 rounded hover:bg-red-800 hover:text-white transition-colors"
+          >
+            {{ localeService.t('delete_button') }}
+          </button>
+        </div>
+  
+        @if (errorMsg()) {
+          <p class="text-sm text-red-700">{{ errorMsg() }}</p>
+        }
+      </form>
+    </section>
+  }
+  
