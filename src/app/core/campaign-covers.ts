@@ -6,16 +6,17 @@ export interface CampaignCover {
 }
 
 export const CAMPAIGN_COVERS: CampaignCover[] = [
-  { key: 'sword', label: 'Spada', file: 'spada.png', gradient: 'from-stone-dark via-stone to-wine-dark' },
+  { key: 'wood', label: 'Bosco', file: 'bosco.png', gradient: 'from-stone-dark via-stone to-wine-dark' },
   { key: 'dragon', label: 'Drago', file: 'drago.png', gradient: 'from-forest via-stone to-ink' },
   { key: 'castle', label: 'Castello', file: 'castello.png', gradient: 'from-slate-arcane via-stone to-ink' },
   { key: 'moon', label: 'Luna', file: 'luna.png', gradient: 'from-ink via-slate-arcane to-stone-dark' },
   { key: 'flame', label: 'Fiamma', file: 'fiamma.png', gradient: 'from-wine-dark via-wine to-ink' },
-  { key: 'shield', label: 'Scudo', file: 'scudo.png', gradient: 'from-gold via-gold-bright to-stone-dark' },
-  { key: 'skull', label: 'Teschio', file: 'teschio.png', gradient: 'from-stone-dark via-ink to-black' },
-  { key: 'pirate', label: 'Bandiera Pirata', file: 'bandiera pirata.png', gradient: 'from-wine-dark via-ink to-stone-dark' },
-  { key: 'ocean', label: 'Oceano', file: 'oceano.png', gradient: 'from-slate-arcane via-forest to-ink' },
+  { key: 'lake', label: 'Lago', file: 'lago.png', gradient: 'from-gold via-gold-bright to-stone-dark' },
+  { key: 'cave', label: 'Caverna', file: 'caverna.png', gradient: 'from-stone-dark via-ink to-black' },
+  { key: 'pirate', label: 'Pirati', file: 'pirati.png', gradient: 'from-wine-dark via-ink to-stone-dark' },
+  { key: 'mountain', label: 'Montagna', file: 'montagna.png', gradient: 'from-slate-arcane via-forest to-ink' },
   { key: 'island', label: 'Isola', file: 'isola.png', gradient: 'from-gold via-forest to-slate-arcane' },
+  { key: 'sea', label: 'Mare', file: 'mare.png', gradient: 'from-slate-arcane via-forest to-ink' },
 ];
 
 export function getCover(key: string): CampaignCover {
