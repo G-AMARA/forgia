@@ -1,0 +1,66 @@
+<section class="bg-white/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  <h2 class="font-display text-2xl text-wine">{{ localeService.t('equipment_catalog_title') }}</h2>
+
+  <form (ngSubmit)="submit()" class="flex flex-col gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('equipment_name_label') }} <span class="text-red-700">*</span></label>
+        <input
+          type="text" [(ngModel)]="name" name="name" required
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_weight_kg_label') }}</label>
+        <input
+          type="number" min="0" step="0.1" [(ngModel)]="weight" name="weight"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+    </div>
+
+    <button
+      type="submit" [disabled]="loading()"
+      class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+    >
+      {{ localeService.t('equipment_add_to_catalog_button') }}
+    </button>
+
+    @if (errorMsg()) {
+      <p class="text-sm text-red-700">{{ errorMsg() }}</p>
+    }
+  </form>
+
+  <div>
+    <h3 class="font-display text-lg text-ink mb-3">{{ localeService.t('equipment_catalog_list_title') }}</h3>
+    @if (homebrewEquipment().length === 0) {
+      <p class="text-slate-arcane italic">{{ localeService.t('no_homebrew_equipment_yet') }}</p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gold text-xs uppercase tracking-wide">
+              <th class="py-2 pr-2">{{ localeService.t('equipment_name_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_weight_kg_label') }}</th>
+              <th class="py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of homebrewEquipment(); track e.id) {
+              <tr class="border-b border-gold/30">
+                <td class="py-2 pr-2">{{ e.name }}</td>
+                <td class="py-2 pr-2">{{ e.weight }} kg</td>
+                <td class="py-2">
+                  <button (click)="deleteEquipment(e.id, e.name)" class="text-xs text-red-700 underline">
+                    {{ localeService.t('delete_button') }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

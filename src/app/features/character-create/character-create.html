@@ -1,5 +1,11 @@
 <section class="bg-white/60 border-2 border-gold rounded-lg p-5 space-y-4">
-  <h2 class="font-display text-2xl text-wine">{{ localeService.t('create_character_title') }}</h2>
+  <h2 class="font-display text-2xl text-wine">
+    @if (campaignStore.current() && hasOwnCharacterAlready()) {
+      {{ localeService.t('your_character_title') }} "{{ campaignStore.current()?.name }}"
+    } @else {
+      {{ localeService.t('create_character_title') }}
+    }
+  </h2>
 
   @if (!campaignStore.current()) {
     <p class="text-slate-arcane italic">{{ localeService.t('no_active_campaign') }}</p>
@@ -13,7 +19,7 @@
 
     <form (ngSubmit)="submit()" class="flex flex-col gap-4">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }}</label>
+        <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }} <span class="text-red-700">*</span></label>
         <input
           type="text" name="name" [(ngModel)]="name" required
           class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
@@ -22,7 +28,7 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('race_label') }}</label>
+          <label class="text-sm font-semibold">{{ localeService.t('race_label') }} <span class="text-red-700">*</span></label>
           <select
             name="race" [(ngModel)]="raceId" required
             class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
@@ -35,7 +41,7 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('class_label') }}</label>
+          <label class="text-sm font-semibold">{{ localeService.t('class_label') }} <span class="text-red-700">*</span></label>
           <select
             name="class" [(ngModel)]="classId" required
             class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
@@ -46,6 +52,21 @@
             }
           </select>
         </div>
+
+        @if (availableSubclasses().length > 0) {
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('subclass_label') }}</label>
+            <select
+              name="subclass" [(ngModel)]="subclassId"
+              class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+            >
+              <option value="">{{ localeService.t('subclass_none') }}</option>
+              @for (sub of availableSubclasses(); track sub.id) {
+                <option [value]="sub.id">{{ sub.name }}</option>
+              }
+            </select>
+          </div>
+        }
 
         <div class="flex flex-col gap-1">
           <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
@@ -73,9 +94,9 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }}</label>
+          <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }} <span class="text-red-700">*</span></label>
           <select
-            name="alignment" [(ngModel)]="alignment"
+            name="alignment" [(ngModel)]="alignment" required
             class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
           >
             @for (al of alignments; track al) {
@@ -92,21 +113,6 @@
           />
         </div>
       </div>
-
-      @if (availableSubclasses().length > 0) {
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('subclass_label') }}</label>
-          <select
-            name="subclass" [(ngModel)]="subclassId"
-            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine sm:w-1/2"
-          >
-            <option value="">{{ localeService.t('subclass_none') }}</option>
-            @for (sub of availableSubclasses(); track sub.id) {
-              <option [value]="sub.id">{{ sub.name }}</option>
-            }
-          </select>
-        </div>
-      }
 
       <!-- Punteggi caratteristica -->
       <div class="flex flex-col gap-2">

@@ -1,11 +1,13 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ContentStore } from '../../core/content-store';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { Auth } from '../../core/auth';
 import { CharacterStore } from '../../core/character-store';
 import { CharacterSheet } from '../character-sheet/character-sheet';
 import { LocaleService } from '../../core/locale';
+import { AppNav } from '../../core/app-nav';
 
 function rollAbilityScore(): number {
   // 4d6, scarta il più basso: il metodo classico D&D
@@ -26,6 +28,8 @@ export class CharacterCreate {
   protected campaignStore = inject(ActiveCampaign);
   protected auth = inject(Auth);
   protected localeService = inject(LocaleService);
+  private appNav = inject(AppNav);
+  private router = inject(Router);
 
   races = this.contentStore.getContent('races');
   classes = this.contentStore.getContent('classes');
@@ -60,16 +64,20 @@ export class CharacterCreate {
   successMsg = signal<string | null>(null);
   loading = signal(false);
 
-  // Sottoclassi disponibili per la classe scelta, sbloccate al livello selezionato o prima
-  availableSubclasses = computed(() => {
+  // Sottoclassi disponibili per la classe scelta, sbloccate al livello selezionato o prima.
+  // Metodo (non computed): classId/level sono campi normali legati con ngModel,
+  // non signal, quindi un computed() non li tracciherebbe e resterebbe bloccato
+  // al primo valore calcolato. Un metodo viene invece rivalutato a ogni ciclo
+  // di change detection, cioè a ogni interazione con la select.
+  availableSubclasses(): any[] {
     if (!this.classId) return [];
     return this.allSubclasses().filter(
       (sub: any) => sub.raw.class_id === this.classId && sub.raw.unlocked_at_level <= this.level
     );
-  });
+  }
 
   // Incantesimi disponibili per la classe scelta (solo se la classe lancia incantesimi)
-  availableSpells = computed(() => {
+  availableSpells(): any[] {
     if (!this.classId) return [];
     const selectedClass = this.classes().find((c: any) => c.id === this.classId);
     if (!selectedClass) return [];
@@ -82,7 +90,7 @@ export class CharacterCreate {
       const classNames = spell.raw.classes ?? [];
       return classNames.some((c: any) => c.name?.toLowerCase() === baseClassName);
     });
-  });
+  }
 
   // True se l'utente loggato ha già un personaggio in questa campagna (max 1 per regola)
   hasOwnCharacterAlready = computed(() => {
@@ -135,7 +143,7 @@ export class CharacterCreate {
     this.successMsg.set(null);
     this.loading.set(true);
 
-    const { error } = await this.characterStore.createCharacter({
+    const { error, characterId } = await this.characterStore.createCharacter({
       name: this.name,
       raceId: this.raceId,
       classId: this.classId,
@@ -149,21 +157,13 @@ export class CharacterCreate {
       spellIds: Array.from(this.selectedSpellIds()),
     });
 
-    if (error) {
-      this.errorMsg.set(error.message);
-    } else {
-      this.successMsg.set(this.localeService.t('character_created'));
-      this.name = '';
-      this.raceId = '';
-      this.classId = '';
-      this.backgroundId = '';
-      this.subclassId = '';
-      this.level = 1;
-      this.backstory = '';
-      this.abilityScores = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
-      this.selectedSpellIds.set(new Set());
+    if (error || !characterId) {
+      this.errorMsg.set(error?.message ?? 'Errore sconosciuto');
+      this.loading.set(false);
+      return;
     }
 
-    this.loading.set(false);
+    this.appNav.setTab('character-sheet');
+    this.router.navigate(['/scheda-personaggio', characterId]);
   }
 }

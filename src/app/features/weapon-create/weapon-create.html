@@ -1,0 +1,155 @@
+<section class="bg-white/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  <h2 class="font-display text-2xl text-wine">{{ localeService.t('weapon_catalog_title') }}</h2>
+
+  <form (ngSubmit)="submit()" class="flex flex-col gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_name_label') }} <span class="text-red-700">*</span></label>
+        <input
+          type="text" [(ngModel)]="name" name="name" required
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_damage_dice_label') }} <span class="text-red-700">*</span></label>
+        <input
+          type="text" [(ngModel)]="damageDice" name="damageDice" required placeholder="1d6"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_damage_type_label') }} <span class="text-red-700">*</span></label>
+        <input
+          type="text" [(ngModel)]="damageType" name="damageType" required placeholder="Contundente"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_versatile_label') }}</label>
+        <input
+          type="text" [(ngModel)]="versatileDamage" name="versatileDamage" placeholder="1d8"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_range_category_label') }}</label>
+        <select
+          [(ngModel)]="rangeCategory" name="rangeCategory"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        >
+          <option value="melee">{{ localeService.t('weapon_range_melee') }}</option>
+          <option value="ranged">{{ localeService.t('weapon_range_ranged') }}</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_attack_ability_label') }}</label>
+        <select
+          [(ngModel)]="suggestedAttackAbility" name="suggestedAttackAbility"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        >
+          <option value="str">{{ localeService.t('ability_str') }}</option>
+          <option value="dex">{{ localeService.t('ability_dex') }}</option>
+        </select>
+      </div>
+
+      @if (rangeCategory === 'ranged') {
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold">{{ localeService.t('weapon_normal_range_label') }}</label>
+          <input
+            type="number" min="0" [(ngModel)]="normalRange" name="normalRange"
+            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold">{{ localeService.t('weapon_long_range_label') }}</label>
+          <input
+            type="number" min="0" [(ngModel)]="longRange" name="longRange"
+            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+          />
+        </div>
+      }
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_weight_kg_label') }}</label>
+        <input
+          type="number" min="0" step="0.1" [(ngModel)]="weight" name="weight"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_properties_label') }}</label>
+        <input
+          type="text" [(ngModel)]="properties" name="properties" [placeholder]="localeService.t('comma_separated_hint')"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+    </div>
+
+    <button
+      type="submit" [disabled]="loading()"
+      class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+    >
+      {{ localeService.t('weapon_add_to_catalog_button') }}
+    </button>
+
+    @if (errorMsg()) {
+      <p class="text-sm text-red-700">{{ errorMsg() }}</p>
+    }
+  </form>
+
+  <div>
+    <h3 class="font-display text-lg text-ink mb-3">{{ localeService.t('weapon_catalog_list_title') }}</h3>
+    @if (weapons().length === 0) {
+      <p class="text-slate-arcane italic">{{ localeService.t('no_weapons_yet') }}</p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gold text-xs uppercase tracking-wide">
+              <th class="py-2 pr-2">{{ localeService.t('weapon_col_weapon') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_col_attack') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_col_damage') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_col_range') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_col_weight') }}</th>
+              <th class="py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of weapons(); track w.id) {
+              <tr class="border-b border-gold/30">
+                <td class="py-2 pr-2">{{ w.name }}</td>
+                <td class="py-2 pr-2">{{ localeService.t('ability_' + w.raw.suggested_attack_ability) }}</td>
+                <td class="py-2 pr-2">
+                  {{ w.raw.damage_dice }} {{ w.raw.damage_type }}
+                  @if (w.raw.versatile_damage) {
+                    ({{ w.raw.versatile_damage }} {{ localeService.t('weapon_versatile_label') }})
+                  }
+                </td>
+                <td class="py-2 pr-2">
+                  @if (w.raw.range_category === 'ranged') {
+                    {{ w.raw.normal_range }}/{{ w.raw.long_range }}
+                  } @else {
+                    {{ localeService.t('weapon_range_melee') }}
+                  }
+                </td>
+                <td class="py-2 pr-2">{{ w.raw.weight }} kg</td>
+                <td class="py-2">
+                  <button (click)="deleteWeapon(w.id, w.name)" class="text-xs text-red-700 underline">
+                    {{ localeService.t('delete_button') }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

@@ -77,6 +77,14 @@
             {{ localeService.t('subtab_spells') }}
           </button>
         }
+        <button
+          class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+          [class.border-wine]="activeSubTab() === 'weapons'"
+          [class.border-transparent]="activeSubTab() !== 'weapons'"
+          (click)="setSubTab('weapons')"
+        >
+          {{ localeService.t('subtab_weapons') }}
+        </button>
       </div>
   
       @if (savedMsg()) {
@@ -88,6 +96,94 @@
   
       <!-- GENERALE -->
       @if (activeSubTab() === 'general') {
+        <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }}</label>
+            <input
+              type="text" [(ngModel)]="identityName" [disabled]="readOnly()"
+              class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold">{{ localeService.t('race_label') }}</label>
+              <select [(ngModel)]="identityRaceId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70">
+                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                @for (race of races(); track race.id) {
+                  <option [value]="race.id">{{ race.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold">{{ localeService.t('class_label') }}</label>
+              <select [(ngModel)]="identityClassId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70">
+                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                @for (cls of classesContent(); track cls.id) {
+                  <option [value]="cls.id">{{ cls.name }}</option>
+                }
+              </select>
+            </div>
+
+            @if (availableSubclasses().length > 0) {
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold">{{ localeService.t('subclass_label') }}</label>
+                <select [(ngModel)]="identitySubclassId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70">
+                  <option value="">{{ localeService.t('subclass_none') }}</option>
+                  @for (sub of availableSubclasses(); track sub.id) {
+                    <option [value]="sub.id">{{ sub.name }}</option>
+                  }
+                </select>
+              </div>
+            }
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
+              <select [(ngModel)]="identityBackgroundId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70">
+                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                @for (bg of backgroundsContent(); track bg.id) {
+                  <option [value]="bg.id">{{ bg.name }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold">{{ localeService.t('level_label') }}</label>
+              <input
+                type="number" min="1" max="20" [(ngModel)]="identityLevel" [disabled]="readOnly()"
+                class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }}</label>
+              <select [(ngModel)]="identityAlignment" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70">
+                @for (al of alignments; track al) {
+                  <option [value]="al">{{ localeService.t('alignment_' + al) }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-semibold">{{ localeService.t('xp_label') }}</label>
+              <input
+                type="number" min="0" [(ngModel)]="identityXp" [disabled]="readOnly()"
+                class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70"
+              />
+            </div>
+          </div>
+
+          @if (!readOnly()) {
+            <button
+              (click)="saveIdentity()"
+              class="px-4 py-2 bg-wine text-parchment font-display rounded border border-gold hover:bg-wine-dark transition-colors"
+            >
+              {{ localeService.t('save_button') }}
+            </button>
+          }
+        </div>
+
         <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-3">
           <label class="text-sm font-semibold">{{ localeService.t('backstory_label') }}</label>
           <textarea
@@ -302,6 +398,83 @@
                 </li>
               }
             </ul>
+          }
+        </div>
+      }
+
+      <!-- ARMI -->
+      @if (activeSubTab() === 'weapons') {
+        <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-4">
+          @if (!readOnly()) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <select
+                [(ngModel)]="selectedWeaponId" (ngModelChange)="onWeaponSelected()"
+                class="px-3 py-2 rounded border border-gold bg-white sm:col-span-2"
+              >
+                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                @for (w of availableWeaponsCatalog(); track w.id) {
+                  <option [value]="w.id">{{ w.name }}</option>
+                }
+              </select>
+              <input
+                type="number" min="1" [(ngModel)]="weaponQuantity" [placeholder]="localeService.t('quantity_label')"
+                class="px-3 py-2 rounded border border-gold bg-white"
+              />
+            </div>
+            <button
+              (click)="addWeapon()"
+              class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+            >
+              {{ localeService.t('add_button') }}
+            </button>
+          }
+
+          @if (c.weapons.length === 0) {
+            <p class="text-slate-arcane italic text-sm">{{ localeService.t('no_weapons_yet') }}</p>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-gold text-xs uppercase tracking-wide">
+                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_weapon') }}</th>
+                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_attack') }}</th>
+                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_damage') }}</th>
+                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_range') }}</th>
+                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_weight') }}</th>
+                    @if (!readOnly()) { <th class="py-2"></th> }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (w of c.weapons; track w.rowId) {
+                    <tr class="border-b border-gold/30">
+                      <td class="py-2 pr-2">{{ w.name }} × {{ w.quantity }}</td>
+                      <td class="py-2 pr-2">{{ localeService.t('ability_' + w.attackAbility) }}</td>
+                      <td class="py-2 pr-2">
+                        {{ w.damageDice }} {{ w.damageType }}
+                        @if (w.versatileDamage) {
+                          ({{ w.versatileDamage }} {{ localeService.t('weapon_versatile_label') }})
+                        }
+                      </td>
+                      <td class="py-2 pr-2">
+                        @if (w.rangeCategory === 'ranged') {
+                          {{ w.normalRange }}/{{ w.longRange }}
+                        } @else {
+                          {{ localeService.t('weapon_range_melee') }}
+                        }
+                      </td>
+                      <td class="py-2 pr-2">{{ w.weight }} kg</td>
+                      @if (!readOnly()) {
+                        <td class="py-2">
+                          <button (click)="removeWeapon(w.rowId)" class="text-xs text-red-700 underline">
+                            {{ localeService.t('remove_button') }}
+                          </button>
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           }
         </div>
       }

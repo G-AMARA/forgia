@@ -7,7 +7,8 @@ export type Tab =
   | 'campaign-edit'
   | 'characters'
   | 'catalog'
-  | 'character-sheet';
+  | 'character-sheet'
+  | 'manage';
 
 @Injectable({ providedIn: 'root' })
 export class AppNav {

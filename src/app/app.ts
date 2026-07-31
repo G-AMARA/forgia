@@ -5,12 +5,12 @@ import { CampaignHub } from './features/campaign-hub/campaign-hub';
 import { CampaignEdit } from './features/campaign-edit/campaign-edit';
 import { CampaignCreate } from './features/campaign-create/campaign-create';
 import { CharacterCreate } from './features/character-create/character-create';
-import { CharacterList } from './features/character-list/character-list';
 import { RaceList } from './features/race-list/race-list';
 import { ClassList } from './features/class-list/class-list';
 import { BackgroundList } from './features/background-list/background-list';
 import { SpellList } from './features/spell-list/spell-list';
 import { EquipmentList } from './features/equipment-list/equipment-list';
+import { Manage } from './features/manage/manage';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
 import { AppNav } from './core/app-nav';
@@ -25,12 +25,12 @@ import { ActiveCampaign } from './core/active-campaign';
     CampaignEdit,
     CampaignCreate,
     CharacterCreate,
-    CharacterList,
     RaceList,
     ClassList,
     BackgroundList,
     SpellList,
     EquipmentList,
+    Manage,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

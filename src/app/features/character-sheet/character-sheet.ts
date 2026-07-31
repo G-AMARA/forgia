@@ -7,7 +7,7 @@ import { LocaleService } from '../../core/locale';
 import { SKILLS } from '../../core/skills';
 import { getClassImagePath } from '../../core/class-images';
 
-type SubTab = 'general' | 'combat' | 'inventory' | 'spells';
+type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
 
 @Component({
   selector: 'app-character-sheet',
@@ -60,6 +60,36 @@ export class CharacterSheet implements OnInit {
 
   private allEquipment = this.contentStore.getContent('equipment');
   private allSpells = this.contentStore.getContent('spells');
+  protected races = this.contentStore.getContent('races');
+  protected classesContent = this.contentStore.getContent('classes');
+  protected backgroundsContent = this.contentStore.getContent('backgrounds');
+  private allSubclasses = this.contentStore.getContent('subclasses');
+
+  protected alignments = [
+    'lawful_good', 'neutral_good', 'chaotic_good',
+    'lawful_neutral', 'true_neutral', 'chaotic_neutral',
+    'lawful_evil', 'neutral_evil', 'chaotic_evil',
+  ];
+
+  identityName = '';
+  identityLevel = 1;
+  identityRaceId = '';
+  identityClassId = '';
+  identitySubclassId = '';
+  identityBackgroundId = '';
+  identityAlignment = 'true_neutral';
+  identityXp = 0;
+
+  // Sottoclassi disponibili per la classe scelta, sbloccate al livello selezionato o prima.
+  // Metodo (non computed): identityClassId/identityLevel sono campi ngModel, non
+  // signal, quindi un computed() non li tracciherebbe e resterebbe bloccato al
+  // primo valore calcolato invece di aggiornarsi a ogni cambio di classe/livello.
+  availableSubclasses(): any[] {
+    if (!this.identityClassId) return [];
+    return this.allSubclasses().filter(
+      (sub: any) => sub.raw.class_id === this.identityClassId && sub.raw.unlocked_at_level <= this.identityLevel
+    );
+  }
 
   selectedEquipmentId = '';
   addQuantity = 1;
@@ -73,6 +103,14 @@ export class CharacterSheet implements OnInit {
     effect(() => {
       const c = this.character();
       if (c) {
+        this.identityName = c.name;
+        this.identityLevel = c.level;
+        this.identityRaceId = c.race_id ?? '';
+        this.identityClassId = c.class_id ?? '';
+        this.identitySubclassId = c.subclass_id ?? '';
+        this.identityBackgroundId = c.background_id ?? '';
+        this.identityAlignment = c.alignment ?? 'true_neutral';
+        this.identityXp = c.experience_points;
         this.currentHp = c.current_hp ?? 0;
         this.maxHp = c.max_hp ?? 0;
         this.armorClass = c.armor_class ?? 10;
@@ -110,6 +148,30 @@ export class CharacterSheet implements OnInit {
 
   isSkillChecked(key: string): boolean {
     return this.skillProficiencies.has(key);
+  }
+
+  async saveIdentity() {
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+
+    this.actionError.set(null);
+    const { error } = await this.characterStore.updateIdentity(c.id, {
+      name: this.identityName,
+      level: this.identityLevel,
+      raceId: this.identityRaceId,
+      classId: this.identityClassId,
+      subclassId: this.identitySubclassId || null,
+      backgroundId: this.identityBackgroundId,
+      alignment: this.identityAlignment,
+      experiencePoints: this.identityXp,
+    });
+
+    if (error) {
+      this.actionError.set(error.message);
+      return;
+    }
+
+    this.showSaved();
   }
 
   async saveCombat() {
@@ -196,6 +258,47 @@ export class CharacterSheet implements OnInit {
     if (!c || this.readOnly()) return;
     this.actionError.set(null);
     const { error } = await this.characterStore.toggleEquipped(c.id, rowId, !currentlyEquipped);
+    if (error) this.actionError.set(error.message);
+  }
+
+  private allWeaponsCatalog = this.contentStore.getContent('weapons');
+  availableWeaponsCatalog = computed(() => this.allWeaponsCatalog());
+
+  selectedWeaponId = '';
+  weaponQuantity = 1;
+  weaponAttackAbility = 'str';
+
+  onWeaponSelected() {
+    const w = this.availableWeaponsCatalog().find((x: any) => x.id === this.selectedWeaponId);
+    this.weaponAttackAbility = w?.raw.suggested_attack_ability ?? 'str';
+  }
+
+  async addWeapon() {
+    const c = this.character();
+    if (!c || !this.selectedWeaponId || this.readOnly()) return;
+
+    this.actionError.set(null);
+    const { error } = await this.characterStore.addWeapon(c.id, {
+      weaponId: this.selectedWeaponId,
+      quantity: this.weaponQuantity,
+      attackAbility: this.weaponAttackAbility,
+    });
+
+    if (error) {
+      this.actionError.set(error.message);
+      return;
+    }
+
+    this.selectedWeaponId = '';
+    this.weaponQuantity = 1;
+    this.weaponAttackAbility = 'str';
+  }
+
+  async removeWeapon(rowId: string) {
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+    this.actionError.set(null);
+    const { error } = await this.characterStore.removeWeapon(c.id, rowId);
     if (error) this.actionError.set(error.message);
   }
 

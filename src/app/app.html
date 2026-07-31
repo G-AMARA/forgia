@@ -91,6 +91,16 @@
         >
           {{ localeService.t('tab_catalog') }}
         </button>
+        @if (auth.isAdmin()) {
+          <button
+            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
+            [class.border-wine]="appNav.activeTab() === 'manage'"
+            [class.border-transparent]="appNav.activeTab() !== 'manage'"
+            (click)="appNav.setTab('manage')"
+          >
+            {{ localeService.t('tab_manage') }}
+          </button>
+        }
       </div>
     </nav>
 
@@ -110,7 +120,6 @@
         }
         @case ('characters') {
           <app-character-create></app-character-create>
-          <app-character-list></app-character-list>
         }
         @case ('character-sheet') {
           <router-outlet />
@@ -136,6 +145,11 @@
             [expanded]="appNav.expandedCatalogSection() === 'equipment'"
             (toggle)="appNav.toggleCatalogSection('equipment')"
           ></app-equipment-list>
+        }
+        @case ('manage') {
+          @if (auth.isAdmin()) {
+            <app-manage></app-manage>
+          }
         }
       }
     </main>

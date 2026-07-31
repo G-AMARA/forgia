@@ -11,7 +11,8 @@ export type ContentTable =
   | 'backgrounds'
   | 'spells'
   | 'equipment'
-  | 'feats';
+  | 'feats'
+  | 'weapons';
 
 export interface LocalizedContent {
   id: string;

@@ -1,0 +1,36 @@
+<section class="space-y-4">
+  <h2 class="font-display text-2xl text-wine">{{ localeService.t('manage_title') }}</h2>
+
+  <div class="flex gap-1 border-b border-gold overflow-x-auto whitespace-nowrap">
+    <button
+      class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+      [class.border-wine]="activeSection() === 'weapons'"
+      [class.border-transparent]="activeSection() !== 'weapons'"
+      (click)="setSection('weapons')"
+    >
+      {{ localeService.t('tab_weapon_manage') }}
+    </button>
+    <button
+      class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+      [class.border-wine]="activeSection() === 'spells'"
+      [class.border-transparent]="activeSection() !== 'spells'"
+      (click)="setSection('spells')"
+    >
+      {{ localeService.t('tab_spell_manage') }}
+    </button>
+    <button
+      class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+      [class.border-wine]="activeSection() === 'equipment'"
+      [class.border-transparent]="activeSection() !== 'equipment'"
+      (click)="setSection('equipment')"
+    >
+      {{ localeService.t('tab_equipment_manage') }}
+    </button>
+  </div>
+
+  @switch (activeSection()) {
+    @case ('weapons') { <app-weapon-create></app-weapon-create> }
+    @case ('spells') { <app-spell-create></app-spell-create> }
+    @case ('equipment') { <app-equipment-create></app-equipment-create> }
+  }
+</section>

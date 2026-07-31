@@ -149,7 +149,7 @@ export class CharacterStore {
     abilityScores: Record<string, number>;
     backstory: string;
     spellIds: string[];
-  }): Promise<{ error: { message: string } | null }> {
+  }): Promise<{ error: { message: string } | null; characterId?: string }> {
     const campaign = this.activeCampaign.current();
     const userId = this.auth.user()?.id;
 
@@ -206,7 +206,7 @@ export class CharacterStore {
 
     await this.loadForActiveCampaign();
 
-    return { error: null };
+    return { error: null, characterId: character.id };
   }
 
   async deleteCharacter(characterId: string) {
@@ -221,13 +221,14 @@ export class CharacterStore {
 
   private static readonly FULL_CHARACTER_SELECT = `
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
-    current_hp, max_hp, armor_class, ability_scores,
+    current_hp, max_hp, armor_class, ability_scores, race_id, background_id,
     skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
     races ( name ),
     backgrounds ( name ),
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
     character_spells ( spell_id, prepared, spells ( name, level, school ) ),
-    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name ) )
+    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name ) ),
+    character_weapons ( id, weapon_id, quantity, attack_ability, weapons ( name, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight ) )
   `;
 
   private mapRowToCharacterFull(row: any): CharacterFull {
@@ -250,9 +251,13 @@ export class CharacterStore {
       damage_resistances: row.damage_resistances ?? [],
       damage_immunities: row.damage_immunities ?? [],
       condition_immunities: row.condition_immunities ?? [],
+      race_id: row.race_id ?? null,
       race_name: row.races?.name ?? null,
+      background_id: row.background_id ?? null,
       background_name: row.backgrounds?.name ?? null,
+      class_id: cls?.class_id ?? null,
       class_name: cls?.classes?.name ?? null,
+      subclass_id: cls?.subclass_id ?? null,
       subclass_name: cls?.subclasses?.name ?? null,
       hit_die: cls?.classes?.hit_die ?? null,
       saving_throw_proficiencies: (cls?.classes?.saving_throw_proficiencies ?? []).map(
@@ -272,6 +277,20 @@ export class CharacterStore {
         name: i.equipment?.name ?? '?',
         quantity: i.quantity,
         equipped: i.equipped,
+      })),
+      weapons: (row.character_weapons ?? []).map((w: any) => ({
+        rowId: w.id,
+        weaponId: w.weapon_id,
+        name: w.weapons?.name ?? '?',
+        quantity: w.quantity,
+        attackAbility: w.attack_ability,
+        damageDice: w.weapons?.damage_dice ?? '',
+        damageType: w.weapons?.damage_type ?? '',
+        versatileDamage: w.weapons?.versatile_damage ?? null,
+        rangeCategory: w.weapons?.range_category ?? 'melee',
+        normalRange: w.weapons?.normal_range ?? null,
+        longRange: w.weapons?.long_range ?? null,
+        weight: w.weapons?.weight ?? null,
       })),
     };
   }
@@ -360,6 +379,47 @@ export class CharacterStore {
     return { error };
   }
 
+  async updateIdentity(
+    characterId: string,
+    updates: {
+      name: string;
+      level: number;
+      raceId: string;
+      classId: string;
+      subclassId: string | null;
+      backgroundId: string;
+      alignment: string;
+      experiencePoints: number;
+    }
+  ) {
+    const { error: charError } = await this.supabase.client
+      .from('characters')
+      .update({
+        name: updates.name,
+        level: updates.level,
+        race_id: updates.raceId,
+        background_id: updates.backgroundId,
+        alignment: updates.alignment,
+        experience_points: updates.experiencePoints,
+      })
+      .eq('id', characterId);
+
+    if (charError) {
+      return { error: charError };
+    }
+
+    const { error: classError } = await this.supabase.client
+      .from('character_classes')
+      .update({ class_id: updates.classId, subclass_id: updates.subclassId, level: updates.level })
+      .eq('character_id', characterId);
+
+    if (!classError) {
+      await this.refreshCharacter(characterId);
+    }
+
+    return { error: classError };
+  }
+
   async updateNotes(characterId: string, notes: string) {
     const { error } = await this.supabase.client
       .from('characters')
@@ -429,6 +489,30 @@ export class CharacterStore {
     return { error };
   }
 
+  async addWeapon(
+    characterId: string,
+    weapon: { weaponId: string; quantity: number; attackAbility: string }
+  ) {
+    const { error } = await this.supabase.client.from('character_weapons').insert({
+      character_id: characterId,
+      weapon_id: weapon.weaponId,
+      quantity: weapon.quantity,
+      attack_ability: weapon.attackAbility,
+    });
+    if (!error) {
+      await this.refreshCharacter(characterId);
+    }
+    return { error };
+  }
+
+  async removeWeapon(characterId: string, rowId: string) {
+    const { error } = await this.supabase.client.from('character_weapons').delete().eq('id', rowId);
+    if (!error) {
+      await this.refreshCharacter(characterId);
+    }
+    return { error };
+  }
+
   async addSpellToCharacter(characterId: string, spellId: string) {
     const { error } = await this.supabase.client
       .from('character_spells')
@@ -483,12 +567,30 @@ export interface CharacterFull {
   damage_resistances: string[];
   damage_immunities: string[];
   condition_immunities: string[];
+  race_id: string | null;
   race_name: string | null;
+  background_id: string | null;
   background_name: string | null;
+  class_id: string | null;
   class_name: string | null;
+  subclass_id: string | null;
   subclass_name: string | null;
   hit_die: number | null;
   saving_throw_proficiencies: string[];
   spells: { rowId: string; spellId: string; name: string; level: number; school: string; prepared: boolean }[];
   inventory: { rowId: string; equipmentId: string; name: string; quantity: number; equipped: boolean }[];
+  weapons: {
+    rowId: string;
+    weaponId: string;
+    name: string;
+    quantity: number;
+    attackAbility: string;
+    damageDice: string;
+    damageType: string;
+    versatileDamage: string | null;
+    rangeCategory: string;
+    normalRange: number | null;
+    longRange: number | null;
+    weight: number | null;
+  }[];
 }
