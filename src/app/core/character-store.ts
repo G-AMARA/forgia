@@ -27,6 +27,7 @@ export class CharacterStore {
   readonly characters = signal<CharacterSummary[]>([]);
   readonly loading = signal(false);
   readonly myCharacter = signal<CharacterFull | null>(null);
+  readonly selectedCharacter = signal<CharacterFull | null>(null);
 
   constructor() {
     // Si ricarica da solo ogni volta che cambia la campagna attiva,
@@ -218,44 +219,25 @@ export class CharacterStore {
     return { error };
   }
 
-  async loadMyCharacter() {
-    const campaign = this.activeCampaign.current();
-    const userId = this.auth.user()?.id;
-    if (!campaign || !userId) {
-      this.myCharacter.set(null);
-      return;
-    }
+  private static readonly FULL_CHARACTER_SELECT = `
+    id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
+    current_hp, max_hp, armor_class, ability_scores,
+    skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
+    races ( name ),
+    backgrounds ( name ),
+    character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
+    character_spells ( spell_id, prepared, spells ( name, level, school ) ),
+    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name ) )
+  `;
 
-    const { data, error } = await this.supabase.client
-      .from('characters')
-      .select(
-        `
-        id, name, level, alignment, experience_points, avatar_url, notes,
-        current_hp, max_hp, armor_class, ability_scores,
-        skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
-        races ( name ),
-        backgrounds ( name ),
-        character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
-        character_spells ( id, spell_id, prepared, spells ( name, level, school ) ),
-        character_inventory ( id, equipment_id, quantity, equipped, equipment ( name ) )
-      `
-      )
-      .eq('campaign_id', campaign.id)
-      .eq('owner_id', userId)
-      .maybeSingle();
-
-    if (error || !data) {
-      this.myCharacter.set(null);
-      return;
-    }
-
-    const row: any = data;
+  private mapRowToCharacterFull(row: any): CharacterFull {
     const cls = row.character_classes?.[0];
 
-    this.myCharacter.set({
+    return {
       id: row.id,
       name: row.name,
       level: row.level,
+      owner_id: row.owner_id,
       alignment: row.alignment,
       experience_points: row.experience_points,
       avatar_url: row.avatar_url,
@@ -277,7 +259,7 @@ export class CharacterStore {
         (s: any) => s.name ?? s
       ),
       spells: (row.character_spells ?? []).map((s: any) => ({
-        rowId: s.id,
+        rowId: s.spell_id,
         spellId: s.spell_id,
         name: s.spells?.name ?? '?',
         level: s.spells?.level ?? 0,
@@ -291,7 +273,57 @@ export class CharacterStore {
         quantity: i.quantity,
         equipped: i.equipped,
       })),
-    });
+    };
+  }
+
+  async loadMyCharacter() {
+    const campaign = this.activeCampaign.current();
+    const userId = this.auth.user()?.id;
+    if (!campaign || !userId) {
+      this.myCharacter.set(null);
+      return;
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('characters')
+      .select(CharacterStore.FULL_CHARACTER_SELECT)
+      .eq('campaign_id', campaign.id)
+      .eq('owner_id', userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      this.myCharacter.set(null);
+      return;
+    }
+
+    this.myCharacter.set(this.mapRowToCharacterFull(data));
+  }
+
+  // Carica una scheda personaggio specifica dato il suo ID, indipendentemente
+  // dalla campagna attualmente attiva: usato dalla rotta /scheda-personaggio/:id.
+  async loadCharacterById(characterId: string) {
+    const { data, error } = await this.supabase.client
+      .from('characters')
+      .select(CharacterStore.FULL_CHARACTER_SELECT)
+      .eq('id', characterId)
+      .maybeSingle();
+
+    if (error || !data) {
+      this.selectedCharacter.set(null);
+      return;
+    }
+
+    this.selectedCharacter.set(this.mapRowToCharacterFull(data));
+  }
+
+  // Ricarica il/i signal che stanno effettivamente mostrando questo personaggio
+  // (può essere "il mio personaggio nella campagna attiva" e/o il personaggio
+  // aperto tramite la rotta /scheda-personaggio/:id: possono coincidere).
+  private async refreshCharacter(characterId: string) {
+    const tasks: Promise<void>[] = [];
+    if (this.myCharacter()?.id === characterId) tasks.push(this.loadMyCharacter());
+    if (this.selectedCharacter()?.id === characterId) tasks.push(this.loadCharacterById(characterId));
+    await Promise.all(tasks);
   }
 
   async updateCombatStats(
@@ -322,7 +354,7 @@ export class CharacterStore {
       .eq('id', characterId);
 
     if (!error) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
 
     return { error };
@@ -335,7 +367,7 @@ export class CharacterStore {
       .eq('id', characterId);
 
     if (!error) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
 
     return { error };
@@ -361,7 +393,7 @@ export class CharacterStore {
       .eq('id', characterId);
 
     if (!updateError) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
 
     return { error: updateError };
@@ -373,26 +405,26 @@ export class CharacterStore {
       .insert({ character_id: characterId, equipment_id: equipmentId, quantity, equipped: false });
 
     if (!error) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
     return { error };
   }
 
-  async removeInventoryItem(rowId: string) {
+  async removeInventoryItem(characterId: string, rowId: string) {
     const { error } = await this.supabase.client.from('character_inventory').delete().eq('id', rowId);
     if (!error) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
     return { error };
   }
 
-  async toggleEquipped(rowId: string, equipped: boolean) {
+  async toggleEquipped(characterId: string, rowId: string, equipped: boolean) {
     const { error } = await this.supabase.client
       .from('character_inventory')
       .update({ equipped })
       .eq('id', rowId);
     if (!error) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
     return { error };
   }
@@ -402,26 +434,33 @@ export class CharacterStore {
       .from('character_spells')
       .insert({ character_id: characterId, spell_id: spellId, prepared: true });
     if (!error) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
     return { error };
   }
 
-  async removeSpellFromCharacter(rowId: string) {
-    const { error } = await this.supabase.client.from('character_spells').delete().eq('id', rowId);
+  // character_spells ha chiave primaria composita (character_id, spell_id):
+  // non esiste una colonna id, quindi la riga si identifica con entrambi i valori.
+  async removeSpellFromCharacter(characterId: string, spellId: string) {
+    const { error } = await this.supabase.client
+      .from('character_spells')
+      .delete()
+      .eq('character_id', characterId)
+      .eq('spell_id', spellId);
     if (!error) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
     return { error };
   }
 
-  async togglePrepared(rowId: string, prepared: boolean) {
+  async togglePrepared(characterId: string, spellId: string, prepared: boolean) {
     const { error } = await this.supabase.client
       .from('character_spells')
       .update({ prepared })
-      .eq('id', rowId);
+      .eq('character_id', characterId)
+      .eq('spell_id', spellId);
     if (!error) {
-      await this.loadMyCharacter();
+      await this.refreshCharacter(characterId);
     }
     return { error };
   }
@@ -431,6 +470,7 @@ export interface CharacterFull {
   id: string;
   name: string;
   level: number;
+  owner_id: string;
   alignment: string | null;
   experience_points: number;
   avatar_url: string | null;

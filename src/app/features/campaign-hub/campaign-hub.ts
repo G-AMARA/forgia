@@ -1,4 +1,5 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { CharacterStore } from '../../core/character-store';
 import { Auth } from '../../core/auth';
@@ -17,6 +18,7 @@ export class CampaignHub {
   protected auth = inject(Auth);
   protected appNav = inject(AppNav);
   protected localeService = inject(LocaleService);
+  private router = inject(Router);
 
   cover = computed(() => {
     const campaign = this.campaignStore.current();
@@ -39,6 +41,38 @@ export class CampaignHub {
 
   goToCharacters() {
     this.appNav.setTab('characters');
+  }
+
+  goToMyCharacter() {
+    const userId = this.auth.user()?.id;
+    const myCharacter = this.characterStore.characters().find((c) => c.owner_id === userId);
+    if (!myCharacter) return;
+
+    this.goToCharacterSheet(myCharacter.id);
+  }
+
+  // Apre la scheda di un personaggio del roster (proprio o altrui). Chi non è
+  // il proprietario la vede in sola lettura: lo gestisce CharacterSheet stesso.
+  goToCharacterSheet(characterId: string) {
+    this.appNav.setTab('character-sheet');
+    this.router.navigate(['/scheda-personaggio', characterId]);
+  }
+
+  deleteError = signal<string | null>(null);
+
+  async deleteCharacter(event: Event, characterId: string, characterName: string) {
+    event.stopPropagation(); // evita che il click apra anche la scheda
+
+    const confirmed = window.confirm(
+      `${this.localeService.t('confirm_delete_character')} "${characterName}"?`
+    );
+    if (!confirmed) return;
+
+    this.deleteError.set(null);
+    const { error } = await this.characterStore.deleteCharacter(characterId);
+    if (error) {
+      this.deleteError.set(error.message);
+    }
   }
 
   goToManage() {

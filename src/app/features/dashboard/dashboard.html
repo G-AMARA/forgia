@@ -1,17 +1,26 @@
 <section class="space-y-4">
     <h2 class="font-display text-2xl text-wine">{{ localeService.t('board_title') }}</h2>
-  
+
+    <input
+      type="search"
+      [(ngModel)]="searchTerm"
+      [placeholder]="localeService.t('search_campaigns_placeholder')"
+      class="w-full sm:w-72 px-3 py-2 rounded border border-gold bg-white/60 text-ink text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright"
+    />
+
     @if (loading()) {
       <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
     } @else if (boardCampaigns().length === 0) {
       <p class="text-slate-arcane italic">{{ localeService.t('no_campaigns_yet') }}</p>
+    } @else if (filteredCampaigns().length === 0) {
+      <p class="text-slate-arcane italic">{{ localeService.t('no_search_results') }}</p>
     } @else {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        @for (campaign of boardCampaigns(); track campaign.id) {
+        @for (campaign of filteredCampaigns(); track campaign.id) {
           <div
             class="relative flex flex-col text-left border-2 border-gold rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all bg-white/60 min-h-80"
           >
-            @if (auth.user()?.id === campaign.ownerId) {
+            @if (auth.user()?.id === campaign.ownerId || auth.isAdmin()) {
               <button
                 (click)="deleteCampaign($event, campaign)"
                 class="absolute top-2 right-2 z-10 text-xs px-2 py-1 bg-red-900/80 text-white rounded hover:bg-red-800 transition-colors"
@@ -19,7 +28,7 @@
                 {{ localeService.t('delete_button') }}
               </button>
             }
-  
+
             <button (click)="enterCampaign(campaign)" class="flex flex-col flex-1 text-left">
               <!-- Copertina -->
               <div class="h-44 shrink-0 bg-gradient-to-br" [class]="campaign.cover.gradient">
@@ -29,18 +38,18 @@
                   class="w-full h-full object-cover"
                 />
               </div>
-  
+
               <!-- Corpo -->
               <div class="p-4 flex flex-col gap-2 flex-1">
                 <h3 class="font-display text-lg text-ink">{{ campaign.name }}</h3>
                 <p class="text-xs text-slate-arcane">
                   {{ localeService.t('master_label') }}: <strong>{{ campaign.masterNickname }}</strong>
                 </p>
-  
+
                 @if (campaign.description) {
                   <p class="text-sm italic opacity-80">{{ campaign.description }}</p>
                 }
-  
+
                 <div class="mt-auto pt-2 border-t border-gold/40 flex justify-between items-center">
                   <span class="text-xs px-2 py-1 bg-gold/20 rounded-full text-ink">
                     {{ campaign.characterCount }} {{ localeService.t('characters_label') }}
@@ -54,4 +63,3 @@
       </div>
     }
   </section>
-  

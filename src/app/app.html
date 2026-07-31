@@ -61,7 +61,7 @@
           class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
           [class.border-wine]="appNav.activeTab() === 'board'"
           [class.border-transparent]="appNav.activeTab() !== 'board'"
-          (click)="appNav.setTab('board')"
+          (click)="goToBoard()"
         >
           {{ localeService.t('tab_board') }}
         </button>
@@ -97,7 +97,7 @@
     <main class="max-w-5xl mx-auto px-4 py-6 space-y-8">
       @switch (appNav.activeTab()) {
         @case ('board') {
-          <app-campaign-board></app-campaign-board>
+          <router-outlet />
         }
         @case ('hub') {
           <app-campaign-hub></app-campaign-hub>
@@ -111,6 +111,9 @@
         @case ('characters') {
           <app-character-create></app-character-create>
           <app-character-list></app-character-list>
+        }
+        @case ('character-sheet') {
+          <router-outlet />
         }
         @case ('catalog') {
           <app-race-list
@@ -138,5 +141,3 @@
     </main>
   }
 </div>
-
-<router-outlet />

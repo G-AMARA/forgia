@@ -40,7 +40,7 @@
               </button>
             } @else {
               <button
-                (click)="goToCharacters()"
+                (click)="goToMyCharacter()"
                 class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-ink transition-colors"
               >
                 {{ localeService.t('view_my_character_button') }}
@@ -53,12 +53,26 @@
       <!-- Roster -->
       <div>
         <h3 class="font-display text-lg text-ink mb-3">{{ localeService.t('roster_title') }}</h3>
+        @if (deleteError()) {
+          <p class="text-sm text-red-700 mb-2">{{ deleteError() }}</p>
+        }
         @if (characterStore.characters().length === 0) {
           <p class="text-slate-arcane italic">{{ localeService.t('no_characters_yet') }}</p>
         } @else {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             @for (character of characterStore.characters(); track character.id) {
-              <div class="bg-white/60 border border-gold rounded-lg p-3">
+              <div
+                (click)="goToCharacterSheet(character.id)"
+                class="relative bg-white/60 border border-gold rounded-lg p-3 cursor-pointer hover:bg-white/80 hover:border-gold-bright transition-colors"
+              >
+                @if (auth.isAdmin()) {
+                  <button
+                    (click)="deleteCharacter($event, character.id, character.name)"
+                    class="absolute top-2 right-2 text-xs px-2 py-1 bg-red-900/80 text-white rounded hover:bg-red-800 transition-colors"
+                  >
+                    {{ localeService.t('delete_button') }}
+                  </button>
+                }
                 <p class="font-display text-base text-ink">{{ character.name }}</p>
                 <p class="text-xs text-slate-arcane">
                   {{ localeService.t('level_label') }} {{ character.level }} · {{ character.race_name }} · {{ character.class_name }}

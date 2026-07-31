@@ -1,10 +1,11 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CharacterStore } from '../../core/character-store';
 import { ContentStore } from '../../core/content-store';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { SKILLS } from '../../core/skills';
+import { getClassImagePath } from '../../core/class-images';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells';
 
@@ -14,13 +15,32 @@ type SubTab = 'general' | 'combat' | 'inventory' | 'spells';
   imports: [FormsModule],
   templateUrl: './character-sheet.html',
 })
-export class CharacterSheet {
+export class CharacterSheet implements OnInit {
   protected characterStore = inject(CharacterStore);
   private contentStore = inject(ContentStore);
   private auth = inject(Auth);
   protected localeService = inject(LocaleService);
 
-  protected character = this.characterStore.myCharacter;
+  // Se valorizzato (es. dalla rotta /scheda-personaggio/:id), la scheda mostra
+  // quel personaggio specifico invece del personaggio dell'utente loggato
+  // nella campagna attiva.
+  @Input() characterId?: string;
+
+  protected character = computed(() =>
+    this.characterId ? this.characterStore.selectedCharacter() : this.characterStore.myCharacter()
+  );
+
+  protected classImagePath = computed(() => getClassImagePath(this.character()?.class_name));
+
+  // Vero se l'utente loggato non è il proprietario: usato per bloccare ogni modifica
+  // quando la scheda si apre dal roster della campagna (vista di un altro personaggio).
+  protected readOnly = computed(() => this.character()?.owner_id !== this.auth.user()?.id);
+
+  ngOnInit() {
+    if (this.characterId) {
+      this.characterStore.loadCharacterById(this.characterId);
+    }
+  }
   protected skills = SKILLS;
   protected abilityKeys: ('str' | 'dex' | 'con' | 'int' | 'wis' | 'cha')[] = [
     'str', 'dex', 'con', 'int', 'wis', 'cha',
@@ -46,6 +66,8 @@ export class CharacterSheet {
   selectedSpellIdToAdd = '';
 
   savedMsg = signal<string | null>(null);
+  avatarError = signal<string | null>(null);
+  avatarUploading = signal(false);
 
   constructor() {
     effect(() => {
@@ -92,7 +114,7 @@ export class CharacterSheet {
 
   async saveCombat() {
     const c = this.character();
-    if (!c) return;
+    if (!c || this.readOnly()) return;
 
     await this.characterStore.updateCombatStats(c.id, {
       currentHp: this.currentHp,
@@ -110,7 +132,7 @@ export class CharacterSheet {
 
   async saveBackstory() {
     const c = this.character();
-    if (!c) return;
+    if (!c || this.readOnly()) return;
     await this.characterStore.updateNotes(c.id, this.backstory);
     this.showSaved();
   }
@@ -129,27 +151,52 @@ export class CharacterSheet {
     const file = input.files?.[0];
     const c = this.character();
     const userId = this.auth.user()?.id;
-    if (!file || !c || !userId) return;
+    if (!file || !c || !userId || this.readOnly()) return;
 
-    await this.characterStore.uploadAvatar(c.id, userId, file);
+    this.avatarError.set(null);
+    this.avatarUploading.set(true);
+
+    const { error } = await this.characterStore.uploadAvatar(c.id, userId, file);
+
+    if (error) {
+      this.avatarError.set(error.message);
+    }
+
+    this.avatarUploading.set(false);
+    input.value = '';
   }
 
   availableEquipment = computed(() => this.allEquipment());
 
+  actionError = signal<string | null>(null);
+
   async addItem() {
     const c = this.character();
-    if (!c || !this.selectedEquipmentId) return;
-    await this.characterStore.addInventoryItem(c.id, this.selectedEquipmentId, this.addQuantity);
+    if (!c || !this.selectedEquipmentId || this.readOnly()) return;
+    this.actionError.set(null);
+    const { error } = await this.characterStore.addInventoryItem(c.id, this.selectedEquipmentId, this.addQuantity);
+    if (error) {
+      this.actionError.set(error.message);
+      return;
+    }
     this.selectedEquipmentId = '';
     this.addQuantity = 1;
   }
 
   async removeItem(rowId: string) {
-    await this.characterStore.removeInventoryItem(rowId);
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+    this.actionError.set(null);
+    const { error } = await this.characterStore.removeInventoryItem(c.id, rowId);
+    if (error) this.actionError.set(error.message);
   }
 
   async toggleEquip(rowId: string, currentlyEquipped: boolean) {
-    await this.characterStore.toggleEquipped(rowId, !currentlyEquipped);
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+    this.actionError.set(null);
+    const { error } = await this.characterStore.toggleEquipped(c.id, rowId, !currentlyEquipped);
+    if (error) this.actionError.set(error.message);
   }
 
   availableClassSpells = computed(() => {
@@ -162,16 +209,29 @@ export class CharacterSheet {
 
   async addSpell() {
     const c = this.character();
-    if (!c || !this.selectedSpellIdToAdd) return;
-    await this.characterStore.addSpellToCharacter(c.id, this.selectedSpellIdToAdd);
+    if (!c || !this.selectedSpellIdToAdd || this.readOnly()) return;
+    this.actionError.set(null);
+    const { error } = await this.characterStore.addSpellToCharacter(c.id, this.selectedSpellIdToAdd);
+    if (error) {
+      this.actionError.set(error.message);
+      return;
+    }
     this.selectedSpellIdToAdd = '';
   }
 
   async removeSpell(rowId: string) {
-    await this.characterStore.removeSpellFromCharacter(rowId);
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+    this.actionError.set(null);
+    const { error } = await this.characterStore.removeSpellFromCharacter(c.id, rowId);
+    if (error) this.actionError.set(error.message);
   }
 
   async toggleSpellPrepared(rowId: string, currentlyPrepared: boolean) {
-    await this.characterStore.togglePrepared(rowId, !currentlyPrepared);
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+    this.actionError.set(null);
+    const { error } = await this.characterStore.togglePrepared(c.id, rowId, !currentlyPrepared);
+    if (error) this.actionError.set(error.message);
   }
 }

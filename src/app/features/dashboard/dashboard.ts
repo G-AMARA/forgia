@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Supabase } from '../../core/supabase';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { AppNav } from '../../core/app-nav';
@@ -18,11 +19,12 @@ interface BoardCampaign {
 }
 
 @Component({
-  selector: 'app-campaign-board',
+  selector: 'app-dashboard',
   standalone: true,
-  templateUrl: './campaign-board.html',
+  imports: [FormsModule],
+  templateUrl: './dashboard.html',
 })
-export class CampaignBoard implements OnInit {
+export class Dashboard implements OnInit {
   private supabase = inject(Supabase);
   private activeCampaign = inject(ActiveCampaign);
   private appNav = inject(AppNav);
@@ -31,9 +33,17 @@ export class CampaignBoard implements OnInit {
 
   boardCampaigns = signal<BoardCampaign[]>([]);
   loading = signal(true);
+  searchTerm = signal('');
   getCoverImagePath = getCoverImagePath;
 
+  filteredCampaigns = computed(() => {
+    const term = this.searchTerm().trim().toLowerCase();
+    if (!term) return this.boardCampaigns();
+    return this.boardCampaigns().filter((c) => c.name.toLowerCase().includes(term));
+  });
+
   async ngOnInit() {
+    this.appNav.setTab('board');
     await this.loadBoard();
   }
 

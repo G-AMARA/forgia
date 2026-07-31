@@ -1,0 +1,10 @@
+<section class="space-y-4">
+  <button
+    (click)="goBackToHub()"
+    class="text-sm px-3 py-1 border border-gold rounded hover:bg-gold hover:text-ink transition-colors"
+  >
+    ← {{ localeService.t('back_to_hub_button') }}
+  </button>
+
+  <app-character-sheet [characterId]="characterId"></app-character-sheet>
+</section>

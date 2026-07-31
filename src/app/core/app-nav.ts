@@ -1,6 +1,13 @@
 import { Injectable, signal } from '@angular/core';
 
-export type Tab = 'board' | 'hub' | 'campaign' | 'campaign-edit' | 'characters' | 'catalog';
+export type Tab =
+  | 'board'
+  | 'hub'
+  | 'campaign'
+  | 'campaign-edit'
+  | 'characters'
+  | 'catalog'
+  | 'character-sheet';
 
 @Injectable({ providedIn: 'root' })
 export class AppNav {

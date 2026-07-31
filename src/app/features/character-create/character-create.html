@@ -127,6 +127,13 @@
                 type="number" min="1" max="30" [(ngModel)]="abilityScores[key]" [name]="'ability_' + key"
                 class="px-2 py-1 rounded border border-gold bg-white text-center focus:outline-none focus:ring-2 focus:ring-wine"
               />
+              <div class="text-xs text-center font-semibold" [class]="getModifier(abilityScores[key]) >= 0 ? 'text-forest' : 'text-red-700'">
+                @if (getModifier(abilityScores[key]) >= 0) {
+                  +{{ getModifier(abilityScores[key]) }}
+                } @else {
+                  {{ getModifier(abilityScores[key]) }}
+                }
+              </div>
             </div>
           }
         </div>

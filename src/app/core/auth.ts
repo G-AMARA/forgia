@@ -16,6 +16,11 @@ export class Auth {
   private _isMaster = signal<boolean>(false);
   readonly isMaster = this._isMaster.asReadonly();
 
+  // Ruolo "super utente": non selezionabile in registrazione, va assegnato
+  // a mano sul DB (colonna profiles.is_admin) da chi già è admin.
+  private _isAdmin = signal<boolean>(false);
+  readonly isAdmin = this._isAdmin.asReadonly();
+
   constructor() {
     // Controlla se c'è già una sessione attiva al caricamento dell'app
     this.supabase.client.auth.getSession().then(({ data }) => {
@@ -36,23 +41,26 @@ export class Auth {
     if (!userId) {
       this._nickname.set(null);
       this._isMaster.set(false);
+      this._isAdmin.set(false);
       return;
     }
 
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .select('nickname, is_master')
+      .select('nickname, is_master, is_admin')
       .eq('id', userId)
       .single();
 
     if (error) {
       this._nickname.set(null);
       this._isMaster.set(false);
+      this._isAdmin.set(false);
       return;
     }
 
     this._nickname.set(data?.nickname ?? null);
     this._isMaster.set(data?.is_master ?? false);
+    this._isAdmin.set(data?.is_admin ?? false);
   }
 
   async signUp(email: string, password: string, nickname: string, isMaster: boolean) {

@@ -1,19 +1,31 @@
 @if (character(); as c) {
     <section class="space-y-4">
       <!-- Intestazione: avatar + identità -->
-      <div class="bg-stone-textured panel-carved border-2 border-gold rounded-lg p-5 text-parchment flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+      <div class="relative bg-stone-textured panel-carved border-2 border-gold rounded-lg p-5 text-parchment overflow-hidden">
+        @if (classImagePath(); as classImg) {
+          <div
+            class="absolute inset-y-0 right-0 w-3/4 bg-cover bg-center opacity-70 mask-[linear-gradient(to_right,transparent,black_40%)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_40%)]"
+            [style.background-image]="'url(' + classImg + ')'"
+          ></div>
+        }
+        <div class="relative flex flex-col sm:flex-row gap-4 items-center sm:items-start">
         <div class="flex flex-col items-center gap-2">
-          <div class="w-24 h-24 rounded-full border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-3xl">
+          <div class="w-32 h-48 rounded-lg border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-6xl">
             @if (c.avatar_url) {
               <img [src]="c.avatar_url" alt="" class="w-full h-full object-cover" />
             } @else {
               🧙
             }
           </div>
-          <label class="text-xs px-2 py-1 border border-gold rounded cursor-pointer hover:bg-gold hover:text-ink transition-colors">
-            {{ localeService.t('upload_photo_button') }}
-            <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" />
-          </label>
+          @if (!readOnly()) {
+            <label class="text-xs px-2 py-1 border border-gold rounded cursor-pointer hover:bg-gold hover:text-ink transition-colors" [class.opacity-50]="avatarUploading()">
+              {{ avatarUploading() ? localeService.t('loading') : localeService.t('upload_photo_button') }}
+              <input type="file" accept="image/*" class="hidden" [disabled]="avatarUploading()" (change)="onAvatarSelected($event)" />
+            </label>
+            @if (avatarError()) {
+              <p class="text-xs text-red-300 text-center max-w-40">{{ avatarError() }}</p>
+            }
+          }
         </div>
   
         <div class="flex-1 text-center sm:text-left">
@@ -26,8 +38,9 @@
             {{ c.background_name }} · {{ localeService.t('alignment_' + c.alignment) }} · {{ c.experience_points }} XP
           </p>
         </div>
+        </div>
       </div>
-  
+
       <!-- Sotto-schede -->
       <div class="flex gap-1 border-b border-gold overflow-x-auto whitespace-nowrap">
         <button
@@ -69,21 +82,26 @@
       @if (savedMsg()) {
         <p class="text-sm text-forest font-semibold">✓ {{ savedMsg() }}</p>
       }
+      @if (actionError()) {
+        <p class="text-sm text-red-700 font-semibold">{{ actionError() }}</p>
+      }
   
       <!-- GENERALE -->
       @if (activeSubTab() === 'general') {
         <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-3">
           <label class="text-sm font-semibold">{{ localeService.t('backstory_label') }}</label>
           <textarea
-            [(ngModel)]="backstory" rows="8"
-            class="w-full px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine resize-none"
+            [(ngModel)]="backstory" rows="8" [disabled]="readOnly()"
+            class="w-full px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine resize-none disabled:opacity-70"
           ></textarea>
-          <button
-            (click)="saveBackstory()"
-            class="px-4 py-2 bg-wine text-parchment font-display rounded border border-gold hover:bg-wine-dark transition-colors"
-          >
-            {{ localeService.t('save_button') }}
-          </button>
+          @if (!readOnly()) {
+            <button
+              (click)="saveBackstory()"
+              class="px-4 py-2 bg-wine text-parchment font-display rounded border border-gold hover:bg-wine-dark transition-colors"
+            >
+              {{ localeService.t('save_button') }}
+            </button>
+          }
         </div>
       }
   
@@ -94,15 +112,15 @@
           <div class="grid grid-cols-3 gap-4 max-w-md">
             <div class="flex flex-col gap-1">
               <label class="text-xs font-semibold">{{ localeService.t('current_hp_label') }}</label>
-              <input type="number" [(ngModel)]="currentHp" class="px-2 py-1 rounded border border-gold text-center" />
+              <input type="number" [(ngModel)]="currentHp" [disabled]="readOnly()" class="px-2 py-1 rounded border border-gold text-center disabled:opacity-70" />
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-xs font-semibold">{{ localeService.t('max_hp_label') }}</label>
-              <input type="number" [(ngModel)]="maxHp" class="px-2 py-1 rounded border border-gold text-center" />
+              <input type="number" [(ngModel)]="maxHp" [disabled]="readOnly()" class="px-2 py-1 rounded border border-gold text-center disabled:opacity-70" />
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-xs font-semibold">{{ localeService.t('armor_class_label') }}</label>
-              <input type="number" [(ngModel)]="armorClass" class="px-2 py-1 rounded border border-gold text-center" />
+              <input type="number" [(ngModel)]="armorClass" [disabled]="readOnly()" class="px-2 py-1 rounded border border-gold text-center disabled:opacity-70" />
             </div>
           </div>
   
@@ -114,8 +132,8 @@
                 <div class="flex flex-col items-center gap-1 border border-gold rounded p-2">
                   <span class="text-xs uppercase">{{ localeService.t('ability_' + key) }}</span>
                   <input
-                    type="number" [(ngModel)]="abilityScores[key]"
-                    class="w-14 px-1 py-1 rounded border border-gold text-center"
+                    type="number" [(ngModel)]="abilityScores[key]" [disabled]="readOnly()"
+                    class="w-14 px-1 py-1 rounded border border-gold text-center disabled:opacity-70"
                   />
                   <span class="text-xs opacity-70">{{ formatModifier(abilityModifier(abilityScores[key])) }}</span>
                 </div>
@@ -140,6 +158,7 @@
                   <input
                     type="checkbox"
                     [checked]="isSkillChecked(skill.key)"
+                    [disabled]="readOnly()"
                     (change)="toggleSkill(skill.key)"
                   />
                   {{ localeService.t('skill_' + skill.key) }}
@@ -154,54 +173,58 @@
             <div class="flex flex-col gap-1">
               <label class="text-xs font-semibold">{{ localeService.t('resistances_label') }}</label>
               <input
-                type="text" [(ngModel)]="damageResistancesText" [placeholder]="localeService.t('comma_separated_hint')"
-                class="px-2 py-1 rounded border border-gold text-sm"
+                type="text" [(ngModel)]="damageResistancesText" [placeholder]="localeService.t('comma_separated_hint')" [disabled]="readOnly()"
+                class="px-2 py-1 rounded border border-gold text-sm disabled:opacity-70"
               />
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-xs font-semibold">{{ localeService.t('immunities_label') }}</label>
               <input
-                type="text" [(ngModel)]="damageImmunitiesText" [placeholder]="localeService.t('comma_separated_hint')"
-                class="px-2 py-1 rounded border border-gold text-sm"
+                type="text" [(ngModel)]="damageImmunitiesText" [placeholder]="localeService.t('comma_separated_hint')" [disabled]="readOnly()"
+                class="px-2 py-1 rounded border border-gold text-sm disabled:opacity-70"
               />
             </div>
             <div class="flex flex-col gap-1">
               <label class="text-xs font-semibold">{{ localeService.t('condition_immunities_label') }}</label>
               <input
-                type="text" [(ngModel)]="conditionImmunitiesText" [placeholder]="localeService.t('comma_separated_hint')"
-                class="px-2 py-1 rounded border border-gold text-sm"
+                type="text" [(ngModel)]="conditionImmunitiesText" [placeholder]="localeService.t('comma_separated_hint')" [disabled]="readOnly()"
+                class="px-2 py-1 rounded border border-gold text-sm disabled:opacity-70"
               />
             </div>
           </div>
-  
-          <button
-            (click)="saveCombat()"
-            class="px-4 py-2 bg-wine text-parchment font-display rounded border border-gold hover:bg-wine-dark transition-colors"
-          >
-            {{ localeService.t('save_button') }}
-          </button>
+
+          @if (!readOnly()) {
+            <button
+              (click)="saveCombat()"
+              class="px-4 py-2 bg-wine text-parchment font-display rounded border border-gold hover:bg-wine-dark transition-colors"
+            >
+              {{ localeService.t('save_button') }}
+            </button>
+          }
         </div>
       }
   
       <!-- INVENTARIO -->
       @if (activeSubTab() === 'inventory') {
         <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-4">
-          <div class="flex flex-col sm:flex-row gap-2">
-            <select [(ngModel)]="selectedEquipmentId" class="flex-1 px-3 py-2 rounded border border-gold">
-              <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-              @for (item of availableEquipment(); track item.id) {
-                <option [value]="item.id">{{ item.name }}</option>
-              }
-            </select>
-            <input type="number" min="1" [(ngModel)]="addQuantity" class="w-20 px-2 py-2 rounded border border-gold text-center" />
-            <button
-              (click)="addItem()"
-              class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
-            >
-              {{ localeService.t('add_button') }}
-            </button>
-          </div>
-  
+          @if (!readOnly()) {
+            <div class="flex flex-col sm:flex-row gap-2">
+              <select [(ngModel)]="selectedEquipmentId" class="flex-1 px-3 py-2 rounded border border-gold">
+                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                @for (item of availableEquipment(); track item.id) {
+                  <option [value]="item.id">{{ item.name }}</option>
+                }
+              </select>
+              <input type="number" min="1" [(ngModel)]="addQuantity" class="w-20 px-2 py-2 rounded border border-gold text-center" />
+              <button
+                (click)="addItem()"
+                class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+              >
+                {{ localeService.t('add_button') }}
+              </button>
+            </div>
+          }
+
           @if (c.inventory.length === 0) {
             <p class="text-slate-arcane italic text-sm">{{ localeService.t('empty_inventory') }}</p>
           } @else {
@@ -212,14 +235,16 @@
                   <div class="flex items-center gap-2">
                     <label class="flex items-center gap-1 text-xs">
                       <input
-                        type="checkbox" [checked]="item.equipped"
+                        type="checkbox" [checked]="item.equipped" [disabled]="readOnly()"
                         (change)="toggleEquip(item.rowId, item.equipped)"
                       />
                       {{ localeService.t('equipped_label') }}
                     </label>
-                    <button (click)="removeItem(item.rowId)" class="text-xs text-red-700 underline">
-                      {{ localeService.t('remove_button') }}
-                    </button>
+                    @if (!readOnly()) {
+                      <button (click)="removeItem(item.rowId)" class="text-xs text-red-700 underline">
+                        {{ localeService.t('remove_button') }}
+                      </button>
+                    }
                   </div>
                 </li>
               }
@@ -231,21 +256,23 @@
       <!-- INCANTESIMI -->
       @if (activeSubTab() === 'spells' && c.class_name) {
         <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-4">
-          <div class="flex flex-col sm:flex-row gap-2">
-            <select [(ngModel)]="selectedSpellIdToAdd" class="flex-1 px-3 py-2 rounded border border-gold">
-              <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-              @for (spell of availableClassSpells(); track spell.id) {
-                <option [value]="spell.id">{{ spell.name }}</option>
-              }
-            </select>
-            <button
-              (click)="addSpell()"
-              class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
-            >
-              {{ localeService.t('add_button') }}
-            </button>
-          </div>
-  
+          @if (!readOnly()) {
+            <div class="flex flex-col sm:flex-row gap-2">
+              <select [(ngModel)]="selectedSpellIdToAdd" class="flex-1 px-3 py-2 rounded border border-gold">
+                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                @for (spell of availableClassSpells(); track spell.id) {
+                  <option [value]="spell.id">{{ spell.name }}</option>
+                }
+              </select>
+              <button
+                (click)="addSpell()"
+                class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+              >
+                {{ localeService.t('add_button') }}
+              </button>
+            </div>
+          }
+
           @if (c.spells.length === 0) {
             <p class="text-slate-arcane italic text-sm">{{ localeService.t('no_spells_known') }}</p>
           } @else {
@@ -261,14 +288,16 @@
                   <div class="flex items-center gap-2">
                     <label class="flex items-center gap-1 text-xs">
                       <input
-                        type="checkbox" [checked]="spell.prepared"
+                        type="checkbox" [checked]="spell.prepared" [disabled]="readOnly()"
                         (change)="toggleSpellPrepared(spell.rowId, spell.prepared)"
                       />
                       {{ localeService.t('prepared_label') }}
                     </label>
-                    <button (click)="removeSpell(spell.rowId)" class="text-xs text-red-700 underline">
-                      {{ localeService.t('remove_button') }}
-                    </button>
+                    @if (!readOnly()) {
+                      <button (click)="removeSpell(spell.rowId)" class="text-xs text-red-700 underline">
+                        {{ localeService.t('remove_button') }}
+                      </button>
+                    }
                   </div>
                 </li>
               }
