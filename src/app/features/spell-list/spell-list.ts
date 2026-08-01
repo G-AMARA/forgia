@@ -1,6 +1,7 @@
 import { Component, inject, computed, signal, Input, Output, EventEmitter } from '@angular/core';
 import { ContentStore } from '../../core/content-store';
 import { LocaleService } from '../../core/locale';
+import { translateSpellSchool } from '../../core/spell-schools';
 
 interface SpellGroup {
   level: number;
@@ -66,5 +67,9 @@ export class SpellList {
 
   description(spell: any): string {
     return spell.description ?? '';
+  }
+
+  schoolLabel(spell: any): string {
+    return translateSpellSchool(spell.raw?.school, this.localeService.locale());
   }
 }

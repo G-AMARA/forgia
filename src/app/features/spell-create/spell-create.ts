@@ -41,6 +41,8 @@ export class SpellCreate {
   description = '';
   selectedClassIds = new Set<string>();
 
+  editingId: string | null = null;
+
   errorMsg = signal<string | null>(null);
   loading = signal(false);
 
@@ -75,6 +77,38 @@ export class SpellCreate {
     this.homebrewSpells.set(data ?? []);
   }
 
+  private resetForm() {
+    this.editingId = null;
+    this.name = '';
+    this.level = 0;
+    this.castingTime = '';
+    this.range = '';
+    this.duration = '';
+    this.damageEffect = '';
+    this.description = '';
+    this.selectedClassIds = new Set();
+  }
+
+  startEdit(spell: HomebrewSpell) {
+    this.editingId = spell.id;
+    this.name = spell.name;
+    this.level = spell.level;
+    this.castingTime = spell.casting_time ?? '';
+    this.range = spell.range ?? '';
+    this.duration = spell.duration ?? '';
+    this.damageEffect = spell.damage_effect ?? '';
+    this.description = spell.description ?? '';
+    const classNames = new Set((spell.classes ?? []).map((c) => c.name));
+    const matchingIds = this.classesCatalog()
+      .filter((c: any) => classNames.has(c.raw.name))
+      .map((c: any) => c.id);
+    this.selectedClassIds = new Set(matchingIds);
+  }
+
+  cancelEdit() {
+    this.resetForm();
+  }
+
   async submit() {
     this.errorMsg.set(null);
     this.loading.set(true);
@@ -83,7 +117,7 @@ export class SpellCreate {
       .filter((c: any) => this.selectedClassIds.has(c.id))
       .map((c: any) => ({ name: c.raw.name }));
 
-    const { error } = await this.supabase.client.from('spells').insert({
+    const payload = {
       name: this.name,
       level: this.level,
       sourcebook_code: 'homebrew',
@@ -93,19 +127,16 @@ export class SpellCreate {
       duration: this.duration || null,
       damage_effect: this.damageEffect || null,
       description: this.description || null,
-    });
+    };
+
+    const { error } = this.editingId
+      ? await this.supabase.client.from('spells').update(payload).eq('id', this.editingId)
+      : await this.supabase.client.from('spells').insert(payload);
 
     if (error) {
       this.errorMsg.set(error.message);
     } else {
-      this.name = '';
-      this.level = 0;
-      this.castingTime = '';
-      this.range = '';
-      this.duration = '';
-      this.damageEffect = '';
-      this.description = '';
-      this.selectedClassIds = new Set();
+      this.resetForm();
       this.contentStore.invalidate('spells');
       await this.loadHomebrewSpells();
     }

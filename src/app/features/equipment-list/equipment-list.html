@@ -30,6 +30,9 @@
                       <div class="p-3 flex-1 flex justify-between items-center">
                         <span class="text-sm">{{ item.name }}</span>
                         <span class="text-xs text-slate-arcane text-right">
+                          @if (formatArmorClass(item)) {
+                            {{ formatArmorClass(item) }}<br />
+                          }
                           {{ formatCost(item) }}
                           @if (formatWeight(item)) {
                             <br />{{ formatWeight(item) }}

@@ -8,6 +8,8 @@ import { SKILLS } from '../../core/skills';
 import { getClassImagePath } from '../../core/class-images';
 import { getAbilityImagePath } from '../../core/ability-images';
 import { getSpellcastingInfo } from '../../core/spellcasting';
+import { calculateArmorClass } from '../../core/armor';
+import { translateSpellSchool } from '../../core/spell-schools';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
 
@@ -53,7 +55,8 @@ export class CharacterSheet implements OnInit {
 
   currentHp = 0;
   maxHp = 0;
-  armorClass = 10;
+  selectedArmorId = '';
+  shieldEquipped = false;
   abilityScores: Record<string, number> = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
   skillProficiencies = new Set<string>();
   damageResistancesText = '';
@@ -105,6 +108,9 @@ export class CharacterSheet implements OnInit {
   selectedEquipmentId = '';
   addQuantity = 1;
   selectedSpellIdToAdd = '';
+  spellSearchTerm = signal('');
+  spellFilterSchool = signal('');
+  spellFilterLevel = signal('');
 
   savedMsg = signal<string | null>(null);
   avatarError = signal<string | null>(null);
@@ -124,7 +130,8 @@ export class CharacterSheet implements OnInit {
         this.identityXp = c.experience_points;
         this.currentHp = c.current_hp ?? 0;
         this.maxHp = c.max_hp ?? 0;
-        this.armorClass = c.armor_class ?? 10;
+        this.selectedArmorId = c.equipped_armor_id ?? '';
+        this.shieldEquipped = c.shield_equipped;
         this.abilityScores = { ...c.ability_scores };
         this.appliedBonus = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
         this.identityBackgroundBonuses = c.background_id
@@ -151,6 +158,52 @@ export class CharacterSheet implements OnInit {
     return mod >= 0 ? `+${mod}` : `${mod}`;
   }
 
+  // Progressione standard D&D 5e: +2 dal livello 1 al 4, poi +1 ogni 4 livelli fino a +6 al livello 20.
+  proficiencyBonus(level: number): number {
+    return Math.ceil(level / 4) + 1;
+  }
+
+  // Armature indossabili dal catalogo (esclude lo scudo, gestito a parte come bonus separato).
+  availableArmors(): any[] {
+    return this.allEquipment().filter(
+      (e: any) => e.raw.type === 'Armor' && e.raw.armor_category !== 'shield' && e.raw.armor_class != null
+    );
+  }
+
+  // CA sempre calcolata da armatura scelta (+ scudo se spuntato) e Destrezza corrente: non è più
+  // un valore modificabile a mano, così resta automaticamente coerente se la Destrezza cambia.
+  currentArmorClass(): number {
+    const dexMod = this.abilityModifier(this.abilityScores['dex']);
+    const armor = this.allEquipment().find((e: any) => e.id === this.selectedArmorId);
+    let ac = armor ? calculateArmorClass(armor.raw.armor_class, armor.raw.armor_category, dexMod) : 10 + dexMod;
+    if (this.shieldEquipped) ac += 2;
+    return ac;
+  }
+
+  // Colore distintivo per livello incantesimo: bordo + sfumatura leggera delle card.
+  private static readonly SPELL_LEVEL_COLORS: Record<number, string> = {
+    0: '#8C8C8C',
+    1: '#4E9F3D',
+    2: '#00A8E8',
+    3: '#FF6B00',
+    4: '#D62828',
+    5: '#8A2BE2',
+    6: '#4A0E4E',
+    7: '#FF007F',
+    8: '#FFD700',
+  };
+
+  spellLevelColor(level: number): string {
+    if (level >= 9) return '#1A1A1A';
+    return CharacterSheet.SPELL_LEVEL_COLORS[level] ?? '#8C8C8C';
+  }
+
+  spellLevelOptionLabel(level: number): string {
+    return level === 0
+      ? this.localeService.t('cantrip_short')
+      : `${this.localeService.t('level_label')} ${level}`;
+  }
+
   // Colore del cerchietto del modificatore: verde se positivo, rosso se negativo, grigio se zero.
   modifierBadgeClass(score: number): string {
     const mod = this.abilityModifier(score);
@@ -171,6 +224,25 @@ export class CharacterSheet implements OnInit {
 
   isSkillChecked(key: string): boolean {
     return this.skillProficiencies.has(key);
+  }
+
+  // Breve descrizione della razza/classe/sottoclasse/background attualmente selezionati nel form
+  // identità (tab Generale): cercate per id nei rispettivi cataloghi già caricati. Null se assente,
+  // così le card in template restano nascoste finché in Gestione non viene compilato il campo.
+  getRaceDescription(): string | null {
+    return this.races().find((r: any) => r.id === this.identityRaceId)?.description ?? null;
+  }
+
+  getClassDescription(): string | null {
+    return this.classesContent().find((c: any) => c.id === this.identityClassId)?.description ?? null;
+  }
+
+  getSubclassDescription(): string | null {
+    return this.allSubclasses().find((s: any) => s.id === this.identitySubclassId)?.description ?? null;
+  }
+
+  getBackgroundDescription(): string | null {
+    return this.backgroundsContent().find((b: any) => b.id === this.identityBackgroundId)?.description ?? null;
   }
 
   // Traduce il nome grezzo inglese della razza al nome tradotto dal catalogo.
@@ -285,7 +357,9 @@ export class CharacterSheet implements OnInit {
     await this.characterStore.updateCombatStats(c.id, {
       currentHp: this.currentHp,
       maxHp: this.maxHp,
-      armorClass: this.armorClass,
+      armorClass: this.currentArmorClass(),
+      equippedArmorId: this.selectedArmorId || null,
+      shieldEquipped: this.shieldEquipped,
       abilityScores: this.abilityScores,
       skillProficiencies: Array.from(this.skillProficiencies),
       damageResistances: this.splitList(this.damageResistancesText),
@@ -332,7 +406,14 @@ export class CharacterSheet implements OnInit {
     input.value = '';
   }
 
-  availableEquipment = computed(() => this.allEquipment());
+  equipmentSearchTerm = signal('');
+
+  availableEquipment = computed(() => {
+    const term = this.equipmentSearchTerm().trim().toLowerCase();
+    const equipment = this.allEquipment();
+    if (!term) return equipment;
+    return equipment.filter((item: any) => item.name.toLowerCase().includes(term));
+  });
 
   actionError = signal<string | null>(null);
 
@@ -402,12 +483,21 @@ export class CharacterSheet implements OnInit {
     if (error) this.actionError.set(error.message);
   }
 
+  // Nome inglese canonico della classe del personaggio, risalito dal suo id: sia
+  // getSpellcastingInfo() sia spell.raw.classes ragionano sul nome base SRD in inglese,
+  // mentre c.class_name può essere tradotto (vedi character-store.ts) e non va usato qui.
+  private canonicalClassName = computed(() => {
+    const c = this.character();
+    if (!c || !c.class_id) return null;
+    return this.classesContent().find((cls: any) => cls.id === c.class_id)?.raw?.name ?? null;
+  });
+
   // Slot incantesimo e trucchetti disponibili, calcolati da classe+livello secondo
   // le tabelle standard SRD (solo per le 8 classi incantatrici canoniche: null altrimenti).
   spellcastingInfo = computed(() => {
     const c = this.character();
     if (!c) return null;
-    return getSpellcastingInfo(c.class_name, c.level, c.ability_scores);
+    return getSpellcastingInfo(this.canonicalClassName(), c.level, c.ability_scores);
   });
 
   knownCantripsCount(): number {
@@ -418,12 +508,46 @@ export class CharacterSheet implements OnInit {
     return this.character()?.spells.filter((s) => s.level > 0).length ?? 0;
   }
 
-  availableClassSpells = computed(() => {
-    const c = this.character();
-    if (!c || !c.class_name) return [];
+  // Incantesimi disponibili per la classe del personaggio, prima dei filtri di ricerca:
+  // serve sia per popolare le opzioni scuola/livello sia come base per il filtro.
+  private classSpells = computed(() => {
+    const canonicalClassName = this.canonicalClassName();
+    if (!canonicalClassName) return [];
     return this.allSpells().filter((spell: any) =>
-      (spell.raw.classes ?? []).some((cn: any) => cn.name === c.class_name)
+      (spell.raw.classes ?? []).some((cn: any) => cn.name === canonicalClassName)
     );
+  });
+
+  // value = school grezzo (inglese, usato per il filtro), label = tradotto per la UI.
+  availableSpellSchools = computed(() => {
+    const locale = this.localeService.locale();
+    const schools = [...new Set(this.classSpells().map((s: any) => s.raw.school).filter(Boolean))];
+    return schools
+      .map((school: string) => ({ value: school, label: translateSpellSchool(school, locale) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  });
+
+  availableSpellLevels = computed(() =>
+    [...new Set(this.classSpells().map((s: any) => s.raw.level ?? 0))].sort((a: number, b: number) => a - b)
+  );
+
+  availableClassSpells = computed(() => {
+    const term = this.spellSearchTerm().trim().toLowerCase();
+    const school = this.spellFilterSchool();
+    const level = this.spellFilterLevel();
+
+    return this.classSpells().filter((spell: any) => {
+      if (
+        term &&
+        !spell.name.toLowerCase().includes(term) &&
+        !(spell.description ?? '').toLowerCase().includes(term)
+      ) {
+        return false;
+      }
+      if (school && spell.raw.school !== school) return false;
+      if (level !== '' && String(spell.raw.level ?? 0) !== level) return false;
+      return true;
+    });
   });
 
   // Gli incantesimi del personaggio arrivano da una join diretta (characters.spells)
@@ -435,6 +559,7 @@ export class CharacterSheet implements OnInit {
 
     const catalogMap = new Map(this.allSpells().map((s: any) => [s.id, s]));
     const groups = new Map<number, any[]>();
+    const locale = this.localeService.locale();
 
     for (const spell of c.spells) {
       const detail = catalogMap.get(spell.spellId);
@@ -443,7 +568,7 @@ export class CharacterSheet implements OnInit {
         rowId: spell.rowId,
         name: detail?.name ?? spell.name,
         level,
-        school: detail?.raw?.school ?? spell.school ?? '',
+        school: translateSpellSchool(detail?.raw?.school ?? spell.school ?? '', locale),
         castingTime: detail?.raw?.casting_time ?? null,
         range: detail?.raw?.range ?? null,
         duration: detail?.raw?.duration ?? null,

@@ -82,4 +82,13 @@ export class EquipmentList {
     const kg = (lb * 0.453592).toFixed(1);
     return `${kg} kg`;
   }
+
+  // Solo per il gruppo Armature: "CA 11 (Leggera)" ecc. Null per tutto il resto dell'equipaggiamento.
+  formatArmorClass(item: any): string | null {
+    const ac = item.raw.armor_class;
+    if (ac == null) return null;
+    const category = item.raw.armor_category;
+    const categoryLabel = category ? this.localeService.t('armor_category_' + category) : '';
+    return `${this.localeService.t('armor_class_short_label')} ${ac}${categoryLabel ? ' (' + categoryLabel + ')' : ''}`;
+  }
 }

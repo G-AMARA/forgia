@@ -114,6 +114,9 @@
                   <option [value]="race.id">{{ race.name }}</option>
                 }
               </select>
+              @if (getRaceDescription(); as desc) {
+                <p class="text-xs italic bg-parchment-dark/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+              }
             </div>
 
             <div class="flex flex-col gap-1">
@@ -124,6 +127,9 @@
                   <option [value]="cls.id">{{ cls.name }}</option>
                 }
               </select>
+              @if (getClassDescription(); as desc) {
+                <p class="text-xs italic bg-parchment-dark/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+              }
             </div>
 
             @if (availableSubclasses().length > 0) {
@@ -135,6 +141,9 @@
                     <option [value]="sub.id">{{ sub.name }}</option>
                   }
                 </select>
+                @if (getSubclassDescription(); as desc) {
+                  <p class="text-xs italic bg-parchment-dark/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+                }
               </div>
             }
 
@@ -146,6 +155,9 @@
                   <option [value]="bg.id">{{ bg.name }}</option>
                 }
               </select>
+              @if (getBackgroundDescription(); as desc) {
+                <p class="text-xs italic bg-parchment-dark/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+              }
             </div>
 
             <div class="flex flex-col gap-1">
@@ -248,22 +260,49 @@
       <!-- COMBATTIMENTO -->
       @if (activeSubTab() === 'combat') {
         <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-5">
-          <!-- PF / CA -->
-          <div class="grid grid-cols-3 gap-4 max-w-md">
+          <!-- PF / CA / Bonus Competenza / Iniziativa -->
+          <div class="grid grid-cols-3 sm:grid-cols-5 gap-4 max-w-2xl">
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold">{{ localeService.t('current_hp_label') }}</label>
+              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('current_hp_label') }}</label>
               <input type="number" [(ngModel)]="currentHp" [disabled]="readOnly()" class="px-2 py-1 rounded border border-gold text-center disabled:opacity-70" />
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold">{{ localeService.t('max_hp_label') }}</label>
+              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('max_hp_label') }}</label>
               <input type="number" [(ngModel)]="maxHp" [disabled]="readOnly()" class="px-2 py-1 rounded border border-gold text-center disabled:opacity-70" />
             </div>
             <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold">{{ localeService.t('armor_class_label') }}</label>
-              <input type="number" [(ngModel)]="armorClass" [disabled]="readOnly()" class="px-2 py-1 rounded border border-gold text-center disabled:opacity-70" />
+              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('armor_class_label') }}</label>
+              <p class="px-2 py-1 rounded border border-gold text-center bg-parchment-dark/60">{{ currentArmorClass() }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('proficiency_bonus_label') }}</label>
+              <p class="px-2 py-1 rounded border border-gold text-center bg-parchment-dark/60">{{ formatModifier(proficiencyBonus(c.level)) }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('initiative_label') }}</label>
+              <p class="px-2 py-1 rounded border border-gold text-center bg-parchment-dark/60">{{ formatModifier(abilityModifier(abilityScores['dex'])) }}</p>
             </div>
           </div>
-  
+
+          <!-- Selezione armatura: la CA sopra si ricalcola da sola in base a categoria + Destrezza -->
+          @if (!readOnly()) {
+            <div class="flex flex-col sm:flex-row sm:items-end gap-2 max-w-2xl">
+              <div class="flex flex-col gap-1 flex-1">
+                <label class="text-xs font-semibold">{{ localeService.t('armor_select_label') }}</label>
+                <select [(ngModel)]="selectedArmorId" class="px-2 py-1 rounded border border-gold bg-white text-ink">
+                  <option value="">{{ localeService.t('armor_none_label') }}</option>
+                  @for (armor of availableArmors(); track armor.id) {
+                    <option [value]="armor.id">{{ armor.name }} (CA {{ armor.raw.armor_class }})</option>
+                  }
+                </select>
+              </div>
+              <label class="flex items-center gap-1 text-sm pb-1">
+                <input type="checkbox" [(ngModel)]="shieldEquipped" />
+                {{ localeService.t('armor_category_shield') }} (+2)
+              </label>
+            </div>
+          }
+
           <!-- Punteggi caratteristica -->
           <div>
             <label class="text-sm font-semibold block mb-2">{{ localeService.t('ability_scores_label') }}</label>
@@ -359,20 +398,31 @@
       @if (activeSubTab() === 'inventory') {
         <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-4">
           @if (!readOnly()) {
-            <div class="flex flex-col sm:flex-row gap-2">
-              <select [(ngModel)]="selectedEquipmentId" class="flex-1 px-3 py-2 rounded border border-gold">
-                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-                @for (item of availableEquipment(); track item.id) {
-                  <option [value]="item.id">{{ item.name }}</option>
-                }
-              </select>
-              <input type="number" min="1" [(ngModel)]="addQuantity" class="w-20 px-2 py-2 rounded border border-gold text-center" />
-              <button
-                (click)="addItem()"
-                class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
-              >
-                {{ localeService.t('add_button') }}
-              </button>
+            <div class="space-y-2">
+              <input
+                type="search"
+                [(ngModel)]="equipmentSearchTerm"
+                [placeholder]="localeService.t('equipment_search_placeholder')"
+                class="w-full px-3 py-2 rounded border border-gold bg-white/60 text-ink text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright"
+              />
+              <div class="flex flex-col sm:flex-row gap-2">
+                <select [(ngModel)]="selectedEquipmentId" class="flex-1 px-3 py-2 rounded border border-gold">
+                  <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                  @for (item of availableEquipment(); track item.id) {
+                    <option [value]="item.id">{{ item.name }}</option>
+                  }
+                </select>
+                <input type="number" min="1" [(ngModel)]="addQuantity" class="w-20 px-2 py-2 rounded border border-gold text-center" />
+                <button
+                  (click)="addItem()"
+                  class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+                >
+                  {{ localeService.t('add_button') }}
+                </button>
+              </div>
+              @if (availableEquipment().length === 0) {
+                <p class="text-slate-arcane italic text-xs">{{ localeService.t('no_equipment_match_filter') }}</p>
+              }
             </div>
           }
 
@@ -438,19 +488,44 @@
           }
 
           @if (!readOnly()) {
-            <div class="flex flex-col sm:flex-row gap-2">
-              <select [(ngModel)]="selectedSpellIdToAdd" class="flex-1 px-3 py-2 rounded border border-gold">
-                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-                @for (spell of availableClassSpells(); track spell.id) {
-                  <option [value]="spell.id">{{ spell.name }}</option>
-                }
-              </select>
-              <button
-                (click)="addSpell()"
-                class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
-              >
-                {{ localeService.t('add_button') }}
-              </button>
+            <div class="space-y-2">
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="search"
+                  [(ngModel)]="spellSearchTerm"
+                  [placeholder]="localeService.t('spell_search_placeholder')"
+                  class="flex-1 px-3 py-2 rounded border border-gold bg-white/60 text-ink text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright"
+                />
+                <select [(ngModel)]="spellFilterSchool" class="px-3 py-2 rounded border border-gold text-sm">
+                  <option value="">{{ localeService.t('spell_filter_school_label') }}</option>
+                  @for (school of availableSpellSchools(); track school.value) {
+                    <option [value]="school.value">{{ school.label }}</option>
+                  }
+                </select>
+                <select [(ngModel)]="spellFilterLevel" class="px-3 py-2 rounded border border-gold text-sm">
+                  <option value="">{{ localeService.t('spell_filter_level_label') }}</option>
+                  @for (level of availableSpellLevels(); track level) {
+                    <option [value]="level">{{ spellLevelOptionLabel(level) }}</option>
+                  }
+                </select>
+              </div>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <select [(ngModel)]="selectedSpellIdToAdd" class="flex-1 px-3 py-2 rounded border border-gold">
+                  <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                  @for (spell of availableClassSpells(); track spell.id) {
+                    <option [value]="spell.id">{{ spell.name }}</option>
+                  }
+                </select>
+                <button
+                  (click)="addSpell()"
+                  class="px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+                >
+                  {{ localeService.t('add_button') }}
+                </button>
+              </div>
+              @if (availableClassSpells().length === 0) {
+                <p class="text-slate-arcane italic text-xs">{{ localeService.t('no_spells_match_filter') }}</p>
+              }
             </div>
           }
 
@@ -463,7 +538,12 @@
                   <h4 class="font-display text-sm text-wine mb-2">{{ group.label }} ({{ group.spells.length }})</h4>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     @for (spell of group.spells; track spell.rowId) {
-                      <div class="flex bg-white/60 border border-gold rounded-lg overflow-hidden">
+                      <div
+                        class="relative flex rounded-lg overflow-hidden bg-cover bg-center border-2"
+                        style="background-image: url('/spells/incantesimi.png')"
+                        [style.border-color]="spellLevelColor(spell.level)"
+                        [style.box-shadow]="'0 0 14px 1px ' + spellLevelColor(spell.level) + '66'"
+                      >
                         <div class="w-1.5 shrink-0" [class]="spell.prepared ? 'bg-forest' : 'bg-slate-arcane'"></div>
                         <div class="p-3 flex-1 space-y-1">
                           <div class="flex items-start justify-between gap-2">

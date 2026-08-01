@@ -21,7 +21,10 @@ export class ClassCreate {
 
   name = '';
   hitDie = 8;
+  description = '';
   savingThrows = new Set<string>();
+
+  editingId: string | null = null;
 
   errorMsg = signal<string | null>(null);
   loading = signal(false);
@@ -40,28 +43,53 @@ export class ClassCreate {
     return this.savingThrows.has(key);
   }
 
-  private refreshClasses() {
-    this.contentStore.invalidate('classes');
-    this.classes = this.contentStore.getContent('classes');
+  private async refreshClasses() {
+    await this.contentStore.refresh('classes');
+  }
+
+  private resetForm() {
+    this.editingId = null;
+    this.name = '';
+    this.hitDie = 8;
+    this.description = '';
+    this.savingThrows = new Set();
+  }
+
+  startEdit(cls: any) {
+    this.editingId = cls.id;
+    this.name = cls.raw.name;
+    this.hitDie = cls.raw.hit_die ?? 8;
+    this.description = cls.raw.description ?? '';
+    const proficiencies = (cls.raw.saving_throw_proficiencies ?? []).map((p: any) =>
+      typeof p === 'string' ? p : p.index ?? p.name
+    );
+    this.savingThrows = new Set(proficiencies);
+  }
+
+  cancelEdit() {
+    this.resetForm();
   }
 
   async submit() {
     this.errorMsg.set(null);
     this.loading.set(true);
 
-    const { error } = await this.supabase.client.from('classes').insert({
+    const payload = {
       name: this.name,
       hit_die: this.hitDie,
+      description: this.description || null,
       saving_throw_proficiencies: Array.from(this.savingThrows),
-    });
+    };
+
+    const { error } = this.editingId
+      ? await this.supabase.client.from('classes').update(payload).eq('id', this.editingId)
+      : await this.supabase.client.from('classes').insert(payload);
 
     if (error) {
       this.errorMsg.set(error.message);
     } else {
-      this.name = '';
-      this.hitDie = 8;
-      this.savingThrows = new Set();
-      this.refreshClasses();
+      this.resetForm();
+      await this.refreshClasses();
     }
 
     this.loading.set(false);
@@ -81,7 +109,7 @@ export class ClassCreate {
 
     const { error } = await this.supabase.client.from('classes').delete().eq('id', id);
     if (!error) {
-      this.refreshClasses();
+      await this.refreshClasses();
     }
   }
 }

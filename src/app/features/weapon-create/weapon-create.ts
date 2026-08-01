@@ -28,6 +28,8 @@ export class WeaponCreate {
   properties = '';
   suggestedAttackAbilities = new Set<string>(['str']);
 
+  editingId: string | null = null;
+
   errorMsg = signal<string | null>(null);
   loading = signal(false);
 
@@ -45,9 +47,40 @@ export class WeaponCreate {
     return this.suggestedAttackAbilities.has(key);
   }
 
-  private refreshWeapons() {
-    this.contentStore.invalidate('weapons');
-    this.weapons = this.contentStore.getContent('weapons');
+  private async refreshWeapons() {
+    await this.contentStore.refresh('weapons');
+  }
+
+  private resetForm() {
+    this.editingId = null;
+    this.name = '';
+    this.damageDice = '';
+    this.damageType = '';
+    this.versatileDamage = '';
+    this.rangeCategory = 'melee';
+    this.normalRange = null;
+    this.longRange = null;
+    this.weight = null;
+    this.properties = '';
+    this.suggestedAttackAbilities = new Set(['str']);
+  }
+
+  startEdit(weapon: any) {
+    this.editingId = weapon.id;
+    this.name = weapon.raw.name;
+    this.damageDice = weapon.raw.damage_dice ?? '';
+    this.damageType = weapon.raw.damage_type ?? '';
+    this.versatileDamage = weapon.raw.versatile_damage ?? '';
+    this.rangeCategory = weapon.raw.range_category ?? 'melee';
+    this.normalRange = weapon.raw.normal_range ?? null;
+    this.longRange = weapon.raw.long_range ?? null;
+    this.weight = weapon.raw.weight ?? null;
+    this.properties = weapon.raw.properties ?? '';
+    this.suggestedAttackAbilities = new Set(weapon.raw.suggested_attack_ability ?? ['str']);
+  }
+
+  cancelEdit() {
+    this.resetForm();
   }
 
   async submit() {
@@ -59,7 +92,7 @@ export class WeaponCreate {
     this.errorMsg.set(null);
     this.loading.set(true);
 
-    const { error } = await this.supabase.client.from('weapons').insert({
+    const payload = {
       name: this.name,
       damage_dice: this.damageDice,
       damage_type: this.damageType,
@@ -70,22 +103,17 @@ export class WeaponCreate {
       weight: this.weight,
       properties: this.properties || null,
       suggested_attack_ability: Array.from(this.suggestedAttackAbilities),
-    });
+    };
+
+    const { error } = this.editingId
+      ? await this.supabase.client.from('weapons').update(payload).eq('id', this.editingId)
+      : await this.supabase.client.from('weapons').insert(payload);
 
     if (error) {
       this.errorMsg.set(error.message);
     } else {
-      this.name = '';
-      this.damageDice = '';
-      this.damageType = '';
-      this.versatileDamage = '';
-      this.rangeCategory = 'melee';
-      this.normalRange = null;
-      this.longRange = null;
-      this.weight = null;
-      this.properties = '';
-      this.suggestedAttackAbilities = new Set(['str']);
-      this.refreshWeapons();
+      this.resetForm();
+      await this.refreshWeapons();
     }
 
     this.loading.set(false);
@@ -101,7 +129,7 @@ export class WeaponCreate {
 
     const { error } = await this.supabase.client.from('weapons').delete().eq('id', id);
     if (!error) {
-      this.refreshWeapons();
+      await this.refreshWeapons();
     }
   }
 }

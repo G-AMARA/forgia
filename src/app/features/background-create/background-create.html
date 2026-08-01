@@ -10,6 +10,14 @@
       />
     </div>
 
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('background_description_label') }}</label>
+      <textarea
+        [(ngModel)]="description" name="description" rows="2"
+        class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine resize-none"
+      ></textarea>
+    </div>
+
     <div class="flex flex-col gap-2">
       <label class="text-sm font-semibold">{{ localeService.t('background_skills_label') }}</label>
       <div class="flex flex-wrap gap-2">
@@ -27,12 +35,22 @@
       </div>
     </div>
 
-    <button
-      type="submit" [disabled]="loading()"
-      class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
-    >
-      {{ localeService.t('background_add_to_catalog_button') }}
-    </button>
+    <div class="flex gap-2">
+      <button
+        type="submit" [disabled]="loading()"
+        class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+      >
+        {{ editingId ? localeService.t('save_changes_button') : localeService.t('background_add_to_catalog_button') }}
+      </button>
+      @if (editingId) {
+        <button
+          type="button" (click)="cancelEdit()"
+          class="self-start px-5 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-ink transition-colors"
+        >
+          {{ localeService.t('cancel_button') }}
+        </button>
+      }
+    </div>
 
     @if (errorMsg()) {
       <p class="text-sm text-red-700">{{ errorMsg() }}</p>
@@ -51,9 +69,14 @@
             <div class="p-3 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <h4 class="font-display text-base text-ink">{{ bg.name }}</h4>
-                <button (click)="deleteBackground(bg.id, bg.name)" class="text-xs text-red-700 underline shrink-0">
-                  {{ localeService.t('delete_button') }}
-                </button>
+                <div class="flex gap-2 shrink-0">
+                  <button (click)="startEdit(bg)" class="text-xs text-wine underline">
+                    {{ localeService.t('edit_button') }}
+                  </button>
+                  <button (click)="deleteBackground(bg.id, bg.name)" class="text-xs text-red-700 underline">
+                    {{ localeService.t('delete_button') }}
+                  </button>
+                </div>
               </div>
               <p class="text-xs text-slate-arcane">{{ skillNames(bg) }}</p>
             </div>

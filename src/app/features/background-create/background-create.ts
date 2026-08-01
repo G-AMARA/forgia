@@ -26,7 +26,10 @@ export class BackgroundCreate {
   skillKeys = SKILL_KEYS;
 
   name = '';
+  description = '';
   selectedSkills = new Set<string>();
+
+  editingId: string | null = null;
 
   errorMsg = signal<string | null>(null);
   loading = signal(false);
@@ -45,26 +48,56 @@ export class BackgroundCreate {
     return this.selectedSkills.has(key);
   }
 
-  private refreshBackgrounds() {
-    this.contentStore.invalidate('backgrounds');
-    this.backgrounds = this.contentStore.getContent('backgrounds');
+  private async refreshBackgrounds() {
+    await this.contentStore.refresh('backgrounds');
+  }
+
+  private resetForm() {
+    this.editingId = null;
+    this.name = '';
+    this.description = '';
+    this.selectedSkills = new Set();
+  }
+
+  // Le competenze arrivano come stringhe piatte (homebrew), oggetti SRD con index
+  // tipo "skill-insight", o oggetti homebrew più vecchi con solo il nome inglese.
+  private toSkillKey(p: any): string {
+    if (typeof p === 'string') return p;
+    if (p.index) return p.index.replace(/^skill-/, '');
+    return (p.name ?? '').toLowerCase().replace(/\s+/g, '_');
+  }
+
+  startEdit(background: any) {
+    this.editingId = background.id;
+    this.name = background.raw.name;
+    this.description = background.raw.description ?? '';
+    const proficiencies = (background.raw.skill_proficiencies ?? []).map((p: any) => this.toSkillKey(p));
+    this.selectedSkills = new Set(proficiencies);
+  }
+
+  cancelEdit() {
+    this.resetForm();
   }
 
   async submit() {
     this.errorMsg.set(null);
     this.loading.set(true);
 
-    const { error } = await this.supabase.client.from('backgrounds').insert({
+    const payload = {
       name: this.name,
+      description: this.description || null,
       skill_proficiencies: Array.from(this.selectedSkills),
-    });
+    };
+
+    const { error } = this.editingId
+      ? await this.supabase.client.from('backgrounds').update(payload).eq('id', this.editingId)
+      : await this.supabase.client.from('backgrounds').insert(payload);
 
     if (error) {
       this.errorMsg.set(error.message);
     } else {
-      this.name = '';
-      this.selectedSkills = new Set();
-      this.refreshBackgrounds();
+      this.resetForm();
+      await this.refreshBackgrounds();
     }
 
     this.loading.set(false);
@@ -84,7 +117,7 @@ export class BackgroundCreate {
 
     const { error } = await this.supabase.client.from('backgrounds').delete().eq('id', id);
     if (!error) {
-      this.refreshBackgrounds();
+      await this.refreshBackgrounds();
     }
   }
 }

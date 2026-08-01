@@ -71,6 +71,25 @@ export class ContentStore {
     this.cache.delete(`${table}:${locale}`);
   }
 
+  /**
+   * Ricarica i dati e li scrive sullo STESSO signal già in cache (invece di invalidate()
+   * + getContent(), che ne crea uno nuovo): più affidabile dopo insert/update/delete in
+   * Gestione, perché i template che già leggono il vecchio signal si aggiornano subito
+   * senza bisogno di ricaricare la pagina. Restituisce la Promise per poterla attendere.
+   */
+  async refresh(table: ContentTable): Promise<void> {
+    const locale = this.localeService.locale();
+    const cacheKey = `${table}:${locale}`;
+
+    let contentSignal = this.cache.get(cacheKey);
+    if (!contentSignal) {
+      contentSignal = signal<LocalizedContent[]>([]);
+      this.cache.set(cacheKey, contentSignal);
+    }
+
+    await this.fetchAndMerge(table, locale, contentSignal);
+  }
+
   private async fetchAndMerge(
     table: ContentTable,
     locale: string,

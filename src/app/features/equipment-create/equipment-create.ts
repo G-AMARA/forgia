@@ -26,6 +26,8 @@ export class EquipmentCreate {
   name = '';
   weight: number | null = null;
 
+  editingId: string | null = null;
+
   errorMsg = signal<string | null>(null);
   loading = signal(false);
 
@@ -42,22 +44,41 @@ export class EquipmentCreate {
     this.homebrewEquipment.set(data ?? []);
   }
 
+  private resetForm() {
+    this.editingId = null;
+    this.name = '';
+    this.weight = null;
+  }
+
+  startEdit(item: HomebrewEquipment) {
+    this.editingId = item.id;
+    this.name = item.name;
+    this.weight = item.weight;
+  }
+
+  cancelEdit() {
+    this.resetForm();
+  }
+
   async submit() {
     this.errorMsg.set(null);
     this.loading.set(true);
 
-    const { error } = await this.supabase.client.from('equipment').insert({
+    const payload = {
       name: this.name,
       weight: this.weight,
       type: 'Adventuring Gear',
       sourcebook_code: 'homebrew',
-    });
+    };
+
+    const { error } = this.editingId
+      ? await this.supabase.client.from('equipment').update(payload).eq('id', this.editingId)
+      : await this.supabase.client.from('equipment').insert(payload);
 
     if (error) {
       this.errorMsg.set(error.message);
     } else {
-      this.name = '';
-      this.weight = null;
+      this.resetForm();
       this.contentStore.invalidate('equipment');
       await this.loadHomebrewEquipment();
     }

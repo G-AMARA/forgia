@@ -19,34 +19,59 @@ export class RaceCreate {
 
   name = '';
   speed = 9;
+  description = '';
   abilityBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
   abilityKeys: (keyof typeof this.abilityBonuses)[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
+  editingId: string | null = null;
 
   errorMsg = signal<string | null>(null);
   loading = signal(false);
 
-  private refreshRaces() {
-    this.contentStore.invalidate('races');
-    this.races = this.contentStore.getContent('races');
+  private async refreshRaces() {
+    await this.contentStore.refresh('races');
+  }
+
+  private resetForm() {
+    this.editingId = null;
+    this.name = '';
+    this.speed = 9;
+    this.description = '';
+    this.abilityBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+  }
+
+  startEdit(race: any) {
+    this.editingId = race.id;
+    this.name = race.raw.name;
+    this.speed = race.raw.speed ?? 9;
+    this.description = race.raw.description ?? '';
+    this.abilityBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0, ...normalizeAbilityBonuses(race.raw.ability_bonuses) };
+  }
+
+  cancelEdit() {
+    this.resetForm();
   }
 
   async submit() {
     this.errorMsg.set(null);
     this.loading.set(true);
 
-    const { error } = await this.supabase.client.from('races').insert({
+    const payload = {
       name: this.name,
       speed: this.speed,
+      description: this.description || null,
       ability_bonuses: this.abilityBonuses,
-    });
+    };
+
+    const { error } = this.editingId
+      ? await this.supabase.client.from('races').update(payload).eq('id', this.editingId)
+      : await this.supabase.client.from('races').insert(payload);
 
     if (error) {
       this.errorMsg.set(error.message);
     } else {
-      this.name = '';
-      this.speed = 9;
-      this.abilityBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
-      this.refreshRaces();
+      this.resetForm();
+      await this.refreshRaces();
     }
 
     this.loading.set(false);
@@ -66,7 +91,7 @@ export class RaceCreate {
 
     const { error } = await this.supabase.client.from('races').delete().eq('id', id);
     if (!error) {
-      this.refreshRaces();
+      await this.refreshRaces();
     }
   }
 }

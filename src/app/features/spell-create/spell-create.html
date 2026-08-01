@@ -73,12 +73,22 @@
       ></textarea>
     </div>
 
-    <button
-      type="submit" [disabled]="loading()"
-      class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
-    >
-      {{ localeService.t('spell_add_to_catalog_button') }}
-    </button>
+    <div class="flex gap-2">
+      <button
+        type="submit" [disabled]="loading()"
+        class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+      >
+        {{ editingId ? localeService.t('save_changes_button') : localeService.t('spell_add_to_catalog_button') }}
+      </button>
+      @if (editingId) {
+        <button
+          type="button" (click)="cancelEdit()"
+          class="self-start px-5 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-ink transition-colors"
+        >
+          {{ localeService.t('cancel_button') }}
+        </button>
+      }
+    </div>
 
     @if (errorMsg()) {
       <p class="text-sm text-red-700">{{ errorMsg() }}</p>
@@ -115,9 +125,14 @@
                 <td class="py-2 pr-2">{{ s.damage_effect }}</td>
                 <td class="py-2 pr-2">{{ classNames(s) }}</td>
                 <td class="py-2">
-                  <button (click)="deleteSpell(s.id, s.name)" class="text-xs text-red-700 underline">
-                    {{ localeService.t('delete_button') }}
-                  </button>
+                  <div class="flex gap-2">
+                    <button (click)="startEdit(s)" class="text-xs text-wine underline">
+                      {{ localeService.t('edit_button') }}
+                    </button>
+                    <button (click)="deleteSpell(s.id, s.name)" class="text-xs text-red-700 underline">
+                      {{ localeService.t('delete_button') }}
+                    </button>
+                  </div>
                 </td>
               </tr>
             }

@@ -223,7 +223,7 @@ export class CharacterStore {
 
   private static readonly FULL_CHARACTER_SELECT = `
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
-    current_hp, max_hp, armor_class, ability_scores, applied_bonus, race_id, background_id,
+    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, ability_scores, applied_bonus, race_id, background_id,
     skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
     races ( name ),
     backgrounds ( name ),
@@ -233,7 +233,46 @@ export class CharacterStore {
     character_weapons ( id, weapon_id, quantity, weapons ( name, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability ) )
   `;
 
-  private mapRowToCharacterFull(row: any): CharacterFull {
+  // Recupera le traduzioni di tutti i contenuti referenziati da questa riga personaggio
+  // (razza, background, classe, sottoclasse, incantesimi, oggetti, armi) in un'unica query,
+  // con lo stesso meccanismo di ContentStore/content_translations. Senza questo, mapRowToCharacterFull
+  // mostrerebbe sempre il nome inglese canonico perché i join Supabase leggono le tabelle base.
+  private async loadTranslationsForRow(row: any): Promise<Record<string, Record<string, string>>> {
+    const locale = this.localeService.locale();
+    if (locale === 'en') return {};
+
+    const cls = row.character_classes?.[0];
+    const idsByTable: Record<string, string[]> = {
+      races: [row.race_id].filter(Boolean),
+      backgrounds: [row.background_id].filter(Boolean),
+      classes: [cls?.class_id].filter(Boolean),
+      subclasses: [cls?.subclass_id].filter(Boolean),
+      spells: (row.character_spells ?? []).map((s: any) => s.spell_id).filter(Boolean),
+      equipment: (row.character_inventory ?? []).map((i: any) => i.equipment_id).filter(Boolean),
+      weapons: (row.character_weapons ?? []).map((w: any) => w.weapon_id).filter(Boolean),
+    };
+
+    const allIds = Object.values(idsByTable).flat();
+    if (allIds.length === 0) return {};
+
+    const { data: translationRows } = await this.supabase.client
+      .from('content_translations')
+      .select('content_table, content_id, name')
+      .eq('locale', locale)
+      .in('content_table', Object.keys(idsByTable))
+      .in('content_id', allIds);
+
+    const translations: Record<string, Record<string, string>> = {};
+    for (const t of translationRows ?? []) {
+      (translations[t.content_table] ??= {})[t.content_id] = t.name;
+    }
+    return translations;
+  }
+
+  private mapRowToCharacterFull(
+    row: any,
+    translations: Record<string, Record<string, string>>
+  ): CharacterFull {
     const cls = row.character_classes?.[0];
 
     return {
@@ -248,6 +287,8 @@ export class CharacterStore {
       current_hp: row.current_hp,
       max_hp: row.max_hp,
       armor_class: row.armor_class,
+      equipped_armor_id: row.equipped_armor_id ?? null,
+      shield_equipped: row.shield_equipped ?? false,
       ability_scores: row.ability_scores ?? {},
       applied_bonus: row.applied_bonus ?? {},
       skill_proficiencies: row.skill_proficiencies ?? [],
@@ -255,13 +296,15 @@ export class CharacterStore {
       damage_immunities: row.damage_immunities ?? [],
       condition_immunities: row.condition_immunities ?? [],
       race_id: row.race_id ?? null,
-      race_name: row.races?.name ?? null,
+      race_name: translations['races']?.[row.race_id] ?? row.races?.name ?? null,
       background_id: row.background_id ?? null,
-      background_name: row.backgrounds?.name ?? null,
+      background_name:
+        translations['backgrounds']?.[row.background_id] ?? row.backgrounds?.name ?? null,
       class_id: cls?.class_id ?? null,
-      class_name: cls?.classes?.name ?? null,
+      class_name: translations['classes']?.[cls?.class_id] ?? cls?.classes?.name ?? null,
       subclass_id: cls?.subclass_id ?? null,
-      subclass_name: cls?.subclasses?.name ?? null,
+      subclass_name:
+        translations['subclasses']?.[cls?.subclass_id] ?? cls?.subclasses?.name ?? null,
       hit_die: cls?.classes?.hit_die ?? null,
       saving_throw_proficiencies: (cls?.classes?.saving_throw_proficiencies ?? []).map(
         (s: any) => s.name ?? s
@@ -269,7 +312,7 @@ export class CharacterStore {
       spells: (row.character_spells ?? []).map((s: any) => ({
         rowId: s.spell_id,
         spellId: s.spell_id,
-        name: s.spells?.name ?? '?',
+        name: translations['spells']?.[s.spell_id] ?? s.spells?.name ?? '?',
         level: s.spells?.level ?? 0,
         school: s.spells?.school ?? '',
         prepared: s.prepared,
@@ -277,14 +320,14 @@ export class CharacterStore {
       inventory: (row.character_inventory ?? []).map((i: any) => ({
         rowId: i.id,
         equipmentId: i.equipment_id,
-        name: i.equipment?.name ?? '?',
+        name: translations['equipment']?.[i.equipment_id] ?? i.equipment?.name ?? '?',
         quantity: i.quantity,
         equipped: i.equipped,
       })),
       weapons: (row.character_weapons ?? []).map((w: any) => ({
         rowId: w.id,
         weaponId: w.weapon_id,
-        name: w.weapons?.name ?? '?',
+        name: translations['weapons']?.[w.weapon_id] ?? w.weapons?.name ?? '?',
         quantity: w.quantity,
         attackAbilities: w.weapons?.suggested_attack_ability ?? [],
         damageDice: w.weapons?.damage_dice ?? '',
@@ -318,7 +361,8 @@ export class CharacterStore {
       return;
     }
 
-    this.myCharacter.set(this.mapRowToCharacterFull(data));
+    const translations = await this.loadTranslationsForRow(data);
+    this.myCharacter.set(this.mapRowToCharacterFull(data, translations));
   }
 
   // Carica una scheda personaggio specifica dato il suo ID, indipendentemente
@@ -335,7 +379,8 @@ export class CharacterStore {
       return;
     }
 
-    this.selectedCharacter.set(this.mapRowToCharacterFull(data));
+    const translations = await this.loadTranslationsForRow(data);
+    this.selectedCharacter.set(this.mapRowToCharacterFull(data, translations));
   }
 
   // Ricarica il/i signal che stanno effettivamente mostrando questo personaggio
@@ -354,6 +399,8 @@ export class CharacterStore {
       currentHp: number | null;
       maxHp: number | null;
       armorClass: number | null;
+      equippedArmorId: string | null;
+      shieldEquipped: boolean;
       abilityScores: Record<string, number>;
       skillProficiencies: string[];
       damageResistances: string[];
@@ -367,6 +414,8 @@ export class CharacterStore {
         current_hp: updates.currentHp,
         max_hp: updates.maxHp,
         armor_class: updates.armorClass,
+        equipped_armor_id: updates.equippedArmorId,
+        shield_equipped: updates.shieldEquipped,
         ability_scores: updates.abilityScores,
         skill_proficiencies: updates.skillProficiencies,
         damage_resistances: updates.damageResistances,
@@ -576,6 +625,8 @@ export interface CharacterFull {
   current_hp: number | null;
   max_hp: number | null;
   armor_class: number | null;
+  equipped_armor_id: string | null;
+  shield_equipped: boolean;
   ability_scores: Record<string, number>;
   applied_bonus: Record<string, number>;
   skill_proficiencies: string[];

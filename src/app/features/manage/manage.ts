@@ -8,18 +8,18 @@ import { ClassCreate } from '../class-create/class-create';
 import { SubclassCreate } from '../subclass-create/subclass-create';
 import { LocaleService } from '../../core/locale';
 
-type ManageSection = 'weapons' | 'spells' | 'equipment' | 'races' | 'backgrounds' | 'classes' | 'subclasses';
+type ManageSection = 'races' | 'classes' | 'subclasses' | 'backgrounds' | 'weapons' | 'spells' | 'equipment';
 
 @Component({
   selector: 'app-manage',
   standalone: true,
-  imports: [WeaponCreate, SpellCreate, EquipmentCreate, RaceCreate, BackgroundCreate, ClassCreate, SubclassCreate],
+  imports: [RaceCreate, ClassCreate, SubclassCreate, BackgroundCreate, WeaponCreate, SpellCreate, EquipmentCreate],
   templateUrl: './manage.html',
 })
 export class Manage {
   protected localeService = inject(LocaleService);
 
-  activeSection = signal<ManageSection>('weapons');
+  activeSection = signal<ManageSection>('races');
 
   setSection(section: ManageSection) {
     this.activeSection.set(section);

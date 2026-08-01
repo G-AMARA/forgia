@@ -29,7 +29,7 @@
                       <div class="w-1.5 bg-slate-arcane shrink-0"></div>
                       <div class="p-3 flex-1">
                         <h4 class="font-display text-sm text-ink">{{ spell.name }}</h4>
-                        <p class="text-xs text-slate-arcane mb-1">{{ spell.raw.school }}</p>
+                        <p class="text-xs text-slate-arcane mb-1">{{ schoolLabel(spell) }}</p>
                         @if (description(spell)) {
                           <p class="text-xs italic opacity-80">{{ description(spell) }}</p>
                         }

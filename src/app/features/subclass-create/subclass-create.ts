@@ -23,12 +23,21 @@ export class SubclassCreate {
   unlockedAtLevel = 3;
   description = '';
 
+  editingId: string | null = null;
+
   errorMsg = signal<string | null>(null);
   loading = signal(false);
 
-  private refreshSubclasses() {
-    this.contentStore.invalidate('subclasses');
-    this.subclasses = this.contentStore.getContent('subclasses');
+  private async refreshSubclasses() {
+    await this.contentStore.refresh('subclasses');
+  }
+
+  private resetForm() {
+    this.editingId = null;
+    this.name = '';
+    this.classId = '';
+    this.unlockedAtLevel = 3;
+    this.description = '';
   }
 
   // Nome della classe genitrice, per mostrarlo nella lista del catalogo.
@@ -37,25 +46,38 @@ export class SubclassCreate {
     return cls?.name ?? '—';
   }
 
+  startEdit(sub: any) {
+    this.editingId = sub.id;
+    this.name = sub.raw.name;
+    this.classId = sub.raw.class_id;
+    this.unlockedAtLevel = sub.raw.unlocked_at_level ?? 3;
+    this.description = sub.description ?? '';
+  }
+
+  cancelEdit() {
+    this.resetForm();
+  }
+
   async submit() {
     this.errorMsg.set(null);
     this.loading.set(true);
 
-    const { error } = await this.supabase.client.from('subclasses').insert({
+    const payload = {
       name: this.name,
       class_id: this.classId,
       unlocked_at_level: this.unlockedAtLevel,
       description: this.description || null,
-    });
+    };
+
+    const { error } = this.editingId
+      ? await this.supabase.client.from('subclasses').update(payload).eq('id', this.editingId)
+      : await this.supabase.client.from('subclasses').insert(payload);
 
     if (error) {
       this.errorMsg.set(error.message);
     } else {
-      this.name = '';
-      this.classId = '';
-      this.unlockedAtLevel = 3;
-      this.description = '';
-      this.refreshSubclasses();
+      this.resetForm();
+      await this.refreshSubclasses();
     }
 
     this.loading.set(false);
@@ -67,7 +89,7 @@ export class SubclassCreate {
 
     const { error } = await this.supabase.client.from('subclasses').delete().eq('id', id);
     if (!error) {
-      this.refreshSubclasses();
+      await this.refreshSubclasses();
     }
   }
 }
