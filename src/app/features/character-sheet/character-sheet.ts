@@ -266,12 +266,6 @@ export class CharacterSheet implements OnInit {
 
   selectedWeaponId = '';
   weaponQuantity = 1;
-  weaponAttackAbility = 'str';
-
-  onWeaponSelected() {
-    const w = this.availableWeaponsCatalog().find((x: any) => x.id === this.selectedWeaponId);
-    this.weaponAttackAbility = w?.raw.suggested_attack_ability ?? 'str';
-  }
 
   async addWeapon() {
     const c = this.character();
@@ -281,7 +275,6 @@ export class CharacterSheet implements OnInit {
     const { error } = await this.characterStore.addWeapon(c.id, {
       weaponId: this.selectedWeaponId,
       quantity: this.weaponQuantity,
-      attackAbility: this.weaponAttackAbility,
     });
 
     if (error) {
@@ -291,7 +284,10 @@ export class CharacterSheet implements OnInit {
 
     this.selectedWeaponId = '';
     this.weaponQuantity = 1;
-    this.weaponAttackAbility = 'str';
+  }
+
+  attackAbilityNames(abilities: string[]): string {
+    return abilities.map((a) => this.localeService.t('ability_' + a)).join(' ' + this.localeService.t('or_label') + ' ');
   }
 
   async removeWeapon(rowId: string) {

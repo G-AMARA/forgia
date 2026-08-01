@@ -10,6 +10,7 @@ import { ClassList } from './features/class-list/class-list';
 import { BackgroundList } from './features/background-list/background-list';
 import { SpellList } from './features/spell-list/spell-list';
 import { EquipmentList } from './features/equipment-list/equipment-list';
+import { WeaponList } from './features/weapon-list/weapon-list';
 import { Manage } from './features/manage/manage';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
@@ -30,6 +31,7 @@ import { ActiveCampaign } from './core/active-campaign';
     BackgroundList,
     SpellList,
     EquipmentList,
+    WeaponList,
     Manage,
   ],
   templateUrl: './app.html',

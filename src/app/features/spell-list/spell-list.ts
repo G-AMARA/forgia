@@ -65,8 +65,6 @@ export class SpellList {
   isLoading = computed(() => this.spells().length === 0);
 
   description(spell: any): string {
-    const desc = spell.raw.raw_srd?.desc;
-    if (!desc || desc.length === 0) return '';
-    return desc[0];
+    return spell.description ?? '';
   }
 }

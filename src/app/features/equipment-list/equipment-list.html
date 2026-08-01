@@ -18,7 +18,7 @@
                 (click)="toggleType(group.type)"
                 class="w-full flex items-center justify-between px-3 py-2 bg-white/40 font-display text-sm text-ink"
               >
-                <span>{{ group.type }} ({{ group.items.length }})</span>
+                <span>{{ typeLabel(group.type) }} ({{ group.items.length }})</span>
                 <span>{{ isTypeExpanded(group.type) ? '▾' : '▸' }}</span>
               </button>
   

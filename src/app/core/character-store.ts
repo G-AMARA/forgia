@@ -228,7 +228,7 @@ export class CharacterStore {
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
     character_spells ( spell_id, prepared, spells ( name, level, school ) ),
     character_inventory ( id, equipment_id, quantity, equipped, equipment ( name ) ),
-    character_weapons ( id, weapon_id, quantity, attack_ability, weapons ( name, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight ) )
+    character_weapons ( id, weapon_id, quantity, weapons ( name, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability ) )
   `;
 
   private mapRowToCharacterFull(row: any): CharacterFull {
@@ -283,7 +283,7 @@ export class CharacterStore {
         weaponId: w.weapon_id,
         name: w.weapons?.name ?? '?',
         quantity: w.quantity,
-        attackAbility: w.attack_ability,
+        attackAbilities: w.weapons?.suggested_attack_ability ?? [],
         damageDice: w.weapons?.damage_dice ?? '',
         damageType: w.weapons?.damage_type ?? '',
         versatileDamage: w.weapons?.versatile_damage ?? null,
@@ -489,15 +489,11 @@ export class CharacterStore {
     return { error };
   }
 
-  async addWeapon(
-    characterId: string,
-    weapon: { weaponId: string; quantity: number; attackAbility: string }
-  ) {
+  async addWeapon(characterId: string, weapon: { weaponId: string; quantity: number }) {
     const { error } = await this.supabase.client.from('character_weapons').insert({
       character_id: characterId,
       weapon_id: weapon.weaponId,
       quantity: weapon.quantity,
-      attack_ability: weapon.attackAbility,
     });
     if (!error) {
       await this.refreshCharacter(characterId);
@@ -584,7 +580,7 @@ export interface CharacterFull {
     weaponId: string;
     name: string;
     quantity: number;
-    attackAbility: string;
+    attackAbilities: string[];
     damageDice: string;
     damageType: string;
     versatileDamage: string | null;

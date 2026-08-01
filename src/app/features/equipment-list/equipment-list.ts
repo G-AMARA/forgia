@@ -44,6 +44,9 @@ export class EquipmentList {
     const groups = new Map<string, any[]>();
     for (const item of all) {
       const type = item.raw.type ?? 'Altro';
+      // Le armi hanno una sezione dedicata nel Catalogo Contenuti (con danno,
+      // gittata, ecc.): niente doppione qui.
+      if (type === 'Weapon') continue;
       if (!groups.has(type)) groups.set(type, []);
       groups.get(type)!.push(item);
     }
@@ -54,6 +57,18 @@ export class EquipmentList {
   });
 
   isLoading = computed(() => this.equipment().length === 0);
+
+  private static readonly TYPE_KEYS: Record<string, string> = {
+    'Adventuring Gear': 'equipment_type_adventuring_gear',
+    'Armor': 'equipment_type_armor',
+    'Mounts and Vehicles': 'equipment_type_mounts_and_vehicles',
+    'Tools': 'equipment_type_tools',
+  };
+
+  typeLabel(type: string): string {
+    const key = EquipmentList.TYPE_KEYS[type];
+    return key ? this.localeService.t(key) : type;
+  }
 
   formatCost(item: any): string {
     const cost = item.raw.cost;

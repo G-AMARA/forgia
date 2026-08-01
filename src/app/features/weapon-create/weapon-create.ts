@@ -26,10 +26,24 @@ export class WeaponCreate {
   longRange: number | null = null;
   weight: number | null = null;
   properties = '';
-  suggestedAttackAbility = 'str';
+  suggestedAttackAbilities = new Set<string>(['str']);
 
   errorMsg = signal<string | null>(null);
   loading = signal(false);
+
+  toggleAttackAbility(key: string) {
+    const current = new Set(this.suggestedAttackAbilities);
+    if (current.has(key)) {
+      current.delete(key);
+    } else {
+      current.add(key);
+    }
+    this.suggestedAttackAbilities = current;
+  }
+
+  isAttackAbilitySelected(key: string): boolean {
+    return this.suggestedAttackAbilities.has(key);
+  }
 
   private refreshWeapons() {
     this.contentStore.invalidate('weapons');
@@ -37,6 +51,11 @@ export class WeaponCreate {
   }
 
   async submit() {
+    if (this.suggestedAttackAbilities.size === 0) {
+      this.errorMsg.set(this.localeService.t('weapon_attack_ability_required'));
+      return;
+    }
+
     this.errorMsg.set(null);
     this.loading.set(true);
 
@@ -50,7 +69,7 @@ export class WeaponCreate {
       long_range: this.rangeCategory === 'ranged' ? this.longRange : null,
       weight: this.weight,
       properties: this.properties || null,
-      suggested_attack_ability: this.suggestedAttackAbility,
+      suggested_attack_ability: Array.from(this.suggestedAttackAbilities),
     });
 
     if (error) {
@@ -65,11 +84,15 @@ export class WeaponCreate {
       this.longRange = null;
       this.weight = null;
       this.properties = '';
-      this.suggestedAttackAbility = 'str';
+      this.suggestedAttackAbilities = new Set(['str']);
       this.refreshWeapons();
     }
 
     this.loading.set(false);
+  }
+
+  attackAbilityNames(abilities: string[]): string {
+    return abilities.map((a) => this.localeService.t('ability_' + a)).join(' ' + this.localeService.t('or_label') + ' ');
   }
 
   async deleteWeapon(id: string, name: string) {

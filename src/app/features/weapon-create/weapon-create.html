@@ -48,13 +48,16 @@
 
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold">{{ localeService.t('weapon_attack_ability_label') }}</label>
-        <select
-          [(ngModel)]="suggestedAttackAbility" name="suggestedAttackAbility"
-          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
-        >
-          <option value="str">{{ localeService.t('ability_str') }}</option>
-          <option value="dex">{{ localeService.t('ability_dex') }}</option>
-        </select>
+        <div class="flex gap-3 px-1 py-2">
+          <label class="flex items-center gap-1 text-sm">
+            <input type="checkbox" [checked]="isAttackAbilitySelected('str')" (change)="toggleAttackAbility('str')" />
+            {{ localeService.t('ability_str') }}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="checkbox" [checked]="isAttackAbilitySelected('dex')" (change)="toggleAttackAbility('dex')" />
+            {{ localeService.t('ability_dex') }}
+          </label>
+        </div>
       </div>
 
       @if (rangeCategory === 'ranged') {
@@ -125,7 +128,7 @@
             @for (w of weapons(); track w.id) {
               <tr class="border-b border-gold/30">
                 <td class="py-2 pr-2">{{ w.name }}</td>
-                <td class="py-2 pr-2">{{ localeService.t('ability_' + w.raw.suggested_attack_ability) }}</td>
+                <td class="py-2 pr-2">{{ attackAbilityNames(w.raw.suggested_attack_ability) }}</td>
                 <td class="py-2 pr-2">
                   {{ w.raw.damage_dice }} {{ w.raw.damage_type }}
                   @if (w.raw.versatile_damage) {

@@ -1,0 +1,57 @@
+<section class="border border-gold rounded-lg overflow-hidden">
+    <button
+      (click)="toggle.emit()"
+      class="w-full flex items-center justify-between px-4 py-3 bg-parchment-dark font-display text-lg text-wine"
+    >
+      <span>{{ localeService.t('weapons_title') }}</span>
+      <span>{{ expanded ? '▾' : '▸' }}</span>
+    </button>
+
+    @if (expanded) {
+      <div class="p-4 space-y-2">
+        @if (isLoading()) {
+          <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
+        } @else {
+          @for (group of groupedWeapons(); track group.category) {
+            <div class="border border-gold/50 rounded overflow-hidden">
+              <button
+                (click)="toggleCategory(group.category)"
+                class="w-full flex items-center justify-between px-3 py-2 bg-white/40 font-display text-sm text-ink"
+              >
+                <span>{{ categoryLabel(group.category) }} ({{ group.weapons.length }})</span>
+                <span>{{ isCategoryExpanded(group.category) ? '▾' : '▸' }}</span>
+              </button>
+
+              @if (isCategoryExpanded(group.category)) {
+                <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  @for (w of group.weapons; track w.id) {
+                    <div class="flex bg-white/60 border border-gold rounded-lg overflow-hidden">
+                      <div class="w-1.5 bg-ink shrink-0"></div>
+                      <div class="p-3 flex-1">
+                        <h4 class="font-display text-sm text-ink">{{ w.name }}</h4>
+                        <p class="text-xs text-slate-arcane">
+                          {{ damageLine(w) }}
+                          @if (rangeLine(w)) {
+                            · {{ rangeLine(w) }}
+                          }
+                          @if (w.raw.weight) {
+                            · {{ w.raw.weight }} kg
+                          }
+                        </p>
+                        <p class="text-xs italic opacity-80">
+                          {{ localeService.t('weapon_col_attack') }}: {{ attackAbilityNames(w.raw.suggested_attack_ability) }}
+                          @if (w.raw.properties) {
+                            · {{ w.raw.properties }}
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+  </section>

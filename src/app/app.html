@@ -145,6 +145,10 @@
             [expanded]="appNav.expandedCatalogSection() === 'equipment'"
             (toggle)="appNav.toggleCatalogSection('equipment')"
           ></app-equipment-list>
+          <app-weapon-list
+            [expanded]="appNav.expandedCatalogSection() === 'weapons'"
+            (toggle)="appNav.toggleCatalogSection('weapons')"
+          ></app-weapon-list>
         }
         @case ('manage') {
           @if (auth.isAdmin()) {
