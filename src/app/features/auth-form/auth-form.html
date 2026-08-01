@@ -12,14 +12,8 @@
     </button>
   </div>
 } @else if (variant === 'landing') {
-  <!-- Variante landing: card in pietra scura con cornice dorata, stile placca da castello -->
-  <div class="relative w-full max-w-sm mx-auto bg-stone-textured panel-carved border-4 border-gold rounded-lg p-6 sm:p-8">
-    <!-- Rivetti angolari con effetto metallico -->
-    <span class="absolute w-3 h-3 rivet rounded-full -top-1.5 -left-1.5"></span>
-    <span class="absolute w-3 h-3 rivet rounded-full -top-1.5 -right-1.5"></span>
-    <span class="absolute w-3 h-3 rivet rounded-full -bottom-1.5 -left-1.5"></span>
-    <span class="absolute w-3 h-3 rivet rounded-full -bottom-1.5 -right-1.5"></span>
-
+  <!-- Variante landing: card scura con cornice ambra, elevazione morbida -->
+  <div class="relative w-full max-w-sm mx-auto bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 sm:p-8">
     <h2 class="font-display text-xl text-center text-gold-bright mb-6">
       {{ mode() === 'login' ? localeService.t('login_title') : localeService.t('signup_title') }}
     </h2>

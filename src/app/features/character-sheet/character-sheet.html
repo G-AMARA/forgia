@@ -31,11 +31,11 @@
         <div class="flex-1 text-center sm:text-left">
           <h2 class="font-display text-2xl text-gold-bright">{{ c.name }}</h2>
           <p class="text-sm opacity-80">
-            {{ localeService.t('level_label') }} {{ c.level }} · {{ c.race_name }} · {{ c.class_name }}
-            @if (c.subclass_name) { ({{ c.subclass_name }}) }
+            {{ localeService.t('level_label') }} {{ c.level }} · {{ getTranslatedRaceName(c.race_name) }} · {{ getTranslatedClassName(c.class_name) }}
+            @if (c.subclass_name) { ({{ getTranslatedSubclassName(c.subclass_name) }}) }
           </p>
           <p class="text-xs opacity-70">
-            {{ c.background_name }} · {{ localeService.t('alignment_' + c.alignment) }} · {{ c.experience_points }} XP
+            {{ getTranslatedBackgroundName(c.background_name) }} · {{ localeService.t('alignment_' + c.alignment) }} · {{ c.experience_points }} XP
           </p>
         </div>
         </div>
@@ -141,7 +141,7 @@
             <div class="flex flex-col gap-1">
               <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
               <select [(ngModel)]="identityBackgroundId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine disabled:opacity-70">
-                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                <option value="">{{ localeService.t('subclass_none') }}</option>
                 @for (bg of backgroundsContent(); track bg.id) {
                   <option [value]="bg.id">{{ bg.name }}</option>
                 }
@@ -173,6 +173,50 @@
               />
             </div>
           </div>
+
+          <!-- Bonus Razziale: automatico dalla razza scelta. Nascosto se c'è un background: i due bonus sono alternativi. -->
+          @if (!identityBackgroundId) {
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-slate-100/50 p-3 rounded border border-dashed border-slate-300">
+              <div class="col-span-3 sm:col-span-6 mb-1">
+                <label class="text-xs uppercase font-semibold text-slate-600">{{ localeService.t('racial_bonus_label') }}</label>
+              </div>
+              @for (key of abilityKeys; track key) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+                  <div class="px-2 py-1 rounded border border-slate-300 bg-white text-center text-sm font-semibold">
+                    @if (getRaceBonus(key) > 0) {
+                      +{{ getRaceBonus(key) }}
+                    } @else {
+                      —
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Bonus Background: manuale, max 3 punti totali. Sostituisce il bonus razziale quando c'è un background. -->
+          @if (identityBackgroundId) {
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-slate-100/50 p-3 rounded border border-dashed border-slate-300">
+              <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
+                <label class="text-xs uppercase font-semibold text-slate-600">{{ localeService.t('background_bonus_label') }}</label>
+                <span class="text-xs text-slate-arcane">
+                  {{ localeService.t('points_remaining_label') }}: {{ backgroundBonusRemaining() }}/{{ backgroundBonusMax }}
+                </span>
+              </div>
+              @for (key of abilityKeys; track key) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+                  <input
+                    type="number" min="0" max="2" [disabled]="readOnly()"
+                    [ngModel]="identityBackgroundBonuses[key]"
+                    (ngModelChange)="setBackgroundBonus(key, $event)"
+                    class="px-2 py-1 rounded border border-slate-300 bg-white text-center focus:outline-none focus:ring-2 focus:ring-wine text-sm disabled:opacity-70"
+                  />
+                </div>
+              }
+            </div>
+          }
 
           @if (!readOnly()) {
             <button
@@ -225,13 +269,24 @@
             <label class="text-sm font-semibold block mb-2">{{ localeService.t('ability_scores_label') }}</label>
             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
               @for (key of abilityKeys; track key) {
-                <div class="flex flex-col items-center gap-1 border border-gold rounded p-2">
-                  <span class="text-xs uppercase">{{ localeService.t('ability_' + key) }}</span>
-                  <input
-                    type="number" [(ngModel)]="abilityScores[key]" [disabled]="readOnly()"
-                    class="w-14 px-1 py-1 rounded border border-gold text-center disabled:opacity-70"
-                  />
-                  <span class="text-xs opacity-70">{{ formatModifier(abilityModifier(abilityScores[key])) }}</span>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-sm uppercase font-semibold">{{ localeService.t('ability_' + key) }}</span>
+                  <div class="relative w-full flex flex-col items-center gap-1 border border-gold rounded p-2 overflow-hidden">
+                    <div
+                      class="absolute inset-0 bg-cover bg-center"
+                      [style.background-image]="'url(' + getAbilityImagePath(key) + ')'"
+                    ></div>
+                    <input
+                      type="number" [(ngModel)]="abilityScores[key]" [disabled]="readOnly()"
+                      class="relative w-full py-1 rounded bg-transparent border-0 text-center text-5xl font-black text-white [-webkit-text-stroke:2px_white] [text-shadow:0_4px_10px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-70"
+                    />
+                    <span
+                      class="relative flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white"
+                      [class]="modifierBadgeClass(abilityScores[key])"
+                    >
+                      {{ formatModifier(abilityModifier(abilityScores[key])) }}
+                    </span>
+                  </div>
                 </div>
               }
             </div>
@@ -241,7 +296,7 @@
           @if (c.saving_throw_proficiencies.length > 0) {
             <div>
               <label class="text-sm font-semibold block mb-1">{{ localeService.t('saving_throws_label') }}</label>
-              <p class="text-sm opacity-80">{{ c.saving_throw_proficiencies.join(', ') }}</p>
+              <p class="text-sm opacity-80">{{ savingThrowNames(c.saving_throw_proficiencies) }}</p>
             </div>
           }
   
@@ -352,6 +407,36 @@
       <!-- INCANTESIMI -->
       @if (activeSubTab() === 'spells' && c.class_name) {
         <div class="bg-white/60 border border-gold rounded-lg p-4 space-y-4">
+          @if (spellcastingInfo(); as info) {
+            <div class="bg-parchment-dark/60 border border-gold rounded-lg p-3 text-sm space-y-1">
+              <p>
+                <strong>{{ localeService.t('cantrips_known_label') }}:</strong>
+                {{ knownCantripsCount() }}/{{ info.cantripsKnown }}
+              </p>
+              @if (info.spellsKnownLimit !== null) {
+                <p>
+                  <strong>{{ localeService.t('spells_know_label') }}:</strong>
+                  {{ knownLeveledSpellsCount() }}/{{ info.spellsKnownLimit }}
+                </p>
+              }
+              <p>
+                <strong>{{ localeService.t('spell_slots_label') }}:</strong>
+                @if (info.slots.length === 0) {
+                  {{ localeService.t('no_spell_slots_label') }}
+                } @else {
+                  @for (slot of info.slots; track slot.level; let last = $last) {
+                    {{ slot.count }}× {{ localeService.t('spell_level_label') }} {{ slot.level }}@if (!last) {, }
+                  }
+                }
+              </p>
+              @if (info.slots.length > 0) {
+                <p class="text-xs opacity-70">
+                  {{ localeService.t('recharge_label') }}: {{ localeService.t('recharge_' + info.recharge) }}
+                </p>
+              }
+            </div>
+          }
+
           @if (!readOnly()) {
             <div class="flex flex-col sm:flex-row gap-2">
               <select [(ngModel)]="selectedSpellIdToAdd" class="flex-1 px-3 py-2 rounded border border-gold">
@@ -372,32 +457,57 @@
           @if (c.spells.length === 0) {
             <p class="text-slate-arcane italic text-sm">{{ localeService.t('no_spells_known') }}</p>
           } @else {
-            <ul class="space-y-1">
-              @for (spell of c.spells; track spell.rowId) {
-                <li class="flex items-center justify-between gap-2 text-sm border-b border-gold/30 pb-1">
-                  <span>
-                    {{ spell.name }}
-                    <span class="text-xs opacity-60">
-                      ({{ spell.level === 0 ? localeService.t('cantrip_short') : 'Lv.' + spell.level }})
-                    </span>
-                  </span>
-                  <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-1 text-xs">
-                      <input
-                        type="checkbox" [checked]="spell.prepared" [disabled]="readOnly()"
-                        (change)="toggleSpellPrepared(spell.rowId, spell.prepared)"
-                      />
-                      {{ localeService.t('prepared_label') }}
-                    </label>
-                    @if (!readOnly()) {
-                      <button (click)="removeSpell(spell.rowId)" class="text-xs text-red-700 underline">
-                        {{ localeService.t('remove_button') }}
-                      </button>
+            <div class="space-y-4">
+              @for (group of groupedCharacterSpells(); track group.level) {
+                <div>
+                  <h4 class="font-display text-sm text-wine mb-2">{{ group.label }} ({{ group.spells.length }})</h4>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    @for (spell of group.spells; track spell.rowId) {
+                      <div class="flex bg-white/60 border border-gold rounded-lg overflow-hidden">
+                        <div class="w-1.5 shrink-0" [class]="spell.prepared ? 'bg-forest' : 'bg-slate-arcane'"></div>
+                        <div class="p-3 flex-1 space-y-1">
+                          <div class="flex items-start justify-between gap-2">
+                            <h5 class="font-display text-sm text-ink">{{ spell.name }}</h5>
+                            @if (!readOnly()) {
+                              <button (click)="removeSpell(spell.rowId)" class="text-xs text-red-700 underline shrink-0">
+                                {{ localeService.t('remove_button') }}
+                              </button>
+                            }
+                          </div>
+                          @if (spell.school) {
+                            <p class="text-xs text-slate-arcane italic">{{ spell.school }}</p>
+                          }
+                          <div class="text-xs opacity-80 grid grid-cols-2 gap-x-2">
+                            @if (spell.castingTime) {
+                              <span>{{ localeService.t('spell_casting_time_label') }}: {{ spell.castingTime }}</span>
+                            }
+                            @if (spell.range) {
+                              <span>{{ localeService.t('spell_range_label') }}: {{ spell.range }}</span>
+                            }
+                            @if (spell.duration) {
+                              <span>{{ localeService.t('spell_duration_label') }}: {{ spell.duration }}</span>
+                            }
+                            @if (spell.damageEffect) {
+                              <span>{{ localeService.t('spell_damage_effect_label') }}: {{ spell.damageEffect }}</span>
+                            }
+                          </div>
+                          @if (spell.description) {
+                            <p class="text-xs opacity-80">{{ spell.description }}</p>
+                          }
+                          <label class="flex items-center gap-1 text-xs pt-1">
+                            <input
+                              type="checkbox" [checked]="spell.prepared" [disabled]="readOnly()"
+                              (change)="toggleSpellPrepared(spell.rowId, spell.prepared)"
+                            />
+                            {{ localeService.t('prepared_label') }}
+                          </label>
+                        </div>
+                      </div>
                     }
                   </div>
-                </li>
+                </div>
               }
-            </ul>
+            </div>
           }
         </div>
       }

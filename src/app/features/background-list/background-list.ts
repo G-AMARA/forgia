@@ -18,8 +18,10 @@ export class BackgroundList {
 
   skillNames(background: any): string {
     const proficiencies = background.raw.skill_proficiencies;
-    if (!proficiencies) return '—';
-    return proficiencies.map((p: any) => p.name).join(', ');
+    if (!proficiencies || proficiencies.length === 0) return '—';
+    return proficiencies
+      .map((p: any) => (typeof p === 'string' ? this.localeService.t('skill_' + p) : p.name))
+      .join(', ');
   }
 
   featureDescription(background: any): string | null {

@@ -71,10 +71,10 @@
         <div class="flex flex-col gap-1">
           <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
           <select
-            name="background" [(ngModel)]="backgroundId" required
+            name="background" [(ngModel)]="backgroundId"
             class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
           >
-            <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+            <option value="">{{ localeService.t('subclass_none') }}</option>
             @for (bg of backgrounds(); track bg.id) {
               <option [value]="bg.id">{{ bg.name }}</option>
             }
@@ -125,6 +125,58 @@
             🎲 {{ localeService.t('roll_dice_button') }}
           </button>
         </div>
+
+        <!-- Bonus Razziale: automatico, definito dalla razza scelta in Gestione > Razze.
+             Nascosto se è stato scelto un background: i due bonus sono alternativi, non cumulativi. -->
+        @if (!backgroundId) {
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-slate-100/50 p-3 rounded border border-dashed border-slate-300">
+            <div class="col-span-3 sm:col-span-6 mb-1">
+              <label class="text-xs uppercase font-semibold text-slate-600">{{ localeService.t('racial_bonus_label') }}</label>
+              @if (!raceId) {
+                <p class="text-xs italic text-slate-arcane">{{ localeService.t('select_race_first_hint') }}</p>
+              }
+            </div>
+            @for (key of abilityKeys; track key) {
+              <div class="flex flex-col gap-1">
+                <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+                <div class="px-2 py-1 rounded border border-slate-300 bg-white text-center text-sm font-semibold">
+                  @if (getRaceBonus(key) > 0) {
+                    +{{ getRaceBonus(key) }}
+                  } @else {
+                    —
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Bonus Background: manuale, max 3 punti totali (tre +1, o un +2 e un +1).
+             Sostituisce il bonus razziale quando è stato scelto un background. -->
+        @if (backgroundId) {
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-slate-100/50 p-3 rounded border border-dashed border-slate-300">
+            <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
+              <label class="text-xs uppercase font-semibold text-slate-600">{{ localeService.t('background_bonus_label') }}</label>
+              <span class="text-xs text-slate-arcane">
+                {{ localeService.t('points_remaining_label') }}: {{ backgroundBonusRemaining() }}/{{ backgroundBonusMax }}
+              </span>
+            </div>
+            @for (key of abilityKeys; track key) {
+              <div class="flex flex-col gap-1">
+                <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+                <input
+                  type="number" min="0" max="2"
+                  [ngModel]="backgroundBonuses[key]"
+                  (ngModelChange)="setBackgroundBonus(key, $event)"
+                  [name]="'background_bonus_' + key"
+                  class="px-2 py-1 rounded border border-slate-300 bg-white text-center focus:outline-none focus:ring-2 focus:ring-wine text-sm"
+                />
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Punteggi Base + Totali -->
         <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
           @for (key of abilityKeys; track key) {
             <div class="flex flex-col gap-1">
@@ -133,11 +185,16 @@
                 type="number" min="1" max="30" [(ngModel)]="abilityScores[key]" [name]="'ability_' + key"
                 class="px-2 py-1 rounded border border-gold bg-white text-center focus:outline-none focus:ring-2 focus:ring-wine"
               />
-              <div class="text-xs text-center font-semibold" [class]="getModifier(abilityScores[key]) >= 0 ? 'text-forest' : 'text-red-700'">
-                @if (getModifier(abilityScores[key]) >= 0) {
-                  +{{ getModifier(abilityScores[key]) }}
+              @if (getAppliedBonus(key) > 0) {
+                <div class="text-xs text-center text-slate-600">
+                  {{ abilityScores[key] }} + {{ getAppliedBonus(key) }} = {{ getTotalScore(key) }}
+                </div>
+              }
+              <div class="text-xs text-center font-semibold" [class]="getModifier(getTotalScore(key)) >= 0 ? 'text-forest' : 'text-red-700'">
+                @if (getModifier(getTotalScore(key)) >= 0) {
+                  +{{ getModifier(getTotalScore(key)) }}
                 } @else {
-                  {{ getModifier(abilityScores[key]) }}
+                  {{ getModifier(getTotalScore(key)) }}
                 }
               </div>
             </div>

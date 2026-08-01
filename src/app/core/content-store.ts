@@ -21,6 +21,22 @@ export interface LocalizedContent {
   raw: any; // dato originale completo (raw_srd + tutte le colonne), per chi serve il dettaglio
 }
 
+// races.ability_bonuses arriva in due formati diversi a seconda dell'origine del dato:
+// - razze importate dall'SRD 5e: array [{ bonus, ability_score: { index: 'str', ... } }, ...]
+// - razze homebrew create da Gestione > Razze: oggetto piatto { str: 2, cha: 1, ... }
+// Questa funzione normalizza entrambi nello stesso formato piatto per il resto dell'app.
+export function normalizeAbilityBonuses(raw: any): Record<string, number> {
+  if (!raw) return {};
+  if (Array.isArray(raw)) {
+    return Object.fromEntries(
+      raw
+        .map((entry: any): [string, number] => [entry.ability_score?.index, entry.bonus])
+        .filter(([key]) => !!key)
+    );
+  }
+  return raw;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ContentStore {
   private supabase = inject(Supabase);

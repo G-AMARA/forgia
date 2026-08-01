@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ContentStore } from '../../core/content-store';
+import { ContentStore, normalizeAbilityBonuses } from '../../core/content-store';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { Auth } from '../../core/auth';
 import { CharacterStore } from '../../core/character-store';
@@ -56,7 +56,13 @@ export class CharacterCreate {
   backstory = '';
 
   abilityScores = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+  backgroundBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
   abilityKeys: (keyof typeof this.abilityScores)[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
+  // Punti massimi assegnabili come Bonus Background e valore massimo per singola caratteristica:
+  // combinazioni valide risultanti: tre caselle a +1, oppure una a +2 e una a +1.
+  readonly backgroundBonusMax = 3;
+  readonly backgroundBonusPerAbilityMax = 2;
 
   selectedSpellIds = signal<Set<string>>(new Set());
 
@@ -138,21 +144,68 @@ export class CharacterCreate {
     return this.selectedSpellIds().has(spellId);
   }
 
+  // Bonus razziale: fisso, definito dalla razza scelta (gestito in Gestione > Razze), non modificabile qui.
+  getRaceBonus(key: keyof typeof this.abilityScores): number {
+    const race = this.races().find((r: any) => r.id === this.raceId);
+    return normalizeAbilityBonuses(race?.raw?.ability_bonuses)[key] ?? 0;
+  }
+
+  backgroundBonusTotal(): number {
+    return this.abilityKeys.reduce((sum, k) => sum + this.backgroundBonuses[k], 0);
+  }
+
+  backgroundBonusRemaining(): number {
+    return this.backgroundBonusMax - this.backgroundBonusTotal();
+  }
+
+  // Applica il nuovo valore rispettando i vincoli: max 2 per caratteristica, max 3 punti totali.
+  setBackgroundBonus(key: keyof typeof this.abilityScores, value: number) {
+    let next = Math.max(0, Math.min(this.backgroundBonusPerAbilityMax, Math.floor(value) || 0));
+    const othersSum = this.abilityKeys
+      .filter((k) => k !== key)
+      .reduce((sum, k) => sum + this.backgroundBonuses[k], 0);
+    if (othersSum + next > this.backgroundBonusMax) {
+      next = Math.max(0, this.backgroundBonusMax - othersSum);
+    }
+    this.backgroundBonuses[key] = next;
+  }
+
+  // Il bonus razziale e quello di background sono alternativi, non cumulativi:
+  // se è stato scelto un background, il suo bonus manuale sostituisce quello automatico della razza.
+  getAppliedBonus(key: keyof typeof this.abilityScores): number {
+    return this.backgroundId ? this.backgroundBonuses[key] : this.getRaceBonus(key);
+  }
+
+  getTotalScore(key: keyof typeof this.abilityScores): number {
+    return this.abilityScores[key] + this.getAppliedBonus(key);
+  }
+
   async submit() {
     this.errorMsg.set(null);
     this.successMsg.set(null);
     this.loading.set(true);
+
+    // I punteggi finali (base + bonus applicato) sono l'unico valore persistito in
+    // ability_scores; appliedBonus viene salvato a parte per poter ricalcolare
+    // correttamente le statistiche se in futuro razza o background cambiano.
+    const finalAbilityScores = Object.fromEntries(
+      this.abilityKeys.map((key) => [key, this.getTotalScore(key)])
+    );
+    const appliedBonus = Object.fromEntries(
+      this.abilityKeys.map((key) => [key, this.getAppliedBonus(key)])
+    );
 
     const { error, characterId } = await this.characterStore.createCharacter({
       name: this.name,
       raceId: this.raceId,
       classId: this.classId,
       subclassId: this.subclassId || null,
-      backgroundId: this.backgroundId,
+      backgroundId: this.backgroundId || null,
       level: this.level,
       alignment: this.alignment,
       experiencePoints: this.experiencePoints,
-      abilityScores: this.abilityScores,
+      abilityScores: finalAbilityScores,
+      appliedBonus,
       backstory: this.backstory,
       spellIds: Array.from(this.selectedSpellIds()),
     });

@@ -1,0 +1,81 @@
+<section class="bg-white/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  <h2 class="font-display text-2xl text-wine">{{ localeService.t('subclass_catalog_title') }}</h2>
+
+  <form (ngSubmit)="submit()" class="flex flex-col gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('subclass_name_label') }} <span class="text-red-700">*</span></label>
+        <input
+          type="text" [(ngModel)]="name" name="name" required
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('subclass_class_label') }} <span class="text-red-700">*</span></label>
+        <select
+          [(ngModel)]="classId" name="classId" required
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        >
+          <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+          @for (cls of classes(); track cls.id) {
+            <option [value]="cls.id">{{ cls.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('subclass_unlocked_level_label') }}</label>
+        <input
+          type="number" min="1" max="20" [(ngModel)]="unlockedAtLevel" name="unlockedAtLevel"
+          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('subclass_description_label') }}</label>
+      <textarea
+        [(ngModel)]="description" name="description" rows="3"
+        class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine resize-none"
+      ></textarea>
+    </div>
+
+    <button
+      type="submit" [disabled]="loading() || !classId"
+      class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+    >
+      {{ localeService.t('subclass_add_to_catalog_button') }}
+    </button>
+
+    @if (errorMsg()) {
+      <p class="text-sm text-red-700">{{ errorMsg() }}</p>
+    }
+  </form>
+
+  <div>
+    <h3 class="font-display text-lg text-ink mb-3">{{ localeService.t('subclass_catalog_list_title') }}</h3>
+    @if (subclasses().length === 0) {
+      <p class="text-slate-arcane italic">{{ localeService.t('no_subclasses_yet') }}</p>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        @for (sub of subclasses(); track sub.id) {
+          <div class="flex bg-white/60 border border-gold rounded-lg overflow-hidden">
+            <div class="w-1.5 bg-wine shrink-0"></div>
+            <div class="p-3 flex-1">
+              <div class="flex items-start justify-between gap-2">
+                <h4 class="font-display text-base text-ink">{{ sub.name }}</h4>
+                <button (click)="deleteSubclass(sub.id, sub.name)" class="text-xs text-red-700 underline shrink-0">
+                  {{ localeService.t('delete_button') }}
+                </button>
+              </div>
+              <p class="text-xs text-slate-arcane">
+                {{ className(sub) }} · {{ localeService.t('subclass_unlocked_level_label') }} {{ sub.raw.unlocked_at_level }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

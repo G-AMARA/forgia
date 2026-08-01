@@ -1,11 +1,13 @@
 import { Component, inject, signal, computed, effect, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CharacterStore } from '../../core/character-store';
-import { ContentStore } from '../../core/content-store';
+import { ContentStore, normalizeAbilityBonuses } from '../../core/content-store';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { SKILLS } from '../../core/skills';
 import { getClassImagePath } from '../../core/class-images';
+import { getAbilityImagePath } from '../../core/ability-images';
+import { getSpellcastingInfo } from '../../core/spellcasting';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
 
@@ -31,6 +33,7 @@ export class CharacterSheet implements OnInit {
   );
 
   protected classImagePath = computed(() => getClassImagePath(this.character()?.class_name));
+  protected getAbilityImagePath = getAbilityImagePath;
 
   // Vero se l'utente loggato non è il proprietario: usato per bloccare ogni modifica
   // quando la scheda si apre dal roster della campagna (vista di un altro personaggio).
@@ -80,6 +83,14 @@ export class CharacterSheet implements OnInit {
   identityAlignment = 'true_neutral';
   identityXp = 0;
 
+  // Bonus attualmente "cotto" dentro abilityScores (razziale o background, sono alternativi):
+  // serve a calcolare la differenza esatta da applicare quando razza/background cambiano.
+  appliedBonus: Record<string, number> = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+  // Allocazione del Bonus Background mostrata/modificabile nel tab Generale.
+  identityBackgroundBonuses: Record<string, number> = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+  readonly backgroundBonusMax = 3;
+  readonly backgroundBonusPerAbilityMax = 2;
+
   // Sottoclassi disponibili per la classe scelta, sbloccate al livello selezionato o prima.
   // Metodo (non computed): identityClassId/identityLevel sono campi ngModel, non
   // signal, quindi un computed() non li tracciherebbe e resterebbe bloccato al
@@ -115,6 +126,10 @@ export class CharacterSheet implements OnInit {
         this.maxHp = c.max_hp ?? 0;
         this.armorClass = c.armor_class ?? 10;
         this.abilityScores = { ...c.ability_scores };
+        this.appliedBonus = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
+        this.identityBackgroundBonuses = c.background_id
+          ? { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus }
+          : { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
         this.skillProficiencies = new Set(c.skill_proficiencies);
         this.damageResistancesText = c.damage_resistances.join(', ');
         this.damageImmunitiesText = c.damage_immunities.join(', ');
@@ -136,6 +151,14 @@ export class CharacterSheet implements OnInit {
     return mod >= 0 ? `+${mod}` : `${mod}`;
   }
 
+  // Colore del cerchietto del modificatore: verde se positivo, rosso se negativo, grigio se zero.
+  modifierBadgeClass(score: number): string {
+    const mod = this.abilityModifier(score);
+    if (mod > 0) return 'bg-forest';
+    if (mod < 0) return 'bg-red-600';
+    return 'bg-slate-500';
+  }
+
   toggleSkill(key: string) {
     const current = new Set(this.skillProficiencies);
     if (current.has(key)) {
@@ -150,20 +173,101 @@ export class CharacterSheet implements OnInit {
     return this.skillProficiencies.has(key);
   }
 
+  // Traduce il nome grezzo inglese della razza al nome tradotto dal catalogo.
+  getTranslatedRaceName(rawName: string | null | undefined): string {
+    if (!rawName) return '';
+    const race = this.races().find((r: any) => r.raw.name === rawName);
+    return race?.name ?? rawName;
+  }
+
+  // Traduce il nome grezzo inglese della classe al nome tradotto dal catalogo.
+  getTranslatedClassName(rawName: string | null | undefined): string {
+    if (!rawName) return '';
+    const cls = this.classesContent().find((c: any) => c.raw.name === rawName);
+    return cls?.name ?? rawName;
+  }
+
+  // Traduce il nome grezzo inglese della sottoclasse al nome tradotto dal catalogo.
+  getTranslatedSubclassName(rawName: string | null | undefined): string {
+    if (!rawName) return '';
+    const subclass = this.allSubclasses().find((s: any) => s.raw.name === rawName);
+    return subclass?.name ?? rawName;
+  }
+
+  // Traduce il nome grezzo inglese del background al nome tradotto dal catalogo.
+  getTranslatedBackgroundName(rawName: string | null | undefined): string {
+    if (!rawName) return '';
+    const bg = this.backgroundsContent().find((b: any) => b.raw.name === rawName);
+    return bg?.name ?? rawName;
+  }
+
+  // Le proficienze arrivano come abbreviazione inglese (es. "STR", "dex", a seconda
+  // che la classe sia dall'SRD o homebrew): le traduce nel nome esteso in italiano.
+  savingThrowNames(proficiencies: string[]): string {
+    return proficiencies.map((p) => this.localeService.t('ability_' + p.toLowerCase())).join(', ');
+  }
+
+  // Bonus razziale: fisso, definito dalla razza scelta (gestito in Gestione > Razze).
+  getRaceBonus(key: keyof typeof this.abilityScores): number {
+    const race = this.races().find((r: any) => r.id === this.identityRaceId);
+    return normalizeAbilityBonuses(race?.raw?.ability_bonuses)[key] ?? 0;
+  }
+
+  backgroundBonusTotal(): number {
+    return this.abilityKeys.reduce((sum, k) => sum + this.identityBackgroundBonuses[k], 0);
+  }
+
+  backgroundBonusRemaining(): number {
+    return this.backgroundBonusMax - this.backgroundBonusTotal();
+  }
+
+  setBackgroundBonus(key: keyof typeof this.abilityScores, value: number) {
+    let next = Math.max(0, Math.min(this.backgroundBonusPerAbilityMax, Math.floor(value) || 0));
+    const othersSum = this.abilityKeys
+      .filter((k) => k !== key)
+      .reduce((sum, k) => sum + this.identityBackgroundBonuses[k], 0);
+    if (othersSum + next > this.backgroundBonusMax) {
+      next = Math.max(0, this.backgroundBonusMax - othersSum);
+    }
+    this.identityBackgroundBonuses[key] = next;
+  }
+
+  // Bonus razziale e background sono alternativi, non cumulativi: quello del
+  // background (se scelto) sostituisce quello automatico della razza.
+  getAppliedBonus(key: keyof typeof this.abilityScores): number {
+    return this.identityBackgroundId ? this.identityBackgroundBonuses[key] : this.getRaceBonus(key);
+  }
+
   async saveIdentity() {
     const c = this.character();
     if (!c || this.readOnly()) return;
 
     this.actionError.set(null);
+
+    // Rimuove dagli ability_scores il bonus applicato in precedenza e vi somma
+    // quello nuovo (razziale o background, in base alla selezione corrente):
+    // così le statistiche restano coerenti quando razza/background cambiano.
+    const newAppliedBonus = Object.fromEntries(
+      this.abilityKeys.map((key) => [key, this.getAppliedBonus(key)])
+    );
+    const newAbilityScores = Object.fromEntries(
+      this.abilityKeys.map((key) => [
+        key,
+        Math.max(1, this.abilityScores[key] - (this.appliedBonus[key] ?? 0) + newAppliedBonus[key]),
+      ])
+    );
+
     const { error } = await this.characterStore.updateIdentity(c.id, {
       name: this.identityName,
       level: this.identityLevel,
       raceId: this.identityRaceId,
       classId: this.identityClassId,
       subclassId: this.identitySubclassId || null,
-      backgroundId: this.identityBackgroundId,
+      backgroundId: this.identityBackgroundId || null,
       alignment: this.identityAlignment,
       experiencePoints: this.identityXp,
+      abilityScores: newAbilityScores,
+      appliedBonus: newAppliedBonus,
     });
 
     if (error) {
@@ -298,6 +402,22 @@ export class CharacterSheet implements OnInit {
     if (error) this.actionError.set(error.message);
   }
 
+  // Slot incantesimo e trucchetti disponibili, calcolati da classe+livello secondo
+  // le tabelle standard SRD (solo per le 8 classi incantatrici canoniche: null altrimenti).
+  spellcastingInfo = computed(() => {
+    const c = this.character();
+    if (!c) return null;
+    return getSpellcastingInfo(c.class_name, c.level, c.ability_scores);
+  });
+
+  knownCantripsCount(): number {
+    return this.character()?.spells.filter((s) => s.level === 0).length ?? 0;
+  }
+
+  knownLeveledSpellsCount(): number {
+    return this.character()?.spells.filter((s) => s.level > 0).length ?? 0;
+  }
+
   availableClassSpells = computed(() => {
     const c = this.character();
     if (!c || !c.class_name) return [];
@@ -306,10 +426,71 @@ export class CharacterSheet implements OnInit {
     );
   });
 
+  // Gli incantesimi del personaggio arrivano da una join diretta (characters.spells)
+  // che non applica le traduzioni: qui li arricchiamo incrociandoli con il catalogo
+  // già tradotto (allSpells), da cui prendiamo anche i dettagli per le card.
+  groupedCharacterSpells = computed(() => {
+    const c = this.character();
+    if (!c) return [];
+
+    const catalogMap = new Map(this.allSpells().map((s: any) => [s.id, s]));
+    const groups = new Map<number, any[]>();
+
+    for (const spell of c.spells) {
+      const detail = catalogMap.get(spell.spellId);
+      const level = detail?.raw?.level ?? spell.level ?? 0;
+      const entry = {
+        rowId: spell.rowId,
+        name: detail?.name ?? spell.name,
+        level,
+        school: detail?.raw?.school ?? spell.school ?? '',
+        castingTime: detail?.raw?.casting_time ?? null,
+        range: detail?.raw?.range ?? null,
+        duration: detail?.raw?.duration ?? null,
+        damageEffect: detail?.raw?.damage_effect ?? null,
+        description: detail?.description ?? null,
+        prepared: spell.prepared,
+      };
+      if (!groups.has(level)) groups.set(level, []);
+      groups.get(level)!.push(entry);
+    }
+
+    return Array.from(groups.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([level, spells]) => ({
+        level,
+        label:
+          level === 0
+            ? this.localeService.t('cantrips_label')
+            : `${this.localeService.t('spell_level_label')} ${level}`,
+        spells,
+      }));
+  });
+
   async addSpell() {
     const c = this.character();
     if (!c || !this.selectedSpellIdToAdd || this.readOnly()) return;
+
     this.actionError.set(null);
+
+    // Applica il limite di trucchetti/incantesimi conosciuti calcolato da classe+livello
+    // (nessun limite se la classe non è tra quelle riconosciute in spellcasting.ts).
+    const info = this.spellcastingInfo();
+    if (info) {
+      const spell = this.allSpells().find((s: any) => s.id === this.selectedSpellIdToAdd);
+      const spellLevel = spell?.raw?.level ?? 0;
+
+      if (spellLevel === 0) {
+        if (this.knownCantripsCount() >= info.cantripsKnown) {
+          this.actionError.set(this.localeService.t('cantrip_limit_reached'));
+          return;
+        }
+      } else if (info.spellsKnownLimit !== null && this.knownLeveledSpellsCount() >= info.spellsKnownLimit) {
+        this.actionError.set(this.localeService.t('spell_limit_reached'));
+        return;
+      }
+    }
+
     const { error } = await this.characterStore.addSpellToCharacter(c.id, this.selectedSpellIdToAdd);
     if (error) {
       this.actionError.set(error.message);

@@ -142,11 +142,12 @@ export class CharacterStore {
     raceId: string;
     classId: string;
     subclassId: string | null;
-    backgroundId: string;
+    backgroundId: string | null;
     level: number;
     alignment: string;
     experiencePoints: number;
     abilityScores: Record<string, number>;
+    appliedBonus: Record<string, number>;
     backstory: string;
     spellIds: string[];
   }): Promise<{ error: { message: string } | null; characterId?: string }> {
@@ -168,6 +169,7 @@ export class CharacterStore {
         alignment: params.alignment,
         experience_points: params.experiencePoints,
         ability_scores: params.abilityScores,
+        applied_bonus: params.appliedBonus,
         notes: params.backstory,
       })
       .select('id')
@@ -221,7 +223,7 @@ export class CharacterStore {
 
   private static readonly FULL_CHARACTER_SELECT = `
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
-    current_hp, max_hp, armor_class, ability_scores, race_id, background_id,
+    current_hp, max_hp, armor_class, ability_scores, applied_bonus, race_id, background_id,
     skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
     races ( name ),
     backgrounds ( name ),
@@ -247,6 +249,7 @@ export class CharacterStore {
       max_hp: row.max_hp,
       armor_class: row.armor_class,
       ability_scores: row.ability_scores ?? {},
+      applied_bonus: row.applied_bonus ?? {},
       skill_proficiencies: row.skill_proficiencies ?? [],
       damage_resistances: row.damage_resistances ?? [],
       damage_immunities: row.damage_immunities ?? [],
@@ -387,9 +390,11 @@ export class CharacterStore {
       raceId: string;
       classId: string;
       subclassId: string | null;
-      backgroundId: string;
+      backgroundId: string | null;
       alignment: string;
       experiencePoints: number;
+      abilityScores: Record<string, number>;
+      appliedBonus: Record<string, number>;
     }
   ) {
     const { error: charError } = await this.supabase.client
@@ -401,6 +406,8 @@ export class CharacterStore {
         background_id: updates.backgroundId,
         alignment: updates.alignment,
         experience_points: updates.experiencePoints,
+        ability_scores: updates.abilityScores,
+        applied_bonus: updates.appliedBonus,
       })
       .eq('id', characterId);
 
@@ -408,16 +415,27 @@ export class CharacterStore {
       return { error: charError };
     }
 
-    const { error: classError } = await this.supabase.client
+    const { data: classData, error: classError } = await this.supabase.client
       .from('character_classes')
       .update({ class_id: updates.classId, subclass_id: updates.subclassId, level: updates.level })
-      .eq('character_id', characterId);
+      .eq('character_id', characterId)
+      .select();
 
-    if (!classError) {
-      await this.refreshCharacter(characterId);
+    if (classError) {
+      return { error: classError };
     }
 
-    return { error: classError };
+    // Se l'RLS blocca l'update, Postgres non restituisce un errore: aggiorna zero righe
+    // in silenzio. Lo intercettiamo qui, altrimenti classe/sottoclasse sembrano salvate
+    // ma tornano al valore precedente al ricaricamento.
+    if (!classData || classData.length === 0) {
+      return {
+        error: { message: 'Aggiornamento di classe/sottoclasse bloccato dai permessi (nessuna riga modificata).' },
+      };
+    }
+
+    await this.refreshCharacter(characterId);
+    return { error: null };
   }
 
   async updateNotes(characterId: string, notes: string) {
@@ -559,6 +577,7 @@ export interface CharacterFull {
   max_hp: number | null;
   armor_class: number | null;
   ability_scores: Record<string, number>;
+  applied_bonus: Record<string, number>;
   skill_proficiencies: string[];
   damage_resistances: string[];
   damage_immunities: string[];
