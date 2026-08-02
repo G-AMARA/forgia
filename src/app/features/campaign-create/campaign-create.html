@@ -1,14 +1,14 @@
 <section class="space-y-6">
-    <h2 class="font-display text-2xl text-wine">{{ localeService.t('campaigns_title') }}</h2>
+    <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('campaigns_title') }}</h2>
   
     @if (campaignStore.campaigns().length > 0) {
       <div>
-        <h3 class="font-display text-lg text-ink mb-3">{{ localeService.t('your_campaigns') }}</h3>
+        <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('your_campaigns') }}</h3>
         <ul class="space-y-2">
           @for (campaign of campaignStore.campaigns(); track campaign.id) {
             <li
-              class="flex items-center justify-between gap-3 p-3 rounded border-2 bg-white/60"
-              [class.border-wine]="campaignStore.current()?.id === campaign.id"
+              class="flex items-center justify-between gap-3 p-3 rounded border-2 bg-fantasy-black/60"
+              [class.border-fantasy-gold]="campaignStore.current()?.id === campaign.id"
               [class.border-gold]="campaignStore.current()?.id !== campaign.id"
             >
               <div class="flex items-center gap-2">
@@ -17,7 +17,7 @@
                 }
                 <span class="font-semibold">{{ campaign.name }}</span>
                 @if (campaignStore.current()?.id === campaign.id) {
-                  <em class="text-xs text-wine">({{ localeService.t('active_label') }})</em>
+                  <em class="text-xs text-fantasy-gold">({{ localeService.t('active_label') }})</em>
                 }
               </div>
   
@@ -25,14 +25,14 @@
                 @if (campaignStore.current()?.id !== campaign.id) {
                   <button
                     (click)="campaignStore.selectCampaign(campaign)"
-                    class="text-xs px-3 py-1 border border-gold rounded hover:bg-gold hover:text-ink transition-colors"
+                    class="text-xs px-3 py-1 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
                   >
                     {{ localeService.t('select_button') }}
                   </button>
                 }
                 <button
                   (click)="deleteCampaign(campaign.id, campaign.name)"
-                  class="text-xs px-3 py-1 border border-red-800 text-red-800 rounded hover:bg-red-800 hover:text-white transition-colors"
+                  class="text-xs px-3 py-1 border border-red-300 text-red-300 rounded hover:bg-red-800 hover:text-white transition-colors"
                 >
                   {{ localeService.t('delete_button') }}
                 </button>
@@ -44,15 +44,15 @@
     }
   
     @if (auth.isMaster()) {
-      <div class="bg-white/60 border-2 border-gold rounded-lg p-5">
-        <h3 class="font-display text-lg text-ink mb-4">{{ localeService.t('create_campaign_title') }}</h3>
+      <div class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5">
+        <h3 class="font-display text-lg text-fantasy-moonstone mb-4">{{ localeService.t('create_campaign_title') }}</h3>
   
         <form (ngSubmit)="submit()" class="flex flex-col gap-4">
           <div class="flex flex-col gap-1">
             <label class="text-sm font-semibold">{{ localeService.t('campaign_name_label') }}</label>
             <input
               type="text" name="name" [(ngModel)]="name" required
-              class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
             />
           </div>
   
@@ -60,7 +60,7 @@
             <label class="text-sm font-semibold">{{ localeService.t('campaign_description_label') }}</label>
             <textarea
               name="description" [(ngModel)]="description" rows="5" [maxlength]="maxDescriptionLength"
-              class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine resize-none"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
             ></textarea>
             <span class="text-xs text-slate-arcane self-end">
               {{ description.length }} / {{ maxDescriptionLength }}
@@ -75,7 +75,7 @@
                   type="button"
                   (click)="coverKey = cover.key"
                   class="w-14 h-14 rounded-lg overflow-hidden border-2 transition-transform"
-                  [class.border-wine]="coverKey === cover.key"
+                  [class.border-fantasy-gold]="coverKey === cover.key"
                   [class.border-gold]="coverKey !== cover.key"
                   [class.scale-110]="coverKey === cover.key"
                   [title]="cover.label"
@@ -88,13 +88,13 @@
   
           <button
             type="submit" [disabled]="loading()"
-            class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+            class="self-start px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
           >
             {{ localeService.t('create_campaign_button') }}
           </button>
   
           @if (errorMsg()) {
-            <p class="text-sm text-red-700">{{ errorMsg() }}</p>
+            <p class="text-sm text-red-300">{{ errorMsg() }}</p>
           }
         </form>
       </div>

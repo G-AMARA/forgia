@@ -1,5 +1,5 @@
-<section class="bg-white/60 border-2 border-gold rounded-lg p-5 space-y-4">
-  <h2 class="font-display text-2xl text-wine">
+<section class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  <h2 class="font-display text-2xl text-fantasy-gold">
     @if (campaignStore.current() && hasOwnCharacterAlready()) {
       {{ localeService.t('your_character_title') }} "{{ campaignStore.current()?.name }}"
     } @else {
@@ -14,24 +14,24 @@
   } @else {
     <p class="text-sm">
       {{ localeService.t('active_campaign_label') }}:
-      <strong class="text-wine">{{ campaignStore.current()?.name }}</strong>
+      <strong class="text-fantasy-gold">{{ campaignStore.current()?.name }}</strong>
     </p>
 
     <form (ngSubmit)="submit()" class="flex flex-col gap-4">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }} <span class="text-red-700">*</span></label>
+        <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }} <span class="text-red-300">*</span></label>
         <input
           type="text" name="name" [(ngModel)]="name" required
-          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
         />
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('race_label') }} <span class="text-red-700">*</span></label>
+          <label class="text-sm font-semibold">{{ localeService.t('race_label') }} <span class="text-red-300">*</span></label>
           <select
             name="race" [(ngModel)]="raceId" required
-            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
             @for (race of races(); track race.id) {
@@ -41,10 +41,10 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('class_label') }} <span class="text-red-700">*</span></label>
+          <label class="text-sm font-semibold">{{ localeService.t('class_label') }} <span class="text-red-300">*</span></label>
           <select
             name="class" [(ngModel)]="classId" required
-            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
             @for (cls of classes(); track cls.id) {
@@ -58,7 +58,7 @@
             <label class="text-sm font-semibold">{{ localeService.t('subclass_label') }}</label>
             <select
               name="subclass" [(ngModel)]="subclassId"
-              class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
             >
               <option value="">{{ localeService.t('subclass_none') }}</option>
               @for (sub of availableSubclasses(); track sub.id) {
@@ -72,7 +72,7 @@
           <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
           <select
             name="background" [(ngModel)]="backgroundId"
-            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             <option value="">{{ localeService.t('subclass_none') }}</option>
             @for (bg of backgrounds(); track bg.id) {
@@ -85,7 +85,7 @@
           <label class="text-sm font-semibold">{{ localeService.t('level_label') }}</label>
           <select
             name="level" [(ngModel)]="level"
-            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             @for (lvl of levels; track lvl) {
               <option [value]="lvl">{{ lvl }}</option>
@@ -94,10 +94,10 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }} <span class="text-red-700">*</span></label>
+          <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }} <span class="text-red-300">*</span></label>
           <select
             name="alignment" [(ngModel)]="alignment" required
-            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             @for (al of alignments; track al) {
               <option [value]="al">{{ localeService.t('alignment_' + al) }}</option>
@@ -109,7 +109,7 @@
           <label class="text-sm font-semibold">{{ localeService.t('xp_label') }}</label>
           <input
             type="number" min="0" name="xp" [(ngModel)]="experiencePoints"
-            class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           />
         </div>
       </div>
@@ -120,7 +120,7 @@
           <label class="text-sm font-semibold">{{ localeService.t('ability_scores_label') }}</label>
           <button
             type="button" (click)="rollAllScores()"
-            class="text-xs px-3 py-1 border border-gold rounded hover:bg-gold hover:text-ink transition-colors"
+            class="text-xs px-3 py-1 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
           >
             🎲 {{ localeService.t('roll_dice_button') }}
           </button>
@@ -139,7 +139,7 @@
             @for (key of abilityKeys; track key) {
               <div class="flex flex-col gap-1">
                 <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
-                <div class="px-2 py-1 rounded border border-slate-300 bg-white text-center text-sm font-semibold">
+                <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
                   @if (getRaceBonus(key) > 0) {
                     +{{ getRaceBonus(key) }}
                   } @else {
@@ -169,7 +169,7 @@
                   [ngModel]="backgroundBonuses[key]"
                   (ngModelChange)="setBackgroundBonus(key, $event)"
                   [name]="'background_bonus_' + key"
-                  class="px-2 py-1 rounded border border-slate-300 bg-white text-center focus:outline-none focus:ring-2 focus:ring-wine text-sm"
+                  class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm"
                 />
               </div>
             }
@@ -183,14 +183,14 @@
               <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
               <input
                 type="number" min="1" max="30" [(ngModel)]="abilityScores[key]" [name]="'ability_' + key"
-                class="px-2 py-1 rounded border border-gold bg-white text-center focus:outline-none focus:ring-2 focus:ring-wine"
+                class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
               />
               @if (getAppliedBonus(key) > 0) {
                 <div class="text-xs text-center text-slate-600">
                   {{ abilityScores[key] }} + {{ getAppliedBonus(key) }} = {{ getTotalScore(key) }}
                 </div>
               }
-              <div class="text-xs text-center font-semibold" [class]="getModifier(getTotalScore(key)) >= 0 ? 'text-forest' : 'text-red-700'">
+              <div class="text-xs text-center font-semibold" [class]="getModifier(getTotalScore(key)) >= 0 ? 'text-forest' : 'text-red-300'">
                 @if (getModifier(getTotalScore(key)) >= 0) {
                   +{{ getModifier(getTotalScore(key)) }}
                 } @else {
@@ -205,7 +205,7 @@
       @if (availableSpells().length > 0) {
         <div class="flex flex-col gap-2">
           <label class="text-sm font-semibold">{{ localeService.t('spells_known_label') }}</label>
-          <div class="max-h-48 overflow-y-auto border border-gold rounded p-2 grid grid-cols-1 sm:grid-cols-2 gap-1 bg-white/50">
+          <div class="max-h-48 overflow-y-auto border border-gold rounded p-2 grid grid-cols-1 sm:grid-cols-2 gap-1 bg-fantasy-black/50">
             @for (spell of availableSpells(); track spell.id) {
               <label class="flex items-center gap-2 text-sm">
                 <input
@@ -227,19 +227,19 @@
         <label class="text-sm font-semibold">{{ localeService.t('backstory_label') }}</label>
         <textarea
           name="backstory" [(ngModel)]="backstory" rows="4"
-          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine resize-none"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
         ></textarea>
       </div>
 
       <button
         type="submit" [disabled]="loading()"
-        class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+        class="self-start px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
       >
         {{ localeService.t('create_character_button') }}
       </button>
 
       @if (errorMsg()) {
-        <p class="text-sm text-red-700">{{ errorMsg() }}</p>
+        <p class="text-sm text-red-300">{{ errorMsg() }}</p>
       }
       @if (successMsg()) {
         <p class="text-sm text-forest font-semibold">{{ successMsg() }}</p>

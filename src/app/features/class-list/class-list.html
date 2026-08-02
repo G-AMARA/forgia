@@ -1,7 +1,7 @@
 <section class="border border-gold rounded-lg overflow-hidden">
     <button
       (click)="toggle.emit()"
-      class="w-full flex items-center justify-between px-4 py-3 bg-parchment-dark font-display text-lg text-wine"
+      class="w-full flex items-center justify-between px-4 py-3 bg-fantasy-black font-display text-lg text-fantasy-gold"
     >
       <span>{{ localeService.t('classes_title') }} ({{ classes().length }})</span>
       <span>{{ expanded ? '▾' : '▸' }}</span>
@@ -14,10 +14,10 @@
         } @else {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             @for (cls of classes(); track cls.id) {
-              <div class="flex bg-white/60 border border-gold rounded-lg overflow-hidden">
-                <div class="w-1.5 bg-wine shrink-0"></div>
+              <div class="flex bg-fantasy-black/60 border border-gold rounded-lg overflow-hidden">
+                <div class="w-1.5 bg-fantasy-gold shrink-0"></div>
                 <div class="p-3 flex-1">
-                  <h3 class="font-display text-base text-ink">{{ cls.name }}</h3>
+                  <h3 class="font-display text-base text-fantasy-moonstone">{{ cls.name }}</h3>
                   <p class="text-xs text-slate-arcane">
                     {{ localeService.t('hit_die_label') }}: d{{ cls.raw.hit_die }}
                   </p>

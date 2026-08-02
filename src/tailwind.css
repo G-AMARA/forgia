@@ -1,22 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  /* Base neutra fredda (slate/zinc) invece della vecchia pergamena calda */
-  --color-parchment: #FAFAF9;
-  --color-parchment-dark: #E7E5E4;
-  --color-ink: #1C1917;
-  /* Accento primario: ambra (era un rosso vino gotico) */
-  --color-wine: #B45309;
-  --color-wine-dark: #78350F;
-  /* Accento secondario/bordi: ambra più chiara, per gerarchia visiva col primario */
-  --color-gold: #F59E0B;
-  --color-gold-bright: #FCD34D;
-  /* Superfici scure: zinc invece del grigio-bruno "pietra" */
-  --color-stone: #27272A;
-  --color-stone-dark: #18181B;
-  /* Accento naturale/successo: smeraldo (era un verde bosco spento) */
-  --color-forest: #059669;
-  --color-slate-arcane: #64748B;
+  /* Palette "Modern D&D Fantasy Portal" (da template.md) */
+  --color-fantasy-black: #1c1c21;
+  --color-fantasy-blue: #354a6a;
+  --color-fantasy-gold: #c7a45e;
+  --color-fantasy-moonstone: #b8c0c8;
+  --color-fantasy-green: #283732;
+  --color-fantasy-red: #8d1b1b;
+
+  /* Token esistenti, ripuntati sui nuovi valori: stesso ruolo (bordo/accento dorato,
+     pannello scuro, testo secondario), tema scuro invece di pergamena chiara. */
+  --color-gold: #c7a45e;
+  --color-gold-bright: #d8bd85;
+  --color-stone: #1c1c21;
+  --color-stone-dark: #131316;
+  --color-slate-arcane: #838d97;
+  /* Più chiaro del fantasy-green ufficiale (#283732): quel valore è illeggibile come
+     testo su sfondo quasi nero, qui serve per stati funzionali (successo, modificatore positivo). */
+  --color-forest: #4f8f6b;
 
   --font-display: "Cinzel", serif;
   --font-body: "Spectral", serif;
@@ -28,20 +30,44 @@ html {
 }
 
 body {
-  background-color: var(--color-parchment);
-  color: var(--color-ink);
+  background-color: var(--color-fantasy-black);
+  color: var(--color-fantasy-moonstone);
   font-family: var(--font-body);
 }
 
-/* Superficie scura per pannelli in rilievo: gradiente sobrio, niente più grana/rumore */
+/* Superficie scura per pannelli in rilievo */
 .bg-stone-textured {
   background-color: var(--color-stone);
   background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 60%);
 }
 
-/* Elevazione moderna: ombra morbida singola invece del bevel inset/outset scolpito */
+/* Elevazione: ombra morbida singola */
 .panel-carved {
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.35),
     0 8px 10px -6px rgba(0, 0, 0, 0.25);
+}
+
+/* Gradienti atmosferici (template.md sezione 2) */
+.bg-header-portal {
+  background-image: linear-gradient(to bottom, #1c1c21 0%, #243245 50%, #354a6a 100%);
+}
+.bg-body-portal {
+  background-image: linear-gradient(to bottom right, #2f3e58 0%, #354a6a 50%, #9e8a5b 100%);
+}
+
+/* Bordo superiore del footer: non una linea retta né una singola diagonale, ma un
+   profilo ondulato che cambia orientamento più volte (2.5 periodi sinusoidali). */
+.footer-slant {
+  clip-path: polygon(0.0% 16.0px, 2.5% 19.83px, 5.0% 23.07px, 7.5% 25.24px, 10.0% 26.0px, 12.5% 25.24px, 15.0% 23.07px, 17.5% 19.83px, 20.0% 16.0px, 22.5% 12.17px, 25.0% 8.93px, 27.5% 6.76px, 30.0% 6.0px, 32.5% 6.76px, 35.0% 8.93px, 37.5% 12.17px, 40.0% 16.0px, 42.5% 19.83px, 45.0% 23.07px, 47.5% 25.24px, 50.0% 26.0px, 52.5% 25.24px, 55.0% 23.07px, 57.5% 19.83px, 60.0% 16.0px, 62.5% 12.17px, 65.0% 8.93px, 67.5% 6.76px, 70.0% 6.0px, 72.5% 6.76px, 75.0% 8.93px, 77.5% 12.17px, 80.0% 16.0px, 82.5% 19.83px, 85.0% 23.07px, 87.5% 25.24px, 90.0% 26.0px, 92.5% 25.24px, 95.0% 23.07px, 97.5% 19.83px, 100.0% 16.0px, 100% 100%, 0% 100%);
+}
+
+/* Bagliori (template.md sezione 3) */
+.glow-gold {
+  box-shadow: 0 0 15px rgba(199, 164, 94, 0.7);
+  filter: drop-shadow(0 0 5px rgba(199, 164, 94, 0.9));
+}
+.glow-blue {
+  box-shadow: 0 0 15px rgba(53, 74, 106, 0.7);
+  filter: drop-shadow(0 0 5px rgba(53, 74, 106, 0.9));
 }

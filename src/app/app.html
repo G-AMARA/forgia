@@ -1,9 +1,55 @@
-<div class="min-h-screen bg-parchment text-ink font-body">
+<div class="min-h-screen bg-body-portal text-fantasy-moonstone font-body">
 
+  @if (!auth.isLoggedIn()) {
+    <!-- Vista di login: schermo intero, senza header né footer -->
+    <div class="relative min-h-screen flex items-center justify-center px-4 py-8 overflow-hidden">
+      <img src="/themes/maps.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+
+      <div class="absolute top-4 right-4 flex border border-gold rounded overflow-hidden text-sm bg-fantasy-black/40 backdrop-blur-sm z-10">
+        <button
+          class="px-3 py-1"
+          [class.bg-gold]="localeService.locale() === 'it'"
+          [class.text-fantasy-black]="localeService.locale() === 'it'"
+          (click)="setLocale('it')"
+        >
+          IT
+        </button>
+        <button
+          class="px-3 py-1"
+          [class.bg-gold]="localeService.locale() === 'en'"
+          [class.text-fantasy-black]="localeService.locale() === 'en'"
+          (click)="setLocale('en')"
+        >
+          EN
+        </button>
+      </div>
+
+      <app-auth-form variant="landing" class="relative block w-full"></app-auth-form>
+    </div>
+  } @else {
   <!-- Header -->
-  <header class="bg-ink text-parchment border-b-4 border-gold">
+  <header class="relative bg-header-portal text-fantasy-moonstone border-b-4 border-gold">
+    <!-- Cornice ornamentale: angoli dorati -->
+    <svg class="absolute top-2 left-2 w-6 h-6 text-gold pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
+      <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+    <svg class="absolute top-2 right-2 w-6 h-6 text-gold pointer-events-none rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
+      <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+    <svg class="absolute bottom-2 right-2 w-6 h-6 text-gold pointer-events-none rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
+      <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+    <svg class="absolute bottom-2 left-2 w-6 h-6 text-gold pointer-events-none -rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
+      <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+
     <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <h1 class="font-display text-2xl sm:text-3xl tracking-wide text-gold">
+      <h1 class="flex items-center gap-2 font-display text-2xl sm:text-3xl tracking-wide text-gold">
+        <img src="/themes/logo.png" alt="" class="w-8 h-8 sm:w-9 sm:h-9 drop-shadow-[0_0_5px_rgba(199,164,94,0.7)]" />
         Forgia
       </h1>
 
@@ -12,7 +58,7 @@
           <button
             class="px-3 py-1"
             [class.bg-gold]="localeService.locale() === 'it'"
-            [class.text-ink]="localeService.locale() === 'it'"
+            [class.text-fantasy-black]="localeService.locale() === 'it'"
             (click)="setLocale('it')"
           >
             IT
@@ -20,21 +66,19 @@
           <button
             class="px-3 py-1"
             [class.bg-gold]="localeService.locale() === 'en'"
-            [class.text-ink]="localeService.locale() === 'en'"
+            [class.text-fantasy-black]="localeService.locale() === 'en'"
             (click)="setLocale('en')"
           >
             EN
           </button>
         </div>
 
-        @if (auth.isLoggedIn()) {
-          <app-auth-form variant="header"></app-auth-form>
-        }
+        <app-auth-form variant="header"></app-auth-form>
 
         @if (activeCampaign.current()) {
           <button
             (click)="appNav.setTab('hub')"
-            class="text-xs px-3 py-1 border border-gold rounded-full hover:bg-gold hover:text-ink transition-colors flex items-center gap-1"
+            class="text-xs px-3 py-1 border border-gold rounded-full hover:bg-gold hover:text-fantasy-black transition-colors flex items-center gap-1"
           >
             📍 {{ activeCampaign.current()?.name }}
           </button>
@@ -43,23 +87,12 @@
     </div>
   </header>
 
-  @if (!auth.isLoggedIn()) {
-    <div class="flex flex-col items-center justify-center px-4 py-16 sm:py-24 min-h-[70vh]">
-      <h2 class="font-display text-3xl sm:text-4xl text-wine text-center mb-2">
-        {{ localeService.t('app_title') }}
-      </h2>
-      <p class="text-center text-slate-arcane italic mb-8 max-w-md">
-        {{ localeService.t('landing_tagline') }}
-      </p>
-      <app-auth-form variant="landing"></app-auth-form>
-    </div>
-  } @else {
     <!-- Navigazione a schede -->
-    <nav class="bg-parchment-dark border-b border-gold overflow-x-auto">
+    <nav class="bg-fantasy-black border-b border-gold overflow-x-auto">
       <div class="max-w-5xl mx-auto px-4 flex gap-1 whitespace-nowrap">
         <button
           class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-          [class.border-wine]="appNav.activeTab() === 'board'"
+          [class.border-fantasy-gold]="appNav.activeTab() === 'board'"
           [class.border-transparent]="appNav.activeTab() !== 'board'"
           (click)="goToBoard()"
         >
@@ -68,7 +101,7 @@
         @if (auth.isMaster()) {
           <button
             class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-            [class.border-wine]="appNav.activeTab() === 'campaign'"
+            [class.border-fantasy-gold]="appNav.activeTab() === 'campaign'"
             [class.border-transparent]="appNav.activeTab() !== 'campaign'"
             (click)="appNav.setTab('campaign')"
           >
@@ -77,7 +110,7 @@
         }
         <button
           class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-          [class.border-wine]="appNav.activeTab() === 'characters'"
+          [class.border-fantasy-gold]="appNav.activeTab() === 'characters'"
           [class.border-transparent]="appNav.activeTab() !== 'characters'"
           (click)="appNav.setTab('characters')"
         >
@@ -85,7 +118,7 @@
         </button>
         <button
           class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-          [class.border-wine]="appNav.activeTab() === 'catalog'"
+          [class.border-fantasy-gold]="appNav.activeTab() === 'catalog'"
           [class.border-transparent]="appNav.activeTab() !== 'catalog'"
           (click)="appNav.setTab('catalog')"
         >
@@ -94,7 +127,7 @@
         @if (auth.isAdmin()) {
           <button
             class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-            [class.border-wine]="appNav.activeTab() === 'manage'"
+            [class.border-fantasy-gold]="appNav.activeTab() === 'manage'"
             [class.border-transparent]="appNav.activeTab() !== 'manage'"
             (click)="appNav.setTab('manage')"
           >
@@ -157,5 +190,22 @@
         }
       }
     </main>
+
+    <!-- Footer -->
+    <footer class="footer-slant relative bg-fantasy-black mt-12 overflow-hidden">
+      <img src="/themes/maps.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+      <svg class="absolute top-0 left-0 w-full h-8 text-gold animate-pulse pointer-events-none" viewBox="0 0 100 32" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline
+          points="0.0,16.0 2.5,19.83 5.0,23.07 7.5,25.24 10.0,26.0 12.5,25.24 15.0,23.07 17.5,19.83 20.0,16.0 22.5,12.17 25.0,8.93 27.5,6.76 30.0,6.0 32.5,6.76 35.0,8.93 37.5,12.17 40.0,16.0 42.5,19.83 45.0,23.07 47.5,25.24 50.0,26.0 52.5,25.24 55.0,23.07 57.5,19.83 60.0,16.0 62.5,12.17 65.0,8.93 67.5,6.76 70.0,6.0 72.5,6.76 75.0,8.93 77.5,12.17 80.0,16.0 82.5,19.83 85.0,23.07 87.5,25.24 90.0,26.0 92.5,25.24 95.0,23.07 97.5,19.83 100.0,16.0"
+          vector-effect="non-scaling-stroke"
+        />
+      </svg>
+
+      <div class="max-w-5xl mx-auto px-4 pt-8 pb-6 flex flex-col items-center gap-2 text-center">
+        <img src="/themes/logo.png" alt="" class="w-9 h-9" />
+        <div class="w-24 h-px bg-gold/40"></div>
+        <p class="text-xs text-slate-arcane">{{ localeService.t('footer_credit') }}</p>
+      </div>
+    </footer>
   }
 </div>

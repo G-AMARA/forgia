@@ -1,13 +1,13 @@
-<section class="bg-white/60 border-2 border-gold rounded-lg p-5 space-y-4">
-  <h2 class="font-display text-2xl text-wine">{{ localeService.t('equipment_catalog_title') }}</h2>
+<section class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('equipment_catalog_title') }}</h2>
 
   <form (ngSubmit)="submit()" class="flex flex-col gap-4">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold">{{ localeService.t('equipment_name_label') }} <span class="text-red-700">*</span></label>
+        <label class="text-sm font-semibold">{{ localeService.t('equipment_name_label') }} <span class="text-red-300">*</span></label>
         <input
           type="text" [(ngModel)]="name" name="name" required
-          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
         />
       </div>
 
@@ -15,7 +15,7 @@
         <label class="text-sm font-semibold">{{ localeService.t('weapon_weight_kg_label') }}</label>
         <input
           type="number" min="0" step="0.1" [(ngModel)]="weight" name="weight"
-          class="px-3 py-2 rounded border border-gold bg-white focus:outline-none focus:ring-2 focus:ring-wine"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
         />
       </div>
     </div>
@@ -23,14 +23,14 @@
     <div class="flex gap-2">
       <button
         type="submit" [disabled]="loading()"
-        class="self-start px-5 py-2 bg-wine text-parchment font-display tracking-wide rounded border-2 border-gold hover:bg-wine-dark transition-colors disabled:opacity-50"
+        class="self-start px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
       >
         {{ editingId ? localeService.t('save_changes_button') : localeService.t('equipment_add_to_catalog_button') }}
       </button>
       @if (editingId) {
         <button
           type="button" (click)="cancelEdit()"
-          class="self-start px-5 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-ink transition-colors"
+          class="self-start px-5 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors"
         >
           {{ localeService.t('cancel_button') }}
         </button>
@@ -38,12 +38,12 @@
     </div>
 
     @if (errorMsg()) {
-      <p class="text-sm text-red-700">{{ errorMsg() }}</p>
+      <p class="text-sm text-red-300">{{ errorMsg() }}</p>
     }
   </form>
 
   <div>
-    <h3 class="font-display text-lg text-ink mb-3">{{ localeService.t('equipment_catalog_list_title') }}</h3>
+    <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('equipment_catalog_list_title') }}</h3>
     @if (homebrewEquipment().length === 0) {
       <p class="text-slate-arcane italic">{{ localeService.t('no_homebrew_equipment_yet') }}</p>
     } @else {
@@ -63,10 +63,10 @@
                 <td class="py-2 pr-2">{{ e.weight }} kg</td>
                 <td class="py-2">
                   <div class="flex gap-2">
-                    <button (click)="startEdit(e)" class="text-xs text-wine underline">
+                    <button (click)="startEdit(e)" class="text-xs text-fantasy-gold underline">
                       {{ localeService.t('edit_button') }}
                     </button>
-                    <button (click)="deleteEquipment(e.id, e.name)" class="text-xs text-red-700 underline">
+                    <button (click)="deleteEquipment(e.id, e.name)" class="text-xs text-red-300 underline">
                       {{ localeService.t('delete_button') }}
                     </button>
                   </div>

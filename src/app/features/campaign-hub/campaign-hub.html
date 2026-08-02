@@ -9,8 +9,8 @@
             <img [src]="getCoverImagePath(cover()!)" [alt]="cover()!.label" class="w-full h-full object-cover" />
           }
         </div>
-        <div class="p-5 bg-white/60 space-y-2">
-          <h2 class="font-display text-2xl text-wine">{{ campaignStore.current()?.name }}</h2>
+        <div class="p-5 bg-fantasy-black/60 space-y-2">
+          <h2 class="font-display text-2xl text-fantasy-gold">{{ campaignStore.current()?.name }}</h2>
           @if (campaignStore.current()?.description) {
             <p class="text-sm italic opacity-80">{{ campaignStore.current()?.description }}</p>
           }
@@ -19,14 +19,14 @@
             @if (isOwner()) {
               <button
                 (click)="goToManage()"
-                class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-ink transition-colors"
+                class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
               >
                 {{ localeService.t('manage_campaign_button') }}
               </button>
               @if (!hasOwnCharacter()) {
                 <button
                   (click)="goToCharacters()"
-                  class="text-sm px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+                  class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
                 >
                   {{ localeService.t('create_my_character_button') }}
                 </button>
@@ -34,14 +34,14 @@
             } @else if (!hasOwnCharacter()) {
               <button
                 (click)="goToCharacters()"
-                class="text-sm px-4 py-2 bg-wine text-parchment rounded border border-gold hover:bg-wine-dark transition-colors"
+                class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
               >
                 {{ localeService.t('create_character_button') }}
               </button>
             } @else {
               <button
                 (click)="goToMyCharacter()"
-                class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-ink transition-colors"
+                class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
               >
                 {{ localeService.t('view_my_character_button') }}
               </button>
@@ -52,9 +52,9 @@
   
       <!-- Roster -->
       <div>
-        <h3 class="font-display text-lg text-ink mb-3">{{ localeService.t('roster_title') }}</h3>
+        <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('roster_title') }}</h3>
         @if (deleteError()) {
-          <p class="text-sm text-red-700 mb-2">{{ deleteError() }}</p>
+          <p class="text-sm text-red-300 mb-2">{{ deleteError() }}</p>
         }
         @if (characterStore.characters().length === 0) {
           <p class="text-slate-arcane italic">{{ localeService.t('no_characters_yet') }}</p>
@@ -63,7 +63,7 @@
             @for (character of characterStore.characters(); track character.id) {
               <div
                 (click)="goToCharacterSheet(character.id)"
-                class="relative bg-white/60 border border-gold rounded-lg p-3 cursor-pointer hover:bg-white/80 hover:border-gold-bright transition-colors"
+                class="relative bg-fantasy-black/60 border border-gold rounded-lg p-3 cursor-pointer hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
               >
                 @if (auth.isAdmin()) {
                   <button
@@ -73,7 +73,7 @@
                     {{ localeService.t('delete_button') }}
                   </button>
                 }
-                <p class="font-display text-base text-ink">{{ character.name }}</p>
+                <p class="font-display text-base text-fantasy-moonstone">{{ character.name }}</p>
                 <p class="text-xs text-slate-arcane">
                   {{ localeService.t('level_label') }} {{ character.level }} · {{ character.race_name }} · {{ character.class_name }}
                 </p>
@@ -89,15 +89,15 @@
       <!-- Sezioni future -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
-          <p class="font-display text-sm text-ink">📖 {{ localeService.t('session_log_title') }}</p>
+          <p class="font-display text-sm text-fantasy-moonstone">📖 {{ localeService.t('session_log_title') }}</p>
           <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
         </div>
         <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
-          <p class="font-display text-sm text-ink">🐲 {{ localeService.t('bestiary_title') }}</p>
+          <p class="font-display text-sm text-fantasy-moonstone">🐲 {{ localeService.t('bestiary_title') }}</p>
           <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
         </div>
         <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
-          <p class="font-display text-sm text-ink">🗺️ {{ localeService.t('maps_title') }}</p>
+          <p class="font-display text-sm text-fantasy-moonstone">🗺️ {{ localeService.t('maps_title') }}</p>
           <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
         </div>
       </div>

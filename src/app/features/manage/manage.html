@@ -1,10 +1,10 @@
 <section class="space-y-4">
-  <h2 class="font-display text-2xl text-wine">{{ localeService.t('manage_title') }}</h2>
+  <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('manage_title') }}</h2>
 
   <div class="flex gap-1 border-b border-gold overflow-x-auto whitespace-nowrap">
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-      [class.border-wine]="activeSection() === 'races'"
+      [class.border-fantasy-gold]="activeSection() === 'races'"
       [class.border-transparent]="activeSection() !== 'races'"
       (click)="setSection('races')"
     >
@@ -12,7 +12,7 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-      [class.border-wine]="activeSection() === 'classes'"
+      [class.border-fantasy-gold]="activeSection() === 'classes'"
       [class.border-transparent]="activeSection() !== 'classes'"
       (click)="setSection('classes')"
     >
@@ -20,7 +20,7 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-      [class.border-wine]="activeSection() === 'subclasses'"
+      [class.border-fantasy-gold]="activeSection() === 'subclasses'"
       [class.border-transparent]="activeSection() !== 'subclasses'"
       (click)="setSection('subclasses')"
     >
@@ -28,7 +28,7 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-      [class.border-wine]="activeSection() === 'backgrounds'"
+      [class.border-fantasy-gold]="activeSection() === 'backgrounds'"
       [class.border-transparent]="activeSection() !== 'backgrounds'"
       (click)="setSection('backgrounds')"
     >
@@ -36,7 +36,7 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-      [class.border-wine]="activeSection() === 'weapons'"
+      [class.border-fantasy-gold]="activeSection() === 'weapons'"
       [class.border-transparent]="activeSection() !== 'weapons'"
       (click)="setSection('weapons')"
     >
@@ -44,7 +44,7 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-      [class.border-wine]="activeSection() === 'spells'"
+      [class.border-fantasy-gold]="activeSection() === 'spells'"
       [class.border-transparent]="activeSection() !== 'spells'"
       (click)="setSection('spells')"
     >
@@ -52,7 +52,7 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-      [class.border-wine]="activeSection() === 'equipment'"
+      [class.border-fantasy-gold]="activeSection() === 'equipment'"
       [class.border-transparent]="activeSection() !== 'equipment'"
       (click)="setSection('equipment')"
     >

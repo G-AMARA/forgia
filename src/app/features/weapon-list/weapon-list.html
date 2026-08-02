@@ -1,7 +1,7 @@
 <section class="border border-gold rounded-lg overflow-hidden">
     <button
       (click)="toggle.emit()"
-      class="w-full flex items-center justify-between px-4 py-3 bg-parchment-dark font-display text-lg text-wine"
+      class="w-full flex items-center justify-between px-4 py-3 bg-fantasy-black font-display text-lg text-fantasy-gold"
     >
       <span>{{ localeService.t('weapons_title') }}</span>
       <span>{{ expanded ? '▾' : '▸' }}</span>
@@ -16,7 +16,7 @@
             <div class="border border-gold/50 rounded overflow-hidden">
               <button
                 (click)="toggleCategory(group.category)"
-                class="w-full flex items-center justify-between px-3 py-2 bg-white/40 font-display text-sm text-ink"
+                class="w-full flex items-center justify-between px-3 py-2 bg-fantasy-black/40 font-display text-sm text-fantasy-moonstone"
               >
                 <span>{{ categoryLabel(group.category) }} ({{ group.weapons.length }})</span>
                 <span>{{ isCategoryExpanded(group.category) ? '▾' : '▸' }}</span>
@@ -25,10 +25,10 @@
               @if (isCategoryExpanded(group.category)) {
                 <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   @for (w of group.weapons; track w.id) {
-                    <div class="flex bg-white/60 border border-gold rounded-lg overflow-hidden">
-                      <div class="w-1.5 bg-ink shrink-0"></div>
+                    <div class="flex bg-fantasy-black/60 border border-gold rounded-lg overflow-hidden">
+                      <div class="w-1.5 bg-slate-arcane shrink-0"></div>
                       <div class="p-3 flex-1">
-                        <h4 class="font-display text-sm text-ink">{{ w.name }}</h4>
+                        <h4 class="font-display text-sm text-fantasy-moonstone">{{ w.name }}</h4>
                         <p class="text-xs text-slate-arcane">
                           {{ damageLine(w) }}
                           @if (rangeLine(w)) {

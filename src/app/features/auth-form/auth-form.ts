@@ -1,4 +1,4 @@
-import { Component, inject, signal, Input } from '@angular/core';
+import { Component, inject, signal, computed, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
@@ -13,6 +13,19 @@ export class AuthForm {
   private auth = inject(Auth);
   protected localeService = inject(LocaleService);
   protected authService = this.auth;
+
+  // Icona del ruolo: admin.png (dado d20) / gameMaster.png (libro) / giocatore.png (spada).
+  protected roleIcon = computed(() => {
+    if (this.auth.isAdmin()) return '/themes/admin.png';
+    if (this.auth.isMaster()) return '/themes/gameMaster.png';
+    return '/themes/giocatore.png';
+  });
+
+  protected roleLabel = computed(() => {
+    if (this.auth.isAdmin()) return this.localeService.t('role_admin');
+    if (this.auth.isMaster()) return this.localeService.t('role_master');
+    return this.localeService.t('role_player');
+  });
 
   @Input() variant: 'header' | 'landing' = 'header';
 

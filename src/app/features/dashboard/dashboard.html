@@ -1,11 +1,11 @@
 <section class="space-y-4">
-    <h2 class="font-display text-2xl text-wine">{{ localeService.t('board_title') }}</h2>
+    <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('board_title') }}</h2>
 
     <input
       type="search"
       [(ngModel)]="searchTerm"
       [placeholder]="localeService.t('search_campaigns_placeholder')"
-      class="w-full sm:w-72 px-3 py-2 rounded border border-gold bg-white/60 text-ink text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright"
+      class="w-full sm:w-72 px-3 py-2 rounded border border-gold bg-fantasy-black/60 text-fantasy-moonstone text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright"
     />
 
     @if (loading()) {
@@ -18,7 +18,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (campaign of filteredCampaigns(); track campaign.id) {
           <div
-            class="relative flex flex-col text-left border-2 border-gold rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all bg-white/60 min-h-80"
+            class="relative flex flex-col text-left border-2 border-gold rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all bg-fantasy-black/60 min-h-80"
           >
             @if (auth.user()?.id === campaign.ownerId || auth.isAdmin()) {
               <button
@@ -41,7 +41,7 @@
 
               <!-- Corpo -->
               <div class="p-4 flex flex-col gap-2 flex-1">
-                <h3 class="font-display text-lg text-ink">{{ campaign.name }}</h3>
+                <h3 class="font-display text-lg text-fantasy-moonstone">{{ campaign.name }}</h3>
                 <p class="text-xs text-slate-arcane">
                   {{ localeService.t('master_label') }}: <strong>{{ campaign.masterNickname }}</strong>
                 </p>
@@ -51,10 +51,10 @@
                 }
 
                 <div class="mt-auto pt-2 border-t border-gold/40 flex justify-between items-center">
-                  <span class="text-xs px-2 py-1 bg-gold/20 rounded-full text-ink">
+                  <span class="text-xs px-2 py-1 bg-gold/20 rounded-full text-fantasy-moonstone">
                     {{ campaign.characterCount }} {{ localeService.t('characters_label') }}
                   </span>
-                  <span class="text-xs text-wine underline">{{ localeService.t('enter_campaign') }}</span>
+                  <span class="text-xs text-fantasy-gold underline">{{ localeService.t('enter_campaign') }}</span>
                 </div>
               </div>
             </button>
