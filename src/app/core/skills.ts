@@ -1,6 +1,6 @@
 export interface SkillDef {
   key: string;
-  ability: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+  ability: 'str' | 'dex' | 'cos' | 'int' | 'wis' | 'cha';
 }
 
 export const SKILLS: SkillDef[] = [

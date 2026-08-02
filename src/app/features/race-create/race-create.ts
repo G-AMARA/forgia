@@ -20,8 +20,8 @@ export class RaceCreate {
   name = '';
   speed = 9;
   description = '';
-  abilityBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
-  abilityKeys: (keyof typeof this.abilityBonuses)[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+  abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  abilityKeys: (keyof typeof this.abilityBonuses)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
 
   editingId: string | null = null;
 
@@ -37,7 +37,7 @@ export class RaceCreate {
     this.name = '';
     this.speed = 9;
     this.description = '';
-    this.abilityBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+    this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   }
 
   startEdit(race: any) {
@@ -45,7 +45,7 @@ export class RaceCreate {
     this.name = race.raw.name;
     this.speed = race.raw.speed ?? 9;
     this.description = race.raw.description ?? '';
-    this.abilityBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0, ...normalizeAbilityBonuses(race.raw.ability_bonuses) };
+    this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...normalizeAbilityBonuses(race.raw.ability_bonuses) };
   }
 
   cancelEdit() {

@@ -32,16 +32,49 @@ export class AuthForm {
   email = '';
   nickname = '';
   password = '';
+  repeat_password = '';
   isMaster = false; // scelta del ruolo in fase di registrazione
+  protected readonly passwordPattern = '^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$';
+  protected readonly emailPattern = '^[^\s@]+@[^\s@]+\\.[^\s@]+$';
   mode = signal<'login' | 'signup'>('login');
   errorMsg = signal<string | null>(null);
   infoMsg = signal<string | null>(null);
   loading = signal(false);
+  showPassword = false;
+  show_repeat_Password = false;
 
   toggleMode() {
     this.mode.set(this.mode() === 'login' ? 'signup' : 'login');
     this.errorMsg.set(null);
     this.infoMsg.set(null);
+  }
+
+  private isPasswordStrong(password: string): boolean {
+    return new RegExp(this.passwordPattern).test(password);
+  }
+
+  private isEmailValid(email: string): boolean {
+    return new RegExp(this.emailPattern).test(email);
+  }
+
+  protected canSubmit(): boolean {
+    if (this.loading()) {
+      return false;
+    }
+
+    if (this.mode() === 'signup') {
+      return !!(
+        this.email.trim() &&
+        this.isEmailValid(this.email) &&
+        this.nickname.trim() &&
+        this.password &&
+        this.repeat_password &&
+        this.isPasswordStrong(this.password) &&
+        this.password === this.repeat_password
+      );
+    }
+
+    return !!(this.nickname.trim() && this.password);
   }
 
   async submit() {
@@ -50,6 +83,24 @@ export class AuthForm {
     this.loading.set(true);
 
     if (this.mode() === 'signup') {
+      if (!this.isEmailValid(this.email)) {
+        this.errorMsg.set('Inserisci un indirizzo email valido.');
+        this.loading.set(false);
+        return;
+      }
+
+      if (!this.isPasswordStrong(this.password)) {
+        this.errorMsg.set('La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo.');
+        this.loading.set(false);
+        return;
+      }
+
+      if (this.password !== this.repeat_password) {
+        this.errorMsg.set('Le password non coincidono.');
+        this.loading.set(false);
+        return;
+      }
+
       const { error } = await this.auth.signUp(
         this.email,
         this.password,

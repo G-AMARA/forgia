@@ -108,7 +108,7 @@ const KNOWN_SPELLS: Record<string, number[]> = {
 
 // Classi a incantesimi "preparati": il limite è mod. caratteristica + livello (Paladino: metà livello,
 // essendo un mezzo incantatore), minimo 1. Richiede gli ability_scores del personaggio.
-const PREPARED_CASTER_ABILITY: Record<string, 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'> = {
+const PREPARED_CASTER_ABILITY: Record<string, 'str' | 'dex' | 'cos' | 'int' | 'wis' | 'cha'> = {
   wizard: 'int',
   cleric: 'wis',
   druid: 'wis',

@@ -47,8 +47,8 @@ export class CharacterSheet implements OnInit {
     }
   }
   protected skills = SKILLS;
-  protected abilityKeys: ('str' | 'dex' | 'con' | 'int' | 'wis' | 'cha')[] = [
-    'str', 'dex', 'con', 'int', 'wis', 'cha',
+  protected abilityKeys: ('str' | 'dex' | 'cos' | 'int' | 'wis' | 'cha')[] = [
+    'str', 'dex', 'cos', 'int', 'wis', 'cha',
   ];
 
   activeSubTab = signal<SubTab>('general');

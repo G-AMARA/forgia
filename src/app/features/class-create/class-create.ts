@@ -17,7 +17,7 @@ export class ClassCreate {
 
   protected classes = this.contentStore.getContent('classes');
 
-  abilityKeys = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+  abilityKeys = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
 
   name = '';
   hitDie = 8;

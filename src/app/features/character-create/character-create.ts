@@ -55,9 +55,9 @@ export class CharacterCreate {
   experiencePoints = 0;
   backstory = '';
 
-  abilityScores = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
-  backgroundBonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
-  abilityKeys: (keyof typeof this.abilityScores)[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+  abilityScores = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
+  backgroundBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  abilityKeys: (keyof typeof this.abilityScores)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
 
   // Punti massimi assegnabili come Bonus Background e valore massimo per singola caratteristica:
   // combinazioni valide risultanti: tre caselle a +1, oppure una a +2 e una a +1.
