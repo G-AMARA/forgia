@@ -24,7 +24,11 @@
         </button>
       </div>
 
-      <app-auth-form variant="landing" class="relative block w-full"></app-auth-form>
+      <div class="relative w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
+        <img src="/themes/logoForgia.png" alt="Forgia" class="h-16 sm:h-20 w-auto" />
+
+        <app-auth-form variant="landing" class="block w-full"></app-auth-form>
+      </div>
     </div>
   } @else {
   <!-- Header -->
@@ -48,9 +52,8 @@
     </svg>
 
     <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <h1 class="flex items-center gap-2 font-display text-2xl sm:text-3xl tracking-wide text-gold">
-        <img src="/themes/logo.png" alt="" class="w-8 h-8 sm:w-9 sm:h-9 drop-shadow-[0_0_5px_rgba(199,164,94,0.7)]" />
-        Forgia
+      <h1 class="flex items-center">
+        <img src="/themes/logoForgia.png" alt="Forgia" class="h-9 sm:h-11 w-auto" />
       </h1>
 
       <div class="flex items-center gap-3 flex-wrap">
@@ -205,6 +208,9 @@
         <img src="/themes/logo.png" alt="" class="w-9 h-9" />
         <div class="w-24 h-px bg-gold/40"></div>
         <p class="text-xs text-slate-arcane">{{ localeService.t('footer_credit') }}</p>
+        <p class="text-[11px] text-slate-arcane/70 leading-relaxed max-w-md mt-2">
+          {{ localeService.t('footer_disclaimer') }}
+        </p>
       </div>
     </footer>
   }

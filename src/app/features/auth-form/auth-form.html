@@ -27,16 +27,21 @@
       </svg>
 
       <div class="relative">
-        <img src="/themes/logo.png" alt="" class="w-14 h-14 mb-4 glow-gold" />
-        <h1 class="font-display text-3xl text-gold-bright tracking-wide mb-3">Forgia</h1>
+        <h1 class="font-display text-2xl sm:text-3xl text-gold-bright tracking-wide mb-3">{{ localeService.t('app_title') }}</h1>
         <p class="text-slate-arcane italic text-sm leading-relaxed">{{ localeService.t('landing_tagline') }}</p>
       </div>
 
       <div class="relative w-16 h-px bg-gold/40"></div>
     </div>
 
-    <!-- Pannello destro: form -->
-    <div class="sm:w-3/5 p-6 sm:p-10 flex flex-col justify-center">
+    <!-- Pannello destro: form, sfondo scuro solido con logo in filigrana -->
+    <div class="relative sm:w-3/5 bg-stone-dark p-6 sm:p-10 flex flex-col justify-center overflow-hidden">
+      <img
+        src="/themes/logo.png" alt=""
+        class="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none select-none filter-[brightness(0)_contrast(1.5)]"
+      />
+
+      <div class="relative z-10">
       <h2 class="font-display text-xl text-gold-bright mb-6">
         {{ mode() === 'login' ? localeService.t('login_title') : localeService.t('signup_title') }}
       </h2>
@@ -120,6 +125,7 @@
       @if (infoMsg()) {
         <p class="text-sm text-green-300 mt-3 text-center">{{ infoMsg() }}</p>
       }
+      </div>
     </div>
   </div>
 } @else {
