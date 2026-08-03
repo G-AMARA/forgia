@@ -107,4 +107,27 @@ export class Auth {
     const { error } = await this.supabase.client.auth.signOut();
     return { error };
   }
+
+  // Il login usa il nickname, non l'email: per il recupero risolviamo prima
+  // l'email tramite la stessa RPC usata in signInWithNickname.
+  async recoverPassword(nickname: string) {
+    const { data: email, error: rpcError } = await this.supabase.client.rpc(
+      'get_email_for_nickname',
+      { p_nickname: nickname }
+    );
+
+    if (rpcError || !email) {
+      return { error: { message: 'Nickname non trovato' } };
+    }
+
+    const { error } = await this.supabase.client.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
+  }
+
+  async updatePassword(newPassword: string) {
+    const { error } = await this.supabase.client.auth.updateUser({ password: newPassword });
+    return { error };
+  }
 }

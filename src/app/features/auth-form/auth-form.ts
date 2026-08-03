@@ -36,7 +36,7 @@ export class AuthForm {
   isMaster = false; // scelta del ruolo in fase di registrazione
   protected readonly passwordPattern = '^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$';
   protected readonly emailPattern = '^[^\s@]+@[^\s@]+\\.[^\s@]+$';
-  mode = signal<'login' | 'signup'>('login');
+  mode = signal<'login' | 'signup' | 'recover'>('login');
   errorMsg = signal<string | null>(null);
   infoMsg = signal<string | null>(null);
   loading = signal(false);
@@ -45,6 +45,12 @@ export class AuthForm {
 
   toggleMode() {
     this.mode.set(this.mode() === 'login' ? 'signup' : 'login');
+    this.errorMsg.set(null);
+    this.infoMsg.set(null);
+  }
+
+  goToRecover() {
+    this.mode.set('recover');
     this.errorMsg.set(null);
     this.infoMsg.set(null);
   }
@@ -74,6 +80,10 @@ export class AuthForm {
       );
     }
 
+    if (this.mode() === 'recover') {
+      return !!this.nickname.trim();
+    }
+
     return !!(this.nickname.trim() && this.password);
   }
 
@@ -81,6 +91,17 @@ export class AuthForm {
     this.errorMsg.set(null);
     this.infoMsg.set(null);
     this.loading.set(true);
+
+    if (this.mode() === 'recover') {
+      const { error } = await this.auth.recoverPassword(this.nickname);
+      if (error) {
+        this.errorMsg.set(error.message);
+      } else {
+        this.infoMsg.set(this.localeService.t('recover_check_email'));
+      }
+      this.loading.set(false);
+      return;
+    }
 
     if (this.mode() === 'signup') {
       if (!this.isEmailValid(this.email)) {
