@@ -158,6 +158,11 @@ export class CharacterCreate {
     return this.backgroundBonusMax - this.backgroundBonusTotal();
   }
 
+  // Tetto dinamico per l'input: non oltre il max per caratteristica, né oltre i punti rimasti.
+  maxBackgroundBonus(key: keyof typeof this.abilityScores): number {
+    return Math.min(this.backgroundBonusPerAbilityMax, this.backgroundBonuses[key] + this.backgroundBonusRemaining());
+  }
+
   // Applica il nuovo valore rispettando i vincoli: max 2 per caratteristica, max 3 punti totali.
   setBackgroundBonus(key: keyof typeof this.abilityScores, value: number) {
     let next = Math.max(0, Math.min(this.backgroundBonusPerAbilityMax, Math.floor(value) || 0));

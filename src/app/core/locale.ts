@@ -8,6 +8,7 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     app_title: 'Un Lancio, Una Storia',
     races_title: 'Razze disponibili',
     classes_title: 'Classi disponibili',
+    subclasses_title: 'Sottoclassi disponibili',
     loading: 'Caricamento...',
     error_generic: 'Si è verificato un errore',
     speed_label: 'Velocità',
@@ -291,11 +292,13 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     recharge_long_rest: 'Riposo lungo',
     cantrip_limit_reached: 'Hai già raggiunto il numero massimo di trucchetti conosciuti per questa classe a questo livello.',
     spell_limit_reached: 'Hai già raggiunto il numero massimo di incantesimi conosciuti/preparabili per questa classe a questo livello.',
+    spells_knows_label: 'Incantesimi conosciuti',
   },
   en: {
     app_title: 'One Roll, One Story',
     races_title: 'Available Races',
     classes_title: 'Available Classes',
+    subclasses_title: 'Available Subclasses',
     loading: 'Loading...',
     error_generic: 'Something went wrong',
     speed_label: 'Speed',
@@ -579,6 +582,7 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     recharge_long_rest: 'Long rest',
     cantrip_limit_reached: 'You have already reached the maximum number of cantrips known for this class at this level.',
     spell_limit_reached: 'You have already reached the maximum number of spells known/preparable for this class at this level.',
+    spells_knows_label: 'Spells known',
   },
 };
 

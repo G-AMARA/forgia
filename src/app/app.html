@@ -169,6 +169,10 @@
             [expanded]="appNav.expandedCatalogSection() === 'classes'"
             (toggle)="appNav.toggleCatalogSection('classes')"
           ></app-class-list>
+          <app-subclass-list
+            [expanded]="appNav.expandedCatalogSection() === 'subclasses'"
+            (toggle)="appNav.toggleCatalogSection('subclasses')"
+          ></app-subclass-list>
           <app-background-list
             [expanded]="appNav.expandedCatalogSection() === 'backgrounds'"
             (toggle)="appNav.toggleCatalogSection('backgrounds')"

@@ -7,6 +7,7 @@ import { CampaignCreate } from './features/campaign-create/campaign-create';
 import { CharacterCreate } from './features/character-create/character-create';
 import { RaceList } from './features/race-list/race-list';
 import { ClassList } from './features/class-list/class-list';
+import { SubclassList } from './features/subclass-list/subclass-list';
 import { BackgroundList } from './features/background-list/background-list';
 import { SpellList } from './features/spell-list/spell-list';
 import { EquipmentList } from './features/equipment-list/equipment-list';
@@ -29,6 +30,7 @@ import { ActiveCampaign } from './core/active-campaign';
     CharacterCreate,
     RaceList,
     ClassList,
+    SubclassList,
     BackgroundList,
     SpellList,
     EquipmentList,
