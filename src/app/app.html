@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-body-portal text-fantasy-moonstone font-body">
+<div class="min-h-screen flex flex-col bg-body-portal text-fantasy-moonstone font-body">
 
   @if (!auth.isLoggedIn()) {
     <!-- Vista di login: schermo intero, senza header né footer -->
@@ -140,7 +140,7 @@
       </div>
     </nav>
 
-    <main class="max-w-5xl mx-auto px-4 py-6 space-y-8">
+    <main class="flex-1 max-w-5xl mx-auto px-4 py-6 space-y-8 w-full">
       @switch (appNav.activeTab()) {
         @case ('board') {
           <router-outlet />
