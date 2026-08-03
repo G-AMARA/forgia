@@ -96,7 +96,7 @@
   
       <!-- GENERALE -->
       @if (activeSubTab() === 'general') {
-        <div class="bg-fantasy-black/60 border border-gold rounded-lg p-4 space-y-4">
+        <app-card contentClass="space-y-4">
           <div class="flex flex-col gap-1">
             <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }}</label>
             <input
@@ -194,7 +194,7 @@
               </div>
               @for (key of abilityKeys; track key) {
                 <div class="flex flex-col gap-1">
-                  <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+                  <label class="text-xs uppercase text-center text-slate-600">{{ localeService.t('ability_' + key) }}</label>
                   <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
                     @if (getRaceBonus(key) > 0) {
                       +{{ getRaceBonus(key) }}
@@ -212,13 +212,13 @@
             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-slate-100/50 p-3 rounded border border-dashed border-slate-300">
               <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
                 <label class="text-xs uppercase font-semibold text-slate-600">{{ localeService.t('background_bonus_label') }}</label>
-                <span class="text-xs text-slate-arcane">
+                <span class="text-xs text-slate-600">
                   {{ localeService.t('points_remaining_label') }}: {{ backgroundBonusRemaining() }}/{{ backgroundBonusMax }}
                 </span>
               </div>
               @for (key of abilityKeys; track key) {
                 <div class="flex flex-col gap-1">
-                  <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+                  <label class="text-xs uppercase text-center text-slate-600">{{ localeService.t('ability_' + key) }}</label>
                   <input
                     type="number" min="0" max="2" [disabled]="readOnly()"
                     [ngModel]="identityBackgroundBonuses[key]"
@@ -238,9 +238,9 @@
               {{ localeService.t('save_button') }}
             </button>
           }
-        </div>
+        </app-card>
 
-        <div class="bg-fantasy-black/60 border border-gold rounded-lg p-4 space-y-3">
+        <app-card contentClass="space-y-3">
           <label class="text-sm font-semibold">{{ localeService.t('backstory_label') }}</label>
           <textarea
             [(ngModel)]="backstory" rows="8" [disabled]="readOnly()"
@@ -254,12 +254,12 @@
               {{ localeService.t('save_button') }}
             </button>
           }
-        </div>
+        </app-card>
       }
-  
+
       <!-- COMBATTIMENTO -->
       @if (activeSubTab() === 'combat') {
-        <div class="bg-fantasy-black/60 border border-gold rounded-lg p-4 space-y-5">
+        <app-card contentClass="space-y-5">
           <!-- PF / CA / Bonus Competenza / Iniziativa -->
           <div class="grid grid-cols-3 sm:grid-cols-5 gap-4 max-w-2xl">
             <div class="flex flex-col gap-1">
@@ -391,12 +391,12 @@
               {{ localeService.t('save_button') }}
             </button>
           }
-        </div>
+        </app-card>
       }
-  
+
       <!-- INVENTARIO -->
       @if (activeSubTab() === 'inventory') {
-        <div class="bg-fantasy-black/60 border border-gold rounded-lg p-4 space-y-4">
+        <app-card contentClass="space-y-4">
           @if (!readOnly()) {
             <div class="space-y-2">
               <input
@@ -451,12 +451,12 @@
               }
             </ul>
           }
-        </div>
+        </app-card>
       }
-  
+
       <!-- INCANTESIMI -->
       @if (activeSubTab() === 'spells' && c.class_name) {
-        <div class="bg-fantasy-black/60 border border-gold rounded-lg p-4 space-y-4">
+        <app-card contentClass="space-y-4">
           @if (spellcastingInfo(); as info) {
             <div class="bg-fantasy-black/60 border border-gold rounded-lg p-3 text-sm space-y-1">
               <p>
@@ -589,12 +589,12 @@
               }
             </div>
           }
-        </div>
+        </app-card>
       }
 
       <!-- ARMI -->
       @if (activeSubTab() === 'weapons') {
-        <div class="bg-fantasy-black/60 border border-gold rounded-lg p-4 space-y-4">
+        <app-card contentClass="space-y-4">
           @if (!readOnly()) {
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               <select
@@ -666,7 +666,7 @@
               </table>
             </div>
           }
-        </div>
+        </app-card>
       }
     </section>
   } @else {

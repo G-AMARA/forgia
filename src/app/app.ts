@@ -12,6 +12,7 @@ import { SpellList } from './features/spell-list/spell-list';
 import { EquipmentList } from './features/equipment-list/equipment-list';
 import { WeaponList } from './features/weapon-list/weapon-list';
 import { Manage } from './features/manage/manage';
+import { Profile } from './features/profile/profile';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
 import { AppNav } from './core/app-nav';
@@ -33,6 +34,7 @@ import { ActiveCampaign } from './core/active-campaign';
     EquipmentList,
     WeaponList,
     Manage,
+    Profile,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

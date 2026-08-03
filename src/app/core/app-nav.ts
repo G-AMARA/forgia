@@ -8,7 +8,8 @@ export type Tab =
   | 'characters'
   | 'catalog'
   | 'character-sheet'
-  | 'manage';
+  | 'manage'
+  | 'profile';
 
 @Injectable({ providedIn: 'root' })
 export class AppNav {

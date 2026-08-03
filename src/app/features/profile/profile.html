@@ -1,0 +1,128 @@
+<section class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-6 max-w-2xl">
+  <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('profile_title') }}</h2>
+
+  <!-- Avatar -->
+  <div class="flex items-center gap-4">
+    <div class="w-24 h-24 rounded-full border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-4xl shrink-0">
+      @if (auth.avatarUrl()) {
+        <img [src]="auth.avatarUrl()" alt="" class="w-full h-full object-cover" />
+      } @else {
+        🧙
+      }
+    </div>
+    <div class="flex flex-col gap-1">
+      <label class="text-xs px-3 py-1.5 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors self-start" [class.opacity-50]="avatarUploading()">
+        {{ avatarUploading() ? localeService.t('loading') : localeService.t('upload_photo_button') }}
+        <input type="file" accept="image/*" class="hidden" [disabled]="avatarUploading()" (change)="onAvatarSelected($event)" />
+      </label>
+      @if (avatarError()) {
+        <p class="text-xs text-red-300">{{ avatarError() }}</p>
+      }
+    </div>
+  </div>
+
+  <!-- Identità: nome/username + ruolo -->
+  <form (ngSubmit)="saveIdentity()" class="flex flex-col gap-4 border-t border-gold/30 pt-4">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('nickname_label') }}</label>
+      <input
+        type="text" name="nickname" [(ngModel)]="nickname" required minlength="3"
+        class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('role_label') }}</label>
+      <div class="flex gap-4 text-sm">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" name="role" value="player" [(ngModel)]="role" class="accent-fantasy-gold" />
+          {{ localeService.t('role_player') }}
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="radio" name="role" value="master" [(ngModel)]="role" class="accent-fantasy-gold" />
+          {{ localeService.t('role_master') }}
+        </label>
+        @if (canBeAdmin) {
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="radio" name="role" value="admin" [(ngModel)]="role" class="accent-fantasy-gold" />
+            {{ localeService.t('role_admin') }}
+          </label>
+        }
+      </div>
+    </div>
+
+    <button
+      type="submit" [disabled]="identitySaving()"
+      class="px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50 self-start"
+    >
+      {{ localeService.t('save_changes_button') }}
+    </button>
+
+    @if (identityError()) {
+      <p class="text-sm text-red-300">{{ identityError() }}</p>
+    }
+    @if (identitySaved()) {
+      <p class="text-sm text-green-300">{{ localeService.t('saved_message') }}</p>
+    }
+  </form>
+
+  <!-- Info statiche -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gold/30 pt-4">
+    <div class="flex flex-col gap-1">
+      <label class="text-xs uppercase text-slate-arcane">{{ localeService.t('email_label') }}</label>
+      <p class="text-sm">{{ auth.user()?.email }}</p>
+    </div>
+    @if (registrationDate(); as date) {
+      <div class="flex flex-col gap-1">
+        <label class="text-xs uppercase text-slate-arcane">{{ localeService.t('registration_date_label') }}</label>
+        <p class="text-sm">{{ date }}</p>
+      </div>
+    }
+  </div>
+
+  <!-- Password -->
+  <form (ngSubmit)="savePassword()" class="flex flex-col gap-4 border-t border-gold/30 pt-4">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('password_label') }}</label>
+      <input
+        #newPasswordInput="ngModel"
+        [type]="showPassword ? 'text' : 'password'"
+        name="newPassword" [(ngModel)]="newPassword" required minlength="8"
+        [pattern]="passwordPattern" autocomplete="new-password"
+        class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+      @if (newPasswordInput.invalid && (newPasswordInput.dirty || newPasswordInput.touched)) {
+        <p class="text-xs text-red-300">{{ localeService.t('password_pattern_hint') }}.</p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('repeat_password_label') }}</label>
+      <input
+        [type]="showPassword ? 'text' : 'password'"
+        name="repeatPassword" [(ngModel)]="repeatPassword" required minlength="8"
+        autocomplete="new-password"
+        class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+    </div>
+
+    <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+      <input type="checkbox" [(ngModel)]="showPassword" name="showPassword" class="accent-fantasy-gold" />
+      {{ localeService.t('show_password_checkbox') }}
+    </label>
+
+    <button
+      type="submit" [disabled]="passwordSaving()"
+      class="px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50 self-start"
+    >
+      {{ localeService.t('save_changes_button') }}
+    </button>
+
+    @if (passwordError()) {
+      <p class="text-sm text-red-300">{{ passwordError() }}</p>
+    }
+    @if (passwordSaved()) {
+      <p class="text-sm text-green-300">{{ localeService.t('saved_message') }}</p>
+    }
+  </form>
+</section>

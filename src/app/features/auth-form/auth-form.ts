@@ -1,18 +1,36 @@
 import { Component, inject, signal, computed, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { UpperCasePipe } from '@angular/common';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
+import { AppNav } from '../../core/app-nav';
 
 @Component({
   selector: 'app-auth-form',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, UpperCasePipe],
   templateUrl: './auth-form.html',
 })
 export class AuthForm {
   private auth = inject(Auth);
   protected localeService = inject(LocaleService);
   protected authService = this.auth;
+  private appNav = inject(AppNav);
+
+  protected userMenuOpen = signal(false);
+
+  toggleUserMenu() {
+    this.userMenuOpen.update((open) => !open);
+  }
+
+  closeUserMenu() {
+    this.userMenuOpen.set(false);
+  }
+
+  goToSettings() {
+    this.userMenuOpen.set(false);
+    this.appNav.setTab('profile');
+  }
 
   // Icona del ruolo: admin.png (dado d20) / gameMaster.png (libro) / giocatore.png (spada).
   protected roleIcon = computed(() => {

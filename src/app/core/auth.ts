@@ -21,6 +21,9 @@ export class Auth {
   private _isAdmin = signal<boolean>(false);
   readonly isAdmin = this._isAdmin.asReadonly();
 
+  private _avatarUrl = signal<string | null>(null);
+  readonly avatarUrl = this._avatarUrl.asReadonly();
+
   constructor() {
     // Controlla se c'è già una sessione attiva al caricamento dell'app
     this.supabase.client.auth.getSession().then(({ data }) => {
@@ -42,12 +45,13 @@ export class Auth {
       this._nickname.set(null);
       this._isMaster.set(false);
       this._isAdmin.set(false);
+      this._avatarUrl.set(null);
       return;
     }
 
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .select('nickname, is_master, is_admin')
+      .select('nickname, is_master, is_admin, avatar_url')
       .eq('id', userId)
       .single();
 
@@ -55,12 +59,14 @@ export class Auth {
       this._nickname.set(null);
       this._isMaster.set(false);
       this._isAdmin.set(false);
+      this._avatarUrl.set(null);
       return;
     }
 
     this._nickname.set(data?.nickname ?? null);
     this._isMaster.set(data?.is_master ?? false);
     this._isAdmin.set(data?.is_admin ?? false);
+    this._avatarUrl.set(data?.avatar_url ?? null);
   }
 
   async signUp(email: string, password: string, nickname: string, isMaster: boolean) {
@@ -129,5 +135,76 @@ export class Auth {
   async updatePassword(newPassword: string) {
     const { error } = await this.supabase.client.auth.updateUser({ password: newPassword });
     return { error };
+  }
+
+  // Diventare admin resta possibile solo a mano sul DB (nessun percorso qui porta
+  // isAdmin da false a true): il chiamante (Profile) passa isAdmin=true solo se
+  // l'utente lo era già all'apertura della pagina. La sicurezza reale però sta
+  // nella RLS su profiles.is_admin lato Supabase, non in questo controllo client.
+  async updateProfile(nickname: string, isMaster: boolean, isAdmin: boolean) {
+    const userId = this._user()?.id;
+    if (!userId) {
+      return { error: { message: 'Non autenticato' } };
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .update({ nickname, is_master: isMaster, is_admin: isAdmin })
+      .eq('id', userId)
+      .select();
+
+    if (!error && (!data || data.length === 0)) {
+      return {
+        error: { message: 'Profilo non aggiornato: controlla i permessi (RLS) su profiles.' },
+      };
+    }
+
+    if (!error) {
+      await this.loadProfile(userId);
+    }
+
+    return { error };
+  }
+
+  async uploadAvatar(file: File) {
+    const userId = this._user()?.id;
+    if (!userId) {
+      return { error: { message: 'Non autenticato' } };
+    }
+
+    const ext = file.name.split('.').pop();
+    const path = `${userId}/profile.${ext}`;
+
+    const { error: uploadError } = await this.supabase.client.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true });
+
+    if (uploadError) {
+      return { error: uploadError };
+    }
+
+    const { data: urlData } = this.supabase.client.storage.from('avatars').getPublicUrl(path);
+
+    // .update() senza .select() non segnala nulla se la RLS blocca la riga: PostgREST
+    // risponde "successo, 0 righe toccate" senza errore. Il .select() forza a scoprirlo.
+    const { data: updateData, error: updateError } = await this.supabase.client
+      .from('profiles')
+      .update({ avatar_url: urlData.publicUrl })
+      .eq('id', userId)
+      .select();
+
+    if (!updateError && (!updateData || updateData.length === 0)) {
+      return {
+        error: {
+          message: 'Foto caricata ma il profilo non è stato aggiornato: controlla i permessi (RLS) su profiles.avatar_url.',
+        },
+      };
+    }
+
+    if (!updateError) {
+      await this.loadProfile(userId);
+    }
+
+    return { error: updateError };
   }
 }

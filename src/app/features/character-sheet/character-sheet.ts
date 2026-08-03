@@ -10,13 +10,14 @@ import { getAbilityImagePath } from '../../core/ability-images';
 import { getSpellcastingInfo } from '../../core/spellcasting';
 import { calculateArmorClass } from '../../core/armor';
 import { translateSpellSchool } from '../../core/spell-schools';
+import { Card } from '../../shared/card/card';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
 
 @Component({
   selector: 'app-character-sheet',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, Card],
   templateUrl: './character-sheet.html',
 })
 export class CharacterSheet implements OnInit {
@@ -57,7 +58,7 @@ export class CharacterSheet implements OnInit {
   maxHp = 0;
   selectedArmorId = '';
   shieldEquipped = false;
-  abilityScores: Record<string, number> = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+  abilityScores: Record<string, number> = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
   skillProficiencies = new Set<string>();
   damageResistancesText = '';
   damageImmunitiesText = '';
@@ -88,9 +89,9 @@ export class CharacterSheet implements OnInit {
 
   // Bonus attualmente "cotto" dentro abilityScores (razziale o background, sono alternativi):
   // serve a calcolare la differenza esatta da applicare quando razza/background cambiano.
-  appliedBonus: Record<string, number> = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+  appliedBonus: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   // Allocazione del Bonus Background mostrata/modificabile nel tab Generale.
-  identityBackgroundBonuses: Record<string, number> = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+  identityBackgroundBonuses: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   readonly backgroundBonusMax = 3;
   readonly backgroundBonusPerAbilityMax = 2;
 
@@ -133,10 +134,10 @@ export class CharacterSheet implements OnInit {
         this.selectedArmorId = c.equipped_armor_id ?? '';
         this.shieldEquipped = c.shield_equipped;
         this.abilityScores = { ...c.ability_scores };
-        this.appliedBonus = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
+        this.appliedBonus = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
         this.identityBackgroundBonuses = c.background_id
-          ? { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus }
-          : { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+          ? { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus }
+          : { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
         this.skillProficiencies = new Set(c.skill_proficiencies);
         this.damageResistancesText = c.damage_resistances.join(', ');
         this.damageImmunitiesText = c.damage_immunities.join(', ');
