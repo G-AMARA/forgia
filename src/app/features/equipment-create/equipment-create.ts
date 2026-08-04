@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 
 interface HomebrewEquipment {
   id: string;
@@ -20,6 +21,7 @@ export class EquipmentCreate {
   private supabase = inject(Supabase);
   private contentStore = inject(ContentStore);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   protected homebrewEquipment = signal<HomebrewEquipment[]>([]);
 
@@ -28,7 +30,6 @@ export class EquipmentCreate {
 
   editingId: string | null = null;
 
-  errorMsg = signal<string | null>(null);
   loading = signal(false);
 
   constructor() {
@@ -61,7 +62,6 @@ export class EquipmentCreate {
   }
 
   async submit() {
-    this.errorMsg.set(null);
     this.loading.set(true);
 
     const payload = {
@@ -76,22 +76,25 @@ export class EquipmentCreate {
       : await this.supabase.client.from('equipment').insert(payload);
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     } else {
       this.resetForm();
       this.contentStore.invalidate('equipment');
       await this.loadHomebrewEquipment();
+      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
   }
 
   async deleteEquipment(id: string, name: string) {
-    const confirmed = window.confirm(`${this.localeService.t('confirm_delete_equipment')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_equipment')} "${name}"?`);
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('equipment').delete().eq('id', id);
-    if (!error) {
+    if (error) {
+      this.modal.error(error.message);
+    } else {
       this.contentStore.invalidate('equipment');
       await this.loadHomebrewEquipment();
     }

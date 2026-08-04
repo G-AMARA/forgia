@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 
 @Component({
   selector: 'app-weapon-create',
@@ -14,6 +15,7 @@ export class WeaponCreate {
   private supabase = inject(Supabase);
   private contentStore = inject(ContentStore);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   protected weapons = this.contentStore.getContent('weapons');
 
@@ -30,7 +32,6 @@ export class WeaponCreate {
 
   editingId: string | null = null;
 
-  errorMsg = signal<string | null>(null);
   loading = signal(false);
 
   toggleAttackAbility(key: string) {
@@ -85,11 +86,10 @@ export class WeaponCreate {
 
   async submit() {
     if (this.suggestedAttackAbilities.size === 0) {
-      this.errorMsg.set(this.localeService.t('weapon_attack_ability_required'));
+      this.modal.error(this.localeService.t('weapon_attack_ability_required'));
       return;
     }
 
-    this.errorMsg.set(null);
     this.loading.set(true);
 
     const payload = {
@@ -110,10 +110,11 @@ export class WeaponCreate {
       : await this.supabase.client.from('weapons').insert(payload);
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     } else {
       this.resetForm();
       await this.refreshWeapons();
+      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
@@ -124,17 +125,15 @@ export class WeaponCreate {
   }
 
   async deleteWeapon(id: string, name: string) {
-    const confirmed = window.confirm(`${this.localeService.t('confirm_delete_weapon')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_weapon')} "${name}"?`);
     if (!confirmed) return;
-
-    this.errorMsg.set(null);
 
     const { data, error } = await this.supabase.client.from('weapons').delete().eq('id', id).select();
 
     if (error) {
       // 23503 = foreign_key_violation: l'arma è ancora referenziata da character_weapons
       // (personaggio che la possiede). Messaggio comprensibile invece del testo Postgres grezzo.
-      this.errorMsg.set(
+      this.modal.error(
         error.code === '23503' ? this.localeService.t('weapon_delete_in_use_error') : error.message
       );
       return;
@@ -144,7 +143,7 @@ export class WeaponCreate {
     // in silenzio (stesso caso già visto in CharacterStore.updateIdentity). Senza questo
     // controllo l'arma sembra non essere mai stata eliminata, senza alcun feedback.
     if (!data || data.length === 0) {
-      this.errorMsg.set('Eliminazione bloccata dai permessi (nessuna riga modificata).');
+      this.modal.error('Eliminazione bloccata dai permessi (nessuna riga modificata).');
       return;
     }
 

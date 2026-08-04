@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 
 @Component({
   selector: 'app-reset-password',
@@ -14,12 +15,12 @@ export class ResetPassword {
   private auth = inject(Auth);
   private router = inject(Router);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   password = '';
   repeat_password = '';
   protected readonly passwordPattern = '^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$';
   errorMsg = signal<string | null>(null);
-  successMsg = signal<string | null>(null);
   loading = signal(false);
   showPassword = false;
 
@@ -49,11 +50,11 @@ export class ResetPassword {
     this.loading.set(false);
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
       return;
     }
 
-    this.successMsg.set(this.localeService.t('reset_password_success'));
+    this.modal.success(this.localeService.t('reset_password_success'));
     setTimeout(() => this.router.navigateByUrl('/dashboard'), 2000);
   }
 }

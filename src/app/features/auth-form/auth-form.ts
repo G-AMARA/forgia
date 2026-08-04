@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { AppNav } from '../../core/app-nav';
+import { Modal } from '../../core/modal';
 
 @Component({
   selector: 'app-auth-form',
@@ -15,6 +16,7 @@ export class AuthForm {
   protected localeService = inject(LocaleService);
   protected authService = this.auth;
   private appNav = inject(AppNav);
+  private modal = inject(Modal);
 
   protected userMenuOpen = signal(false);
 
@@ -41,7 +43,6 @@ export class AuthForm {
   protected readonly passwordPattern = '^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$';
   protected readonly emailPattern = '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$';
   mode = signal<'login' | 'signup' | 'recover'>('login');
-  errorMsg = signal<string | null>(null);
   infoMsg = signal<string | null>(null);
   loading = signal(false);
   showPassword = false;
@@ -49,13 +50,11 @@ export class AuthForm {
 
   toggleMode() {
     this.mode.set(this.mode() === 'login' ? 'signup' : 'login');
-    this.errorMsg.set(null);
     this.infoMsg.set(null);
   }
 
   goToRecover() {
     this.mode.set('recover');
-    this.errorMsg.set(null);
     this.infoMsg.set(null);
   }
 
@@ -92,14 +91,13 @@ export class AuthForm {
   }
 
   async submit() {
-    this.errorMsg.set(null);
     this.infoMsg.set(null);
     this.loading.set(true);
 
     if (this.mode() === 'recover') {
       const { error } = await this.auth.recoverPassword(this.nickname);
       if (error) {
-        this.errorMsg.set(error.message);
+        this.modal.error(error.message);
       } else {
         this.infoMsg.set(this.localeService.t('recover_check_email'));
       }
@@ -109,19 +107,19 @@ export class AuthForm {
 
     if (this.mode() === 'signup') {
       if (!this.isEmailValid(this.email)) {
-        this.errorMsg.set('Inserisci un indirizzo email valido.');
+        this.modal.error('Inserisci un indirizzo email valido.');
         this.loading.set(false);
         return;
       }
 
       if (!this.isPasswordStrong(this.password)) {
-        this.errorMsg.set('La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo.');
+        this.modal.error('La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo.');
         this.loading.set(false);
         return;
       }
 
       if (this.password !== this.repeat_password) {
-        this.errorMsg.set('Le password non coincidono.');
+        this.modal.error('Le password non coincidono.');
         this.loading.set(false);
         return;
       }
@@ -133,14 +131,14 @@ export class AuthForm {
         this.isMaster
       );
       if (error) {
-        this.errorMsg.set(error.message);
+        this.modal.error(error.message);
       } else {
         this.infoMsg.set(this.localeService.t('signup_check_email'));
       }
     } else {
       const { error } = await this.auth.signInWithNickname(this.nickname, this.password);
       if (error) {
-        this.errorMsg.set(error.message);
+        this.modal.error(error.message);
       }
     }
 

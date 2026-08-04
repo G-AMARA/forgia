@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 
 interface HomebrewSpell {
   id: string;
@@ -26,6 +27,7 @@ export class SpellCreate {
   private supabase = inject(Supabase);
   private contentStore = inject(ContentStore);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   protected classesCatalog = this.contentStore.getContent('classes');
   protected homebrewSpells = signal<HomebrewSpell[]>([]);
@@ -43,7 +45,6 @@ export class SpellCreate {
 
   editingId: string | null = null;
 
-  errorMsg = signal<string | null>(null);
   loading = signal(false);
 
   constructor() {
@@ -110,7 +111,6 @@ export class SpellCreate {
   }
 
   async submit() {
-    this.errorMsg.set(null);
     this.loading.set(true);
 
     const chosenClasses = this.classesCatalog()
@@ -134,22 +134,25 @@ export class SpellCreate {
       : await this.supabase.client.from('spells').insert(payload);
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     } else {
       this.resetForm();
       this.contentStore.invalidate('spells');
       await this.loadHomebrewSpells();
+      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
   }
 
   async deleteSpell(id: string, name: string) {
-    const confirmed = window.confirm(`${this.localeService.t('confirm_delete_spell')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_spell')} "${name}"?`);
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('spells').delete().eq('id', id);
-    if (!error) {
+    if (error) {
+      this.modal.error(error.message);
+    } else {
       this.contentStore.invalidate('spells');
       await this.loadHomebrewSpells();
     }

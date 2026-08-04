@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 
 @Component({
   selector: 'app-subclass-create',
@@ -14,6 +15,7 @@ export class SubclassCreate {
   private supabase = inject(Supabase);
   private contentStore = inject(ContentStore);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   protected classes = this.contentStore.getContent('classes');
   protected subclasses = this.contentStore.getContent('subclasses');
@@ -25,7 +27,6 @@ export class SubclassCreate {
 
   editingId: string | null = null;
 
-  errorMsg = signal<string | null>(null);
   loading = signal(false);
 
   private async refreshSubclasses() {
@@ -59,7 +60,6 @@ export class SubclassCreate {
   }
 
   async submit() {
-    this.errorMsg.set(null);
     this.loading.set(true);
 
     const payload = {
@@ -74,21 +74,24 @@ export class SubclassCreate {
       : await this.supabase.client.from('subclasses').insert(payload);
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     } else {
       this.resetForm();
       await this.refreshSubclasses();
+      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
   }
 
   async deleteSubclass(id: string, name: string) {
-    const confirmed = window.confirm(`${this.localeService.t('confirm_delete_subclass')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_subclass')} "${name}"?`);
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('subclasses').delete().eq('id', id);
-    if (!error) {
+    if (error) {
+      this.modal.error(error.message);
+    } else {
       await this.refreshSubclasses();
     }
   }

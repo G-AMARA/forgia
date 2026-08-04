@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 
 @Component({
   selector: 'app-class-create',
@@ -14,6 +15,7 @@ export class ClassCreate {
   private supabase = inject(Supabase);
   private contentStore = inject(ContentStore);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   protected classes = this.contentStore.getContent('classes');
 
@@ -26,7 +28,6 @@ export class ClassCreate {
 
   editingId: string | null = null;
 
-  errorMsg = signal<string | null>(null);
   loading = signal(false);
 
   toggleSavingThrow(key: string) {
@@ -71,7 +72,6 @@ export class ClassCreate {
   }
 
   async submit() {
-    this.errorMsg.set(null);
     this.loading.set(true);
 
     const payload = {
@@ -86,10 +86,11 @@ export class ClassCreate {
       : await this.supabase.client.from('classes').insert(payload);
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     } else {
       this.resetForm();
       await this.refreshClasses();
+      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
@@ -104,11 +105,13 @@ export class ClassCreate {
   }
 
   async deleteClass(id: string, name: string) {
-    const confirmed = window.confirm(`${this.localeService.t('confirm_delete_class')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_class')} "${name}"?`);
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('classes').delete().eq('id', id);
-    if (!error) {
+    if (error) {
+      this.modal.error(error.message);
+    } else {
       await this.refreshClasses();
     }
   }

@@ -15,9 +15,6 @@
         {{ avatarUploading() ? localeService.t('loading') : localeService.t('upload_photo_button') }}
         <input type="file" accept="image/*" class="hidden" [disabled]="avatarUploading()" (change)="onAvatarSelected($event)" />
       </label>
-      @if (avatarError()) {
-        <p class="text-xs text-red-300">{{ avatarError() }}</p>
-      }
     </div>
   </div>
 
@@ -58,12 +55,6 @@
       {{ localeService.t('save_changes_button') }}
     </button>
 
-    @if (identityError()) {
-      <p class="text-sm text-red-300">{{ identityError() }}</p>
-    }
-    @if (identitySaved()) {
-      <p class="text-sm text-green-300">{{ localeService.t('saved_message') }}</p>
-    }
   </form>
 
   <!-- Info statiche -->
@@ -120,9 +111,6 @@
 
     @if (passwordError()) {
       <p class="text-sm text-red-300">{{ passwordError() }}</p>
-    }
-    @if (passwordSaved()) {
-      <p class="text-sm text-green-300">{{ localeService.t('saved_message') }}</p>
     }
   </form>
 </section>

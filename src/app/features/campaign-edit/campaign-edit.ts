@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { AppNav } from '../../core/app-nav';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 import { CAMPAIGN_COVERS, getCoverImagePath } from '../../core/campaign-covers';
 
 @Component({
@@ -15,6 +16,7 @@ export class CampaignEdit implements OnInit {
   protected campaignStore = inject(ActiveCampaign);
   protected appNav = inject(AppNav);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   covers = CAMPAIGN_COVERS;
   getCoverImagePath = getCoverImagePath;
@@ -25,7 +27,6 @@ export class CampaignEdit implements OnInit {
   description = '';
   coverKey = '';
 
-  errorMsg = signal<string | null>(null);
   loading = signal(false);
 
   ngOnInit() {
@@ -41,7 +42,6 @@ export class CampaignEdit implements OnInit {
     const campaign = this.campaignStore.current();
     if (!campaign) return;
 
-    this.errorMsg.set(null);
     this.loading.set(true);
 
     const { error } = await this.campaignStore.updateCampaign(campaign.id, {
@@ -51,8 +51,9 @@ export class CampaignEdit implements OnInit {
     });
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     } else {
+      this.modal.success(this.localeService.t('saved_message'));
       this.appNav.setTab('hub');
     }
 
@@ -63,13 +64,15 @@ export class CampaignEdit implements OnInit {
     const campaign = this.campaignStore.current();
     if (!campaign) return;
 
-    const confirmed = window.confirm(
+    const confirmed = await this.modal.confirm(
       `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`
     );
     if (!confirmed) return;
 
     const { error } = await this.campaignStore.deleteCampaign(campaign.id);
-    if (!error) {
+    if (error) {
+      this.modal.error(error.message);
+    } else {
       this.appNav.setTab('board');
     }
   }

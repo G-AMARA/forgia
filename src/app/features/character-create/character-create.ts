@@ -2,6 +2,8 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ContentStore, normalizeAbilityBonuses } from '../../core/content-store';
+import { getClassImagePath } from '../../core/class-images';
+import { Modal } from '../../core/modal';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { Auth } from '../../core/auth';
 import { CharacterStore } from '../../core/character-store';
@@ -30,6 +32,7 @@ export class CharacterCreate {
   protected localeService = inject(LocaleService);
   private appNav = inject(AppNav);
   private router = inject(Router);
+  private modal = inject(Modal);
 
   races = this.contentStore.getContent('races');
   classes = this.contentStore.getContent('classes');
@@ -71,8 +74,6 @@ export class CharacterCreate {
 
   selectedSpellIds = signal<Set<string>>(new Set());
 
-  errorMsg = signal<string | null>(null);
-  successMsg = signal<string | null>(null);
   loading = signal(false);
 
   // Sottoclassi disponibili per la classe scelta, sbloccate al livello selezionato o prima.
@@ -85,6 +86,13 @@ export class CharacterCreate {
     return this.allSubclasses().filter(
       (sub: any) => sub.raw.class_id === this.classId && sub.raw.unlocked_at_level <= this.level
     );
+  }
+
+  // Immagine di sfondo della classe scelta, versione femminile o maschile a seconda del
+  // sesso impostato. Metodo (non computed): classId/sex sono campi ngModel, non signal.
+  classImagePath(): string | null {
+    const selectedClass = this.classes().find((c: any) => c.id === this.classId);
+    return getClassImagePath(selectedClass?.name, this.sex);
   }
 
   // Incantesimi disponibili per la classe scelta (solo se la classe lancia incantesimi)
@@ -191,8 +199,6 @@ export class CharacterCreate {
   }
 
   async submit() {
-    this.errorMsg.set(null);
-    this.successMsg.set(null);
     this.loading.set(true);
 
     // I punteggi finali (base + bonus applicato) sono l'unico valore persistito in
@@ -226,7 +232,7 @@ export class CharacterCreate {
     });
 
     if (error || !characterId) {
-      this.errorMsg.set(error?.message ?? 'Errore sconosciuto');
+      this.modal.error(error?.message ?? 'Errore sconosciuto');
       this.loading.set(false);
       return;
     }

@@ -15,6 +15,7 @@ import { WeaponList } from './features/weapon-list/weapon-list';
 import { Manage } from './features/manage/manage';
 import { Profile } from './features/profile/profile';
 import { Araldica } from './features/araldica/araldica';
+import { AppModal } from './features/app-modal/app-modal';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
 import { AppNav } from './core/app-nav';
@@ -40,6 +41,7 @@ import { NavigationTracker } from './core/navigation-tracker';
     Manage,
     Profile,
     Araldica,
+    AppModal,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
