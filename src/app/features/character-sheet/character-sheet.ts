@@ -11,13 +11,14 @@ import { getSpellcastingInfo } from '../../core/spellcasting';
 import { calculateArmorClass } from '../../core/armor';
 import { translateSpellSchool } from '../../core/spell-schools';
 import { Card } from '../../shared/card/card';
+import { GenericModalComponent } from '../../shared/modal/generic-adviser-modal/generic-adviser-modal';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
 
 @Component({
   selector: 'app-character-sheet',
   standalone: true,
-  imports: [FormsModule, Card],
+  imports: [FormsModule, Card, GenericModalComponent],
   templateUrl: './character-sheet.html',
 })
 export class CharacterSheet implements OnInit {
@@ -64,6 +65,8 @@ export class CharacterSheet implements OnInit {
   damageImmunitiesText = '';
   conditionImmunitiesText = '';
   backstory = '';
+  modaldata : any;
+  modalItemName = '';
 
   private allEquipment = this.contentStore.getContent('equipment');
   private allSpells = this.contentStore.getContent('spells');
@@ -121,6 +124,7 @@ export class CharacterSheet implements OnInit {
   savedMsg = signal<string | null>(null);
   avatarError = signal<string | null>(null);
   avatarUploading = signal(false);
+  isModalOpen = signal(false);
 
   constructor() {
     effect(() => {
@@ -659,5 +663,20 @@ export class CharacterSheet implements OnInit {
     this.actionError.set(null);
     const { error } = await this.characterStore.togglePrepared(c.id, rowId, !currentlyPrepared);
     if (error) this.actionError.set(error.message);
+  }
+
+  openModal(data?: any) {
+    this.modalItemName = data.name;
+    this.modaldata = data;
+    this.isModalOpen.set(true);
+  }
+
+  closeModal() {
+    this.isModalOpen.set(false);
+  }
+
+  onConfirm() {
+    this.removeItem(this.modaldata.rowId);
+    this.closeModal();
   }
 }

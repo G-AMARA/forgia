@@ -1,0 +1,44 @@
+@if (isOpen()) {
+  <!-- OVERLAY (Sfondo scuro semitrasparente). Cliccando qui si chiude la modale -->
+  <div 
+    class="fixed inset-0 z-50 flex items-center justify-center bg-fantasy-black/70 backdrop-blur-xl transition-opacity" 
+    (click)="onClose()">
+    
+    <!-- CONTENITORE MODALE. -->
+    <div 
+      class="w-full max-w-xl rounded-[2rem] border-2 border-gold/30 bg-fantasy-black/95 p-6 shadow-2xl panel-carved transform transition-all" 
+      (click)="$event.stopPropagation()">
+      
+      <!-- HEADER  -->
+      <div class="mb-4 flex items-center justify-between border-b border-gold/30 pb-3">
+        <h2 class="text-xl font-display font-semibold text-fantasy-gold">
+          @if (modalTitle()) {
+            {{ modalTitle() }}
+          } @else {
+            <ng-content select="[modal-title]"></ng-content>
+          }
+        </h2>
+        
+        <button 
+          (click)="onClose()"
+          class="text-fantasy-moonstone hover:text-fantasy-gold focus:outline-none rounded-full p-1 hover:bg-fantasy-gold/10 transition-colors">
+          <!-- Icona X in SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- BODY  -->
+      <div class="mb-6 text-fantasy-moonstone">
+        <ng-content select="[modal-body]"></ng-content>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex justify-end gap-3 pt-3 border-t border-gold/30">
+        <ng-content select="[modal-footer]"></ng-content>
+      </div>
+
+    </div>
+  </div>
+}
