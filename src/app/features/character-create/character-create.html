@@ -112,6 +112,55 @@
             class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           />
         </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold">{{ localeService.t('sex_label') }}</label>
+          <select
+            name="sex" [(ngModel)]="sex"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          >
+            <option value="M">{{ localeService.t('sex_male') }}</option>
+            <option value="F">{{ localeService.t('sex_female') }}</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold">{{ localeService.t('darkvision_label') }}</label>
+          <select
+            name="darkvision" [(ngModel)]="darkvision"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          >
+            <option [ngValue]="false">{{ localeService.t('darkvision_no') }}</option>
+            <option [ngValue]="true">{{ localeService.t('darkvision_yes') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Monete: scritta colorata per distinguere subito oro/argento/rame. -->
+      <div class="grid grid-cols-3 gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('gold_coins_label') }}</label>
+          <input
+            type="number" min="0" name="goldCoins" [(ngModel)]="goldCoins"
+            class="px-3 py-2 rounded border border-fantasy-gold bg-fantasy-black/40 text-fantasy-gold focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-fantasy-moonstone">{{ localeService.t('silver_coins_label') }}</label>
+          <input
+            type="number" min="0" name="silverCoins" [(ngModel)]="silverCoins"
+            class="px-3 py-2 rounded border border-fantasy-moonstone bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-copper">{{ localeService.t('copper_coins_label') }}</label>
+          <input
+            type="number" min="0" name="copperCoins" [(ngModel)]="copperCoins"
+            class="px-3 py-2 rounded border border-copper bg-fantasy-black/40 text-copper focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          />
+        </div>
       </div>
 
       <!-- Punteggi caratteristica -->

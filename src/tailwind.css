@@ -16,6 +16,8 @@
   --color-stone: #1c1c21;
   --color-stone-dark: #131316;
   --color-slate-arcane: #838d97;
+  /* Per la scritta "ramata" delle monete di rame: bronzo-ramato, leggibile su sfondo scuro. */
+  --color-copper: #c2764a;
   /* Più chiaro del fantasy-green ufficiale (#283732): quel valore è illeggibile come
      testo su sfondo quasi nero, qui serve per stati funzionali (successo, modificatore positivo). */
   --color-forest: #4f8f6b;

@@ -33,25 +33,7 @@
   } @else {
   <!-- Header -->
   <header class="relative bg-header-portal text-fantasy-moonstone border-b-4 border-gold">
-    <!-- Cornice ornamentale: angoli dorati -->
-    <svg class="absolute top-2 left-2 w-6 h-6 text-gold pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
-      <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-    <svg class="absolute top-2 right-2 w-6 h-6 text-gold pointer-events-none rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
-      <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-    <svg class="absolute bottom-2 right-2 w-6 h-6 text-gold pointer-events-none rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
-      <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-    <svg class="absolute bottom-2 left-2 w-6 h-6 text-gold pointer-events-none -rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
-      <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-
-    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h1 class="flex items-center">
         <img src="/themes/logoForgia.png" alt="Forgia" class="h-9 sm:h-11 w-auto" />
       </h1>
@@ -92,7 +74,7 @@
 
     <!-- Navigazione a schede -->
     <nav class="bg-fantasy-black border-b border-gold overflow-x-auto">
-      <div class="max-w-5xl mx-auto px-4 flex gap-1 whitespace-nowrap">
+      <div class="px-4 flex gap-1 whitespace-nowrap">
         <button
           class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
           [class.border-fantasy-gold]="appNav.activeTab() === 'board'"
@@ -140,7 +122,22 @@
       </div>
     </nav>
 
-    <main class="flex-1 max-w-5xl mx-auto px-4 py-6 space-y-8 w-full">
+    <div class="relative flex-1 overflow-hidden">
+      <!-- Immagine decorativa in trasparenza: visibile solo nelle colonne vuote ai lati del contenuto centrale. -->
+      <div class="absolute inset-0 flex justify-between pointer-events-none">
+        <img
+          src="/themes/wallpapersx.png" alt=""
+          class="h-full object-cover opacity-10"
+          style="width: max(0px, calc((100% - 62rem) / 2))"
+        />
+        <img
+          src="/themes/wallpaperdx.png" alt=""
+          class="h-full object-cover opacity-10"
+          style="width: max(0px, calc((100% - 62rem) / 2))"
+        />
+      </div>
+
+      <main class="relative max-w-5xl mx-auto px-4 py-6 space-y-8 w-full">
       @switch (appNav.activeTab()) {
         @case ('board') {
           <router-outlet />
@@ -199,7 +196,8 @@
           <app-profile></app-profile>
         }
       }
-    </main>
+      </main>
+    </div>
 
     <!-- Footer -->
     <footer class="footer-slant relative bg-fantasy-black mt-12 overflow-hidden">

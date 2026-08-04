@@ -86,6 +86,11 @@ export class CharacterSheet implements OnInit {
   identityBackgroundId = '';
   identityAlignment = 'true_neutral';
   identityXp = 0;
+  identitySex: 'M' | 'F' = 'M';
+  identityDarkvision = false;
+  identityGoldCoins = 0;
+  identitySilverCoins = 0;
+  identityCopperCoins = 0;
 
   // Bonus attualmente "cotto" dentro abilityScores (razziale o background, sono alternativi):
   // serve a calcolare la differenza esatta da applicare quando razza/background cambiano.
@@ -129,6 +134,11 @@ export class CharacterSheet implements OnInit {
         this.identityBackgroundId = c.background_id ?? '';
         this.identityAlignment = c.alignment ?? 'true_neutral';
         this.identityXp = c.experience_points;
+        this.identitySex = c.sex ?? 'M';
+        this.identityDarkvision = c.darkvision;
+        this.identityGoldCoins = c.gold_coins;
+        this.identitySilverCoins = c.silver_coins;
+        this.identityCopperCoins = c.copper_coins;
         this.currentHp = c.current_hp ?? 0;
         this.maxHp = c.max_hp ?? 0;
         this.selectedArmorId = c.equipped_armor_id ?? '';
@@ -346,6 +356,11 @@ export class CharacterSheet implements OnInit {
       experiencePoints: this.identityXp,
       abilityScores: newAbilityScores,
       appliedBonus: newAppliedBonus,
+      sex: this.identitySex,
+      darkvision: this.identityDarkvision,
+      goldCoins: this.identityGoldCoins,
+      silverCoins: this.identitySilverCoins,
+      copperCoins: this.identityCopperCoins,
     });
 
     if (error) {

@@ -53,7 +53,7 @@ export class AuthForm {
   repeat_password = '';
   isMaster = false; // scelta del ruolo in fase di registrazione
   protected readonly passwordPattern = '^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$';
-  protected readonly emailPattern = '^[^\s@]+@[^\s@]+\\.[^\s@]+$';
+  protected readonly emailPattern = '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$';
   mode = signal<'login' | 'signup' | 'recover'>('login');
   errorMsg = signal<string | null>(null);
   infoMsg = signal<string | null>(null);

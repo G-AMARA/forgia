@@ -149,6 +149,11 @@ export class CharacterStore {
     abilityScores: Record<string, number>;
     appliedBonus: Record<string, number>;
     backstory: string;
+    sex: 'M' | 'F';
+    darkvision: boolean;
+    goldCoins: number;
+    silverCoins: number;
+    copperCoins: number;
     spellIds: string[];
   }): Promise<{ error: { message: string } | null; characterId?: string }> {
     const campaign = this.activeCampaign.current();
@@ -171,6 +176,11 @@ export class CharacterStore {
         ability_scores: params.abilityScores,
         applied_bonus: params.appliedBonus,
         notes: params.backstory,
+        sex: params.sex,
+        darkvision: params.darkvision,
+        gold_coins: params.goldCoins,
+        silver_coins: params.silverCoins,
+        copper_coins: params.copperCoins,
       })
       .select('id')
       .single();
@@ -225,6 +235,7 @@ export class CharacterStore {
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
     current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, ability_scores, applied_bonus, race_id, background_id,
     skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
+    sex, darkvision, gold_coins, silver_coins, copper_coins,
     races ( name ),
     backgrounds ( name ),
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
@@ -295,6 +306,11 @@ export class CharacterStore {
       damage_resistances: row.damage_resistances ?? [],
       damage_immunities: row.damage_immunities ?? [],
       condition_immunities: row.condition_immunities ?? [],
+      sex: row.sex ?? null,
+      darkvision: row.darkvision ?? false,
+      gold_coins: row.gold_coins ?? 0,
+      silver_coins: row.silver_coins ?? 0,
+      copper_coins: row.copper_coins ?? 0,
       race_id: row.race_id ?? null,
       race_name: translations['races']?.[row.race_id] ?? row.races?.name ?? null,
       background_id: row.background_id ?? null,
@@ -444,6 +460,11 @@ export class CharacterStore {
       experiencePoints: number;
       abilityScores: Record<string, number>;
       appliedBonus: Record<string, number>;
+      sex: 'M' | 'F';
+      darkvision: boolean;
+      goldCoins: number;
+      silverCoins: number;
+      copperCoins: number;
     }
   ) {
     const { error: charError } = await this.supabase.client
@@ -457,6 +478,11 @@ export class CharacterStore {
         experience_points: updates.experiencePoints,
         ability_scores: updates.abilityScores,
         applied_bonus: updates.appliedBonus,
+        sex: updates.sex,
+        darkvision: updates.darkvision,
+        gold_coins: updates.goldCoins,
+        silver_coins: updates.silverCoins,
+        copper_coins: updates.copperCoins,
       })
       .eq('id', characterId);
 
@@ -633,6 +659,11 @@ export interface CharacterFull {
   damage_resistances: string[];
   damage_immunities: string[];
   condition_immunities: string[];
+  sex: 'M' | 'F' | null;
+  darkvision: boolean;
+  gold_coins: number;
+  silver_coins: number;
+  copper_coins: number;
   race_id: string | null;
   race_name: string | null;
   background_id: string | null;

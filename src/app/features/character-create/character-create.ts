@@ -54,6 +54,11 @@ export class CharacterCreate {
   alignment = 'true_neutral';
   experiencePoints = 0;
   backstory = '';
+  sex: 'M' | 'F' = 'M';
+  darkvision = false;
+  goldCoins = 0;
+  silverCoins = 0;
+  copperCoins = 0;
 
   abilityScores = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
   backgroundBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
@@ -212,6 +217,11 @@ export class CharacterCreate {
       abilityScores: finalAbilityScores,
       appliedBonus,
       backstory: this.backstory,
+      sex: this.sex,
+      darkvision: this.darkvision,
+      goldCoins: this.goldCoins,
+      silverCoins: this.silverCoins,
+      copperCoins: this.copperCoins,
       spellIds: Array.from(this.selectedSpellIds()),
     });
 
