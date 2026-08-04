@@ -127,9 +127,27 @@ export class WeaponCreate {
     const confirmed = window.confirm(`${this.localeService.t('confirm_delete_weapon')} "${name}"?`);
     if (!confirmed) return;
 
-    const { error } = await this.supabase.client.from('weapons').delete().eq('id', id);
-    if (!error) {
-      await this.refreshWeapons();
+    this.errorMsg.set(null);
+
+    const { data, error } = await this.supabase.client.from('weapons').delete().eq('id', id).select();
+
+    if (error) {
+      // 23503 = foreign_key_violation: l'arma è ancora referenziata da character_weapons
+      // (personaggio che la possiede). Messaggio comprensibile invece del testo Postgres grezzo.
+      this.errorMsg.set(
+        error.code === '23503' ? this.localeService.t('weapon_delete_in_use_error') : error.message
+      );
+      return;
     }
+
+    // Se l'RLS blocca la delete, Postgres non restituisce un errore: elimina zero righe
+    // in silenzio (stesso caso già visto in CharacterStore.updateIdentity). Senza questo
+    // controllo l'arma sembra non essere mai stata eliminata, senza alcun feedback.
+    if (!data || data.length === 0) {
+      this.errorMsg.set('Eliminazione bloccata dai permessi (nessuna riga modificata).');
+      return;
+    }
+
+    await this.refreshWeapons();
   }
 }

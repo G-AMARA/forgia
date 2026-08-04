@@ -14,10 +14,12 @@ import { EquipmentList } from './features/equipment-list/equipment-list';
 import { WeaponList } from './features/weapon-list/weapon-list';
 import { Manage } from './features/manage/manage';
 import { Profile } from './features/profile/profile';
+import { Araldica } from './features/araldica/araldica';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
 import { AppNav } from './core/app-nav';
 import { ActiveCampaign } from './core/active-campaign';
+import { NavigationTracker } from './core/navigation-tracker';
 
 @Component({
   selector: 'app-root',
@@ -37,6 +39,7 @@ import { ActiveCampaign } from './core/active-campaign';
     WeaponList,
     Manage,
     Profile,
+    Araldica,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -48,6 +51,9 @@ export class App {
   protected appNav = inject(AppNav);
   protected activeCampaign = inject(ActiveCampaign);
   private router = inject(Router);
+  // Mai referenziato altrove: injectarlo qui basta a istanziare il service (providedIn:
+  // 'root') e avviare il suo effect() che segue auth.isLoggedIn() per far partire il tracker.
+  private navigationTracker = inject(NavigationTracker);
 
   constructor() {
     // URL richiesto dal browser al caricamento (prima che il redirect '' -> 'dashboard'
