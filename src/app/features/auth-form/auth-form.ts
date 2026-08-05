@@ -48,9 +48,56 @@ export class AuthForm {
   showPassword = false;
   show_repeat_Password = false;
 
+  nicknameTaken = signal(false);
+  private nicknameCheckSeq = 0;
+
+  emailTaken = signal(false);
+  private emailCheckSeq = 0;
+
+  // Reset immediato appena l'utente ritocca il campo: l'esito del controllo precedente
+  // non è più valido per il nuovo valore digitato (evita di lasciare il bordo rosso
+  // "appiccicato" a un nickname che nel frattempo è stato corretto).
+  onNicknameChange() {
+    this.nicknameTaken.set(false);
+  }
+
+  async checkNickname() {
+    if (this.mode() !== 'signup' || !this.nickname.trim()) {
+      this.nicknameTaken.set(false);
+      return;
+    }
+
+    // Una risposta RPC in ritardo (blur veloce, poi altro giro) non deve sovrascrivere
+    // l'esito di un controllo più recente: solo l'ultima chiamata avviata può scrivere.
+    const seq = ++this.nicknameCheckSeq;
+    const exists = await this.auth.nicknameExists(this.nickname.trim());
+    if (seq === this.nicknameCheckSeq) {
+      this.nicknameTaken.set(exists);
+    }
+  }
+
+  onEmailChange() {
+    this.emailTaken.set(false);
+  }
+
+  async checkEmail() {
+    if (this.mode() !== 'signup' || !this.isEmailValid(this.email)) {
+      this.emailTaken.set(false);
+      return;
+    }
+
+    const seq = ++this.emailCheckSeq;
+    const exists = await this.auth.emailExists(this.email.trim());
+    if (seq === this.emailCheckSeq) {
+      this.emailTaken.set(exists);
+    }
+  }
+
   toggleMode() {
     this.mode.set(this.mode() === 'login' ? 'signup' : 'login');
     this.infoMsg.set(null);
+    this.nicknameTaken.set(false);
+    this.emailTaken.set(false);
   }
 
   goToRecover() {
@@ -75,7 +122,9 @@ export class AuthForm {
       return !!(
         this.email.trim() &&
         this.isEmailValid(this.email) &&
+        !this.emailTaken() &&
         this.nickname.trim() &&
+        !this.nicknameTaken() &&
         this.password &&
         this.repeat_password &&
         this.isPasswordStrong(this.password) &&
@@ -112,6 +161,14 @@ export class AuthForm {
         return;
       }
 
+      // Ricontrolla appena prima del signUp: tra il blur e il click "Registrati"
+      // qualcun altro potrebbe essersi registrato con la stessa email.
+      if (await this.auth.emailExists(this.email.trim())) {
+        this.emailTaken.set(true);
+        this.loading.set(false);
+        return;
+      }
+
       if (!this.isPasswordStrong(this.password)) {
         this.modal.error('La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo.');
         this.loading.set(false);
@@ -120,6 +177,14 @@ export class AuthForm {
 
       if (this.password !== this.repeat_password) {
         this.modal.error('Le password non coincidono.');
+        this.loading.set(false);
+        return;
+      }
+
+      // Ricontrolla appena prima dell'insert: tra il blur e il click "Registrati"
+      // qualcun altro potrebbe aver preso lo stesso nickname.
+      if (await this.auth.nicknameExists(this.nickname.trim())) {
+        this.nicknameTaken.set(true);
         this.loading.set(false);
         return;
       }

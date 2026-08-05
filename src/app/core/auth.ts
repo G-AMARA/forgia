@@ -92,6 +92,23 @@ export class Auth {
     return { data, error: null };
   }
 
+  // Riusa la stessa RPC del login (SECURITY DEFINER, bypassa la RLS che altrimenti
+  // limiterebbe la select su profiles alla sola riga dell'utente): se restituisce
+  // un'email, quel nickname è già occupato da un altro account.
+  async nicknameExists(nickname: string): Promise<boolean> {
+    const { data } = await this.supabase.client.rpc('get_email_for_nickname', {
+      p_nickname: nickname,
+    });
+    return !!data;
+  }
+
+  // Come nicknameExists ma sull'email: richiede l'RPC SECURITY DEFINER email_exists,
+  // perché l'email vive in auth.users (non in profiles) e non è leggibile via client.
+  async emailExists(email: string): Promise<boolean> {
+    const { data } = await this.supabase.client.rpc('email_exists', { p_email: email });
+    return !!data;
+  }
+
   async signInWithNickname(nickname: string, password: string) {
     const { data: email, error: rpcError } = await this.supabase.client.rpc(
       'get_email_for_nickname',

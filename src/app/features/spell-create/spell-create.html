@@ -94,47 +94,87 @@
 
   <div>
     <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('spell_catalog_list_title') }}</h3>
-    @if (homebrewSpells().length === 0) {
+    @if (allSpells().length === 0) {
       <p class="text-slate-arcane italic">{{ localeService.t('no_homebrew_spells_yet') }}</p>
     } @else {
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left border-collapse">
-          <thead>
-            <tr class="border-b border-gold text-xs uppercase tracking-wide">
-              <th class="py-2 pr-2">{{ localeService.t('level_label') }}</th>
-              <th class="py-2 pr-2">{{ localeService.t('spell_name_label') }}</th>
-              <th class="py-2 pr-2">{{ localeService.t('spell_casting_time_label') }}</th>
-              <th class="py-2 pr-2">{{ localeService.t('spell_range_label') }}</th>
-              <th class="py-2 pr-2">{{ localeService.t('spell_duration_label') }}</th>
-              <th class="py-2 pr-2">{{ localeService.t('spell_damage_effect_label') }}</th>
-              <th class="py-2 pr-2">{{ localeService.t('spell_classes_label') }}</th>
-              <th class="py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (s of homebrewSpells(); track s.id) {
-              <tr class="border-b border-gold/30">
-                <td class="py-2 pr-2">{{ s.level === 0 ? localeService.t('cantrip_short') : s.level }}</td>
-                <td class="py-2 pr-2">{{ s.name }}</td>
-                <td class="py-2 pr-2">{{ s.casting_time }}</td>
-                <td class="py-2 pr-2">{{ s.range }}</td>
-                <td class="py-2 pr-2">{{ s.duration }}</td>
-                <td class="py-2 pr-2">{{ s.damage_effect }}</td>
-                <td class="py-2 pr-2">{{ classNames(s) }}</td>
-                <td class="py-2">
-                  <div class="flex gap-2">
-                    <button (click)="startEdit(s)" class="text-xs text-fantasy-gold underline">
-                      {{ localeService.t('edit_button') }}
-                    </button>
-                    <button (click)="deleteSpell(s.id, s.name)" class="text-xs text-red-300 underline">
-                      {{ localeService.t('delete_button') }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
+      <input
+        type="search"
+        [(ngModel)]="listSearchTerm"
+        name="listSearchTerm"
+        [placeholder]="localeService.t('spell_search_placeholder')"
+        class="w-full mb-3 px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+
+      @if (groupedSpells().length === 0) {
+        <p class="text-slate-arcane italic">{{ localeService.t('no_spells_match_filter') }}</p>
+      }
+
+      <div class="space-y-2">
+        @for (group of groupedSpells(); track group.level) {
+          <div class="border border-gold/40 rounded-lg overflow-hidden">
+            <button
+              type="button"
+              (click)="toggleLevel(group.level)"
+              class="w-full flex items-center justify-between px-3 py-2 bg-fantasy-black/40 hover:bg-fantasy-black/60 transition-colors"
+            >
+              <span class="font-display text-sm text-fantasy-gold">
+                {{ group.level === 0 ? localeService.t('cantrip_short') : localeService.t('spell_level_label') + ' ' + group.level }}
+                <span class="text-slate-arcane font-normal">({{ group.spells.length }})</span>
+              </span>
+              <span class="text-fantasy-gold text-xs">{{ isLevelExpanded(group.level) ? '▲' : '▼' }}</span>
+            </button>
+
+            @if (isLevelExpanded(group.level)) {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left border-collapse">
+                  <thead>
+                    <tr class="border-b border-gold text-xs uppercase tracking-wide">
+                      <th class="py-2 px-2">{{ localeService.t('spell_name_label') }}</th>
+                      <th class="py-2 px-2">{{ localeService.t('spell_casting_time_label') }}</th>
+                      <th class="py-2 px-2">{{ localeService.t('spell_range_label') }}</th>
+                      <th class="py-2 px-2">{{ localeService.t('spell_duration_label') }}</th>
+                      <th class="py-2 px-2">{{ localeService.t('spell_damage_effect_label') }}</th>
+                      <th class="py-2 px-2">{{ localeService.t('spell_classes_label') }}</th>
+                      <th class="py-2 px-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (s of group.spells; track s.id) {
+                      <tr
+                        class="border-b border-gold/30 transition-colors"
+                        [class.bg-fantasy-gold/20]="s.id === editingId"
+                        [class.border-l-4]="s.id === editingId"
+                        [class.border-l-fantasy-gold]="s.id === editingId"
+                      >
+                        <td class="py-2 px-2">
+                          {{ s.name }}
+                          <span class="text-[10px] uppercase text-slate-arcane ml-1">({{ s.sourcebook_code }})</span>
+                        </td>
+                        <td class="py-2 px-2">{{ s.casting_time }}</td>
+                        <td class="py-2 px-2">{{ s.range }}</td>
+                        <td class="py-2 px-2">{{ s.duration }}</td>
+                        <td class="py-2 px-2">{{ s.damage_effect }}</td>
+                        <td class="py-2 px-2">{{ classNames(s) }}</td>
+                        <td class="py-2 px-2">
+                          <div class="flex gap-2">
+                            <button (click)="startEdit(s)" class="text-xs text-fantasy-gold underline">
+                              {{ localeService.t('edit_button') }}
+                            </button>
+                            @if (s.sourcebook_code === 'homebrew') {
+                              <button (click)="deleteSpell(s.id, s.name)" class="text-xs text-red-300 underline">
+                                {{ localeService.t('delete_button') }}
+                              </button>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             }
-          </tbody>
-        </table>
+          </div>
+        }
       </div>
     }
   </div>
