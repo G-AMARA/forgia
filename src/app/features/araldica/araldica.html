@@ -1,17 +1,67 @@
 @if (rank(); as r) {
   <div class="relative flex items-center gap-2">
-    <div class="hidden sm:flex flex-col leading-tight text-right">
-      @if (!auth.isAdmin()) {
-        <span class="text-[10px] uppercase text-slate-arcane">{{ navigationHours() }}h</span>
-      }
-      <span class="font-display text-xs text-fantasy-gold">{{ r.name }}</span>
-    </div>
-    <img [src]="r.icon" [alt]="r.name" [title]="r.name" class="w-8 h-8 rounded-full border-2 border-gold-bright" />
+    <button
+      type="button"
+      (click)="showRanksModal.set(true)"
+      class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+    >
+      <div class="hidden sm:flex flex-col leading-tight text-right">
+        @if (!auth.isAdmin()) {
+          <span class="text-[10px] uppercase text-slate-arcane">{{ hoursToExp(navigationHours()) }} exp</span>
+        }
+        <span class="font-display text-xs text-fantasy-gold">{{ r.name }}</span>
+      </div>
+      <img [src]="r.icon" [alt]="r.name" [title]="r.name" class="w-8 h-8 rounded-full border-2 border-gold-bright" />
+    </button>
 
     @if (showLevelUp()) {
       <div class="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-fantasy-gold text-fantasy-black text-xs font-display tracking-wide rounded-full shadow-lg glow-gold whitespace-nowrap z-30 animate-pulse">
         ⬆ Nuovo rango: {{ r.name }}!
       </div>
     }
+  </div>
+}
+
+@if (showRanksModal()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+    (click)="showRanksModal.set(false)"
+  >
+    <div
+      class="relative w-full max-w-sm bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+      (click)="$event.stopPropagation()"
+    >
+      <h3 class="font-display text-lg mb-4 text-fantasy-gold">Ranghi dell'Araldica</h3>
+
+      <ul class="space-y-2 max-h-[60vh] overflow-y-auto">
+        @for (tier of rankList; track tier.name) {
+          <li
+            class="flex items-center gap-3 p-2 rounded border border-gold/30"
+            [class.bg-fantasy-gold]="rank()?.name === tier.name"
+            [class.text-fantasy-black]="rank()?.name === tier.name"
+          >
+            <img [src]="tier.icon" [alt]="tier.name" class="w-8 h-8 rounded-full border-2 border-gold-bright shrink-0" />
+            <span class="font-display text-sm flex-1">{{ tier.name }}</span>
+            @if (tier.minHours < 0) {
+              <span class="text-[10px] uppercase text-right leading-tight">Speciale</span>
+            } @else {
+              <span class="text-[10px] uppercase text-right leading-tight">
+                {{ tier.minHours }}h<br />{{ hoursToExp(tier.minHours) }} exp
+              </span>
+            }
+          </li>
+        }
+      </ul>
+
+      <div class="flex justify-end mt-6">
+        <button
+          type="button"
+          (click)="showRanksModal.set(false)"
+          class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+        >
+          Chiudi
+        </button>
+      </div>
+    </div>
   </div>
 }

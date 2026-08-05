@@ -185,11 +185,17 @@ export class Auth {
 
     const { data: urlData } = this.supabase.client.storage.from('avatars').getPublicUrl(path);
 
+    // getPublicUrl() è deterministico sul path: se si ricarica una foto con la stessa
+    // estensione, l'URL torna identico a quello già salvato. Senza cache-bust né il
+    // signal (stesso valore = nessun re-render) né il browser (stesso URL = cache) si
+    // accorgono che l'immagine è cambiata, quindi l'utente non vede alcun aggiornamento.
+    const cacheBustedUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+
     // .update() senza .select() non segnala nulla se la RLS blocca la riga: PostgREST
     // risponde "successo, 0 righe toccate" senza errore. Il .select() forza a scoprirlo.
     const { data: updateData, error: updateError } = await this.supabase.client
       .from('profiles')
-      .update({ avatar_url: urlData.publicUrl })
+      .update({ avatar_url: cacheBustedUrl })
       .eq('id', userId)
       .select();
 

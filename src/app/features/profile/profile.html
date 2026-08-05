@@ -12,7 +12,7 @@
     </div>
     <div class="flex flex-col gap-1">
       <label class="text-xs px-3 py-1.5 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors self-start" [class.opacity-50]="avatarUploading()">
-        {{ avatarUploading() ? localeService.t('loading') : localeService.t('upload_photo_button') }}
+        {{ avatarUploading() ? localeService.t('loading') : localeService.t(auth.avatarUrl() ? 'edit_photo_button' : 'upload_photo_button') }}
         <input type="file" accept="image/*" class="hidden" [disabled]="avatarUploading()" (change)="onAvatarSelected($event)" />
       </label>
     </div>

@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { Supabase } from '../../core/supabase';
 import { Auth } from '../../core/auth';
-import { getRankForSeconds, rankIndex, RankTier } from '../../core/ranks';
+import { FATO_RANK, getRankForSeconds, hoursToExp, RANK_TIERS, rankIndex, RankTier } from '../../core/ranks';
 
 @Component({
   selector: 'app-araldica',
@@ -16,6 +16,11 @@ export class Araldica implements OnInit, OnDestroy {
   protected rank = signal<RankTier | null>(null);
   protected navigationHours = signal(0);
   protected showLevelUp = signal(false);
+  protected showRanksModal = signal(false);
+
+  // Elenco decrescente (Fato in cima come rango speciale) per la modale dei ranghi.
+  protected readonly rankList = [FATO_RANK, ...RANK_TIERS].slice().reverse();
+  protected readonly hoursToExp = hoursToExp;
 
   private channel: RealtimeChannel | null = null;
 

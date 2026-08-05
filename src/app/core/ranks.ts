@@ -38,3 +38,9 @@ export function rankIndex(tier: RankTier): number {
   if (tier === FATO_RANK) return RANK_TIERS.length;
   return RANK_TIERS.indexOf(tier);
 }
+
+export const EXP_PER_HOUR = 10;
+
+export function hoursToExp(hours: number): number {
+  return hours * EXP_PER_HOUR;
+}
