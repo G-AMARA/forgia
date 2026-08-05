@@ -303,7 +303,7 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     recharge_long_rest: 'Riposo lungo',
     cantrip_limit_reached: 'Hai già raggiunto il numero massimo di trucchetti conosciuti per questa classe a questo livello.',
     spell_limit_reached: 'Hai già raggiunto il numero massimo di incantesimi conosciuti/preparabili per questa classe a questo livello.',
-    spells_knows_label: 'Incantesimi conosciuti',
+    spells_known_label: 'Incantesimi conosciuti',
   },
   en: {
     app_title: 'One Roll, One Story',
@@ -604,7 +604,7 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     recharge_long_rest: 'Long rest',
     cantrip_limit_reached: 'You have already reached the maximum number of cantrips known for this class at this level.',
     spell_limit_reached: 'You have already reached the maximum number of spells known/preparable for this class at this level.',
-    spells_knows_label: 'Spells known',
+    spells_known_label: 'Spells known',
   },
 };
 
