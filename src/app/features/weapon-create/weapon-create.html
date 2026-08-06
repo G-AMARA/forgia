@@ -95,6 +95,23 @@
       </div>
     </div>
 
+    <div class="flex items-center gap-4">
+      <div class="w-25 h-25 rounded border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-3xl shrink-0">
+        @if (imageUrl) {
+          <img [src]="imageUrl" alt="" class="w-full h-full object-cover" />
+        } @else {
+          🗡️
+        }
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold">{{ localeService.t('image_label') }}</label>
+        <label class="text-xs px-3 py-1.5 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors self-start" [class.opacity-50]="imageUploading()">
+          {{ imageUploading() ? localeService.t('loading') : localeService.t('upload_image_button') }}
+          <input type="file" accept="image/*" class="hidden" [disabled]="imageUploading()" (change)="onImageSelected($event)" />
+        </label>
+      </div>
+    </div>
+
     <div class="flex gap-2">
       <button
         type="submit" [disabled]="loading()"
@@ -119,10 +136,23 @@
     @if (weapons().length === 0) {
       <p class="text-slate-arcane italic">{{ localeService.t('no_weapons_yet') }}</p>
     } @else {
+      <input
+        type="search"
+        [(ngModel)]="listSearchTerm"
+        name="listSearchTerm"
+        [placeholder]="localeService.t('spell_search_placeholder')"
+        class="w-full mb-3 px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+
+      @if (filteredWeapons().length === 0) {
+        <p class="text-slate-arcane italic">{{ localeService.t('no_spells_match_filter') }}</p>
+      }
+
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left border-collapse">
           <thead>
             <tr class="border-b border-gold text-xs uppercase tracking-wide">
+              <th class="py-2 pr-2">{{ localeService.t('image_label') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_col_weapon') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_col_attack') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_col_damage') }}</th>
@@ -132,9 +162,22 @@
             </tr>
           </thead>
           <tbody>
-            @for (w of weapons(); track w.id) {
-              <tr class="border-b border-gold/30">
-                <td class="py-2 pr-2">{{ w.name }}</td>
+            @for (w of filteredWeapons(); track w.id) {
+              <tr
+                class="border-b border-gold/30 transition-colors"
+                [class.bg-fantasy-gold/20]="w.id === editingId"
+                [class.border-l-4]="w.id === editingId"
+                [class.border-l-fantasy-gold]="w.id === editingId"
+              >
+                <td class="py-2 pr-2">
+                  @if (w.raw.image_url) {
+                    <img [src]="w.raw.image_url" alt="" class="w-10 h-10 rounded object-cover" />
+                  }
+                </td>
+                <td class="py-2 pr-2">
+                  {{ w.name }}
+                  <span class="text-[10px] uppercase text-slate-arcane ml-1">({{ w.raw.sourcebook_code }})</span>
+                </td>
                 <td class="py-2 pr-2">{{ attackAbilityNames(w.raw.suggested_attack_ability) }}</td>
                 <td class="py-2 pr-2">
                   {{ w.raw.damage_dice }} {{ w.raw.damage_type }}
@@ -155,9 +198,11 @@
                     <button (click)="startEdit(w)" class="text-xs text-fantasy-gold underline">
                       {{ localeService.t('edit_button') }}
                     </button>
-                    <button (click)="deleteWeapon(w.id, w.name)" class="text-xs text-red-300 underline">
-                      {{ localeService.t('delete_button') }}
-                    </button>
+                    @if (w.raw.sourcebook_code === 'homebrew') {
+                      <button (click)="deleteWeapon(w.id, w.name)" class="text-xs text-red-300 underline">
+                        {{ localeService.t('delete_button') }}
+                      </button>
+                    }
                   </div>
                 </td>
               </tr>

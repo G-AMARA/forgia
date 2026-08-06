@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
@@ -19,6 +19,12 @@ export class WeaponCreate {
 
   protected weapons = this.contentStore.getContent('weapons');
 
+  listSearchTerm = signal('');
+  protected filteredWeapons = computed(() => {
+    const term = this.listSearchTerm().trim().toLowerCase();
+    return term ? this.weapons().filter((w: any) => w.name.toLowerCase().includes(term)) : this.weapons();
+  });
+
   name = '';
   damageDice = '';
   damageType = '';
@@ -29,10 +35,15 @@ export class WeaponCreate {
   weight: number | null = null;
   properties = '';
   suggestedAttackAbilities = new Set<string>(['str']);
+  imageUrl: string | null = null;
 
   editingId: string | null = null;
+  // sourcebook_code dell'arma in modifica: preservato al salvataggio così
+  // modificare un'arma SRD non la "adotta" silenziosamente come homebrew.
+  private editingSourcebookCode: string | null = null;
 
   loading = signal(false);
+  imageUploading = signal(false);
 
   toggleAttackAbility(key: string) {
     const current = new Set(this.suggestedAttackAbilities);
@@ -54,6 +65,7 @@ export class WeaponCreate {
 
   private resetForm() {
     this.editingId = null;
+    this.editingSourcebookCode = null;
     this.name = '';
     this.damageDice = '';
     this.damageType = '';
@@ -64,11 +76,17 @@ export class WeaponCreate {
     this.weight = null;
     this.properties = '';
     this.suggestedAttackAbilities = new Set(['str']);
+    this.imageUrl = null;
   }
 
   startEdit(weapon: any) {
     this.editingId = weapon.id;
-    this.name = weapon.raw.name;
+    this.editingSourcebookCode = weapon.raw.sourcebook_code;
+    // In inglese si modifica il dato canonico. Nelle altre lingue si modifica invece
+    // la traduzione mostrata in lista (submit() la salva su content_translations,
+    // senza toccare la riga base): così l'admin corregge esattamente quello che vede.
+    const isEnglish = this.localeService.locale() === 'en';
+    this.name = isEnglish ? weapon.raw.name : weapon.name;
     this.damageDice = weapon.raw.damage_dice ?? '';
     this.damageType = weapon.raw.damage_type ?? '';
     this.versatileDamage = weapon.raw.versatile_damage ?? '';
@@ -78,10 +96,37 @@ export class WeaponCreate {
     this.weight = weapon.raw.weight ?? null;
     this.properties = weapon.raw.properties ?? '';
     this.suggestedAttackAbilities = new Set(weapon.raw.suggested_attack_ability ?? ['str']);
+    this.imageUrl = weapon.raw.image_url ?? null;
   }
 
   cancelEdit() {
     this.resetForm();
+  }
+
+  async onImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.imageUploading.set(true);
+
+    const ext = file.name.split('.').pop();
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await this.supabase.client.storage
+      .from('content-images')
+      .upload(path, file, { upsert: true });
+
+    if (uploadError) {
+      this.modal.error(uploadError.message);
+      this.imageUploading.set(false);
+      input.value = '';
+      return;
+    }
+
+    const { data } = this.supabase.client.storage.from('content-images').getPublicUrl(path);
+    this.imageUrl = data.publicUrl;
+    this.imageUploading.set(false);
+    input.value = '';
   }
 
   async submit() {
@@ -92,8 +137,9 @@ export class WeaponCreate {
 
     this.loading.set(true);
 
-    const payload = {
-      name: this.name,
+    // Campi senza traduzione separata: valgono per tutte le lingue, vanno sempre
+    // sulla riga base a prescindere dalla lingua corrente.
+    const basePayload = {
       damage_dice: this.damageDice,
       damage_type: this.damageType,
       versatile_damage: this.versatileDamage || null,
@@ -103,7 +149,48 @@ export class WeaponCreate {
       weight: this.weight,
       properties: this.properties || null,
       suggested_attack_ability: Array.from(this.suggestedAttackAbilities),
+      image_url: this.imageUrl,
+      sourcebook_code: this.editingId ? (this.editingSourcebookCode ?? 'homebrew') : 'homebrew',
     };
+
+    const locale = this.localeService.locale();
+
+    if (this.editingId && locale !== 'en') {
+      // Si sta modificando un'arma esistente in una lingua diversa dall'inglese:
+      // nome/descrizione vanno nella traduzione, mai sulla riga canonica.
+      const { error: baseError } = await this.supabase.client
+        .from('weapons')
+        .update(basePayload)
+        .eq('id', this.editingId);
+
+      const { error: translationError } = baseError
+        ? { error: baseError }
+        : await this.supabase.client.from('content_translations').upsert(
+            {
+              content_table: 'weapons',
+              content_id: this.editingId,
+              locale,
+              name: this.name,
+            },
+            { onConflict: 'content_table,content_id,locale' }
+          );
+
+      const error = baseError ?? translationError;
+      if (error) {
+        this.modal.error(error.message);
+      } else {
+        this.resetForm();
+        await this.refreshWeapons();
+        this.modal.success(this.localeService.t('saved_message'));
+      }
+
+      this.loading.set(false);
+      return;
+    }
+
+    // Creazione di una nuova homebrew, oppure modifica mentre si è in inglese:
+    // nome e descrizione vanno direttamente sulla riga canonica, come prima.
+    const payload = { ...basePayload, name: this.name };
 
     const { error } = this.editingId
       ? await this.supabase.client.from('weapons').update(payload).eq('id', this.editingId)
@@ -146,6 +233,13 @@ export class WeaponCreate {
       this.modal.error('Eliminazione bloccata dai permessi (nessuna riga modificata).');
       return;
     }
+
+    // Ripulisce eventuali traduzioni orfane rimaste agganciate a questa arma.
+    await this.supabase.client
+      .from('content_translations')
+      .delete()
+      .eq('content_table', 'weapons')
+      .eq('content_id', id);
 
     await this.refreshWeapons();
   }
