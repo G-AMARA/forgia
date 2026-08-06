@@ -2,6 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ContentStore, normalizeAbilityBonuses } from '../../core/content-store';
+import { getSpellcastingInfo } from '../../core/spellcasting';
 import { getClassImagePath } from '../../core/class-images';
 import { Modal } from '../../core/modal';
 import { ActiveCampaign } from '../../core/active-campaign';
@@ -95,7 +96,11 @@ export class CharacterCreate {
     return getClassImagePath(selectedClass?.name, this.sex);
   }
 
-  // Incantesimi disponibili per la classe scelta (solo se la classe lancia incantesimi)
+  // Incantesimi disponibili per la classe scelta, ristretti al livello massimo che
+  // quella classe ha sbloccato al livello del personaggio (es. Warlock lvl 1 vede solo
+  // trucchetti e incantesimi di 1° livello, non l'intera lista della classe). Le classi
+  // homebrew/non canoniche (getSpellcastingInfo torna null, nessuna progressione nota)
+  // non subiscono il taglio per livello: si vede l'intera lista come prima.
   availableSpells(): any[] {
     if (!this.classId) return [];
     const selectedClass = this.classes().find((c: any) => c.id === this.classId);
@@ -105,10 +110,41 @@ export class CharacterCreate {
     // perché l'array spell.raw.classes arriva così com'è dall'SRD in inglese.
     const baseClassName = selectedClass.raw.name?.toLowerCase();
 
-    return this.allSpells().filter((spell: any) => {
+    const classSpells = this.allSpells().filter((spell: any) => {
       const classNames = spell.raw.classes ?? [];
       return classNames.some((c: any) => c.name?.toLowerCase() === baseClassName);
     });
+
+    const info = getSpellcastingInfo(selectedClass.raw.name, this.level);
+    if (!info) return classSpells;
+
+    const maxSpellLevel = info.slots.reduce((max, s) => Math.max(max, s.level), 0);
+    return classSpells.filter((spell: any) => {
+      const spellLevel = spell.raw.level ?? 0;
+      return spellLevel === 0 ? info.cantripsKnown > 0 : spellLevel <= maxSpellLevel;
+    });
+  }
+
+  // Se cambiando classe o livello alcuni incantesimi già selezionati non sono più
+  // ammessi, li rimuove: altrimenti resterebbero "fantasma" nel Set, non più visibili
+  // in lista (perché filtrata) ma comunque inviati al salvataggio del personaggio.
+  private pruneInvalidSpells() {
+    const validIds = new Set(this.availableSpells().map((s: any) => s.id));
+    const current = this.selectedSpellIds();
+    const pruned = new Set([...current].filter((id) => validIds.has(id)));
+    if (pruned.size !== current.size) {
+      this.selectedSpellIds.set(pruned);
+    }
+  }
+
+  onClassChange(classId: string) {
+    this.classId = classId;
+    this.pruneInvalidSpells();
+  }
+
+  onLevelChange(level: number) {
+    this.level = level;
+    this.pruneInvalidSpells();
   }
 
   // True se l'utente loggato ha già un personaggio in questa campagna (max 1 per regola)
