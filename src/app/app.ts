@@ -75,6 +75,11 @@ export class App {
       if (!hasHandledInitialAuth && initialPath.startsWith('/scheda-personaggio/')) {
         this.appNav.setTab('character-sheet');
         this.router.navigateByUrl(initialPath);
+      } else if (!hasHandledInitialAuth && initialPath.startsWith('/reset-password')) {
+        // Il link di recupero password nell'email autentica automaticamente l'utente
+        // (Supabase rileva il token nell'URL) mentre si trova ancora su /reset-password:
+        // senza questo caso speciale verrebbe dirottato sulla dashboard prima di poter
+        // impostare la nuova password, rendendo il link di recupero inutilizzabile.
       } else {
         // appNav.activeTab() sopravvive al logout: senza questo reset,
         // al login successivo lo switch mostrerebbe ancora l'ultima
