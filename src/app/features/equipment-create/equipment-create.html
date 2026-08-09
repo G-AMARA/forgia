@@ -20,6 +20,66 @@
       </div>
     </div>
 
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('equipment_description_label') }}</label>
+      <textarea
+        [(ngModel)]="description" name="description" rows="3"
+        class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
+      ></textarea>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <div class="w-25 h-25 rounded border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-3xl shrink-0">
+        @if (imageUrl) {
+          <img [src]="imageUrl" alt="" class="w-full h-full object-cover" />
+        } @else {
+          🎒
+        }
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold">{{ localeService.t('image_label') }}</label>
+        <label class="text-xs px-3 py-1.5 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors self-start" [class.opacity-50]="imageUploading()">
+          {{ imageUploading() ? localeService.t('loading') : localeService.t('upload_image_button') }}
+          <input type="file" accept="image/*" class="hidden" [disabled]="imageUploading()" (change)="onImageSelected($event)" />
+        </label>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('equipment_contents_label') }}</label>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <select [(ngModel)]="contentToAddId" name="contentToAddId" class="flex-1 px-3 py-2 rounded border border-gold bg-fantasy-black/40">
+          <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+          @for (opt of availableContentOptions(); track opt.id) {
+            <option [value]="opt.id">{{ opt.name }}</option>
+          }
+        </select>
+        <input
+          type="number" min="1" [(ngModel)]="contentToAddQuantity" name="contentToAddQuantity"
+          class="w-full sm:w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40"
+        />
+        <button
+          type="button" (click)="addContent()" [disabled]="!contentToAddId"
+          class="px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
+        >
+          {{ localeService.t('add_button') }}
+        </button>
+      </div>
+
+      @if (selectedContents.length > 0) {
+        <ul class="flex flex-col gap-1">
+          @for (c of selectedContents; track c.childId) {
+            <li class="flex items-center justify-between text-sm px-3 py-1.5 border border-gold/30 rounded">
+              <span>{{ c.quantity }}× {{ contentName(c.childId) }}</span>
+              <button type="button" (click)="removeContent(c.childId)" class="text-xs text-red-300 underline">
+                {{ localeService.t('remove_button') }}
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
     <div class="flex gap-2">
       <button
         type="submit" [disabled]="loading()"
@@ -37,38 +97,74 @@
       }
     </div>
 
-    @if (errorMsg()) {
-      <p class="text-sm text-red-300">{{ errorMsg() }}</p>
-    }
   </form>
 
   <div>
     <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('equipment_catalog_list_title') }}</h3>
-    @if (homebrewEquipment().length === 0) {
+    @if (equipment().length === 0) {
       <p class="text-slate-arcane italic">{{ localeService.t('no_homebrew_equipment_yet') }}</p>
     } @else {
+      <input
+        type="search"
+        [(ngModel)]="listSearchTerm"
+        name="listSearchTerm"
+        [placeholder]="localeService.t('spell_search_placeholder')"
+        class="w-full mb-3 px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+
+      @if (filteredEquipment().length === 0) {
+        <p class="text-slate-arcane italic">{{ localeService.t('no_spells_match_filter') }}</p>
+      }
+
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left border-collapse">
           <thead>
             <tr class="border-b border-gold text-xs uppercase tracking-wide">
+              <th class="py-2 pr-2">{{ localeService.t('image_label') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('equipment_name_label') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_weight_kg_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('equipment_description_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('equipment_contents_label') }}</th>
               <th class="py-2"></th>
             </tr>
           </thead>
           <tbody>
-            @for (e of homebrewEquipment(); track e.id) {
-              <tr class="border-b border-gold/30">
-                <td class="py-2 pr-2">{{ e.name }}</td>
-                <td class="py-2 pr-2">{{ e.weight }} kg</td>
+            @for (e of filteredEquipment(); track e.id) {
+              <tr
+                class="border-b border-gold/30 transition-colors"
+                [class.bg-fantasy-gold/20]="e.id === editingId"
+                [class.border-l-4]="e.id === editingId"
+                [class.border-l-fantasy-gold]="e.id === editingId"
+              >
+                <td class="py-2 pr-2">
+                  @if (e.raw.image_url) {
+                    <img [src]="e.raw.image_url" alt="" class="w-10 h-10 rounded object-cover" />
+                  }
+                </td>
+                <td class="py-2 pr-2">
+                  {{ e.name }}
+                  <span class="text-[10px] uppercase text-slate-arcane ml-1">({{ e.raw.sourcebook_code }})</span>
+                </td>
+                <td class="py-2 pr-2">{{ e.raw.weight }} kg</td>
+                <td class="py-2 pr-2">{{ e.description }}</td>
+                <td class="py-2 pr-2 text-xs">
+                  @if (contentsSummary(e.id); as contains) {
+                    <div>{{ localeService.t('equipment_contains_label') }}: {{ contains }}</div>
+                  }
+                  @if (containedInSummary(e.id); as containedIn) {
+                    <div class="text-slate-arcane">{{ localeService.t('equipment_contained_in_label') }}: {{ containedIn }}</div>
+                  }
+                </td>
                 <td class="py-2">
                   <div class="flex gap-2">
                     <button (click)="startEdit(e)" class="text-xs text-fantasy-gold underline">
                       {{ localeService.t('edit_button') }}
                     </button>
-                    <button (click)="deleteEquipment(e.id, e.name)" class="text-xs text-red-300 underline">
-                      {{ localeService.t('delete_button') }}
-                    </button>
+                    @if (e.raw.sourcebook_code === 'homebrew') {
+                      <button (click)="deleteEquipment(e.id, e.name)" class="text-xs text-red-300 underline">
+                        {{ localeService.t('delete_button') }}
+                      </button>
+                    }
                   </div>
                 </td>
               </tr>

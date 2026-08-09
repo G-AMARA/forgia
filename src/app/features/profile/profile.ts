@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 
 @Component({
   selector: 'app-profile',
@@ -12,6 +13,7 @@ import { LocaleService } from '../../core/locale';
 export class Profile {
   protected auth = inject(Auth);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   nickname = this.auth.nickname() ?? '';
 
@@ -30,11 +32,8 @@ export class Profile {
       : 'player';
 
   avatarUploading = signal(false);
-  avatarError = signal<string | null>(null);
 
   identitySaving = signal(false);
-  identityError = signal<string | null>(null);
-  identitySaved = signal(false);
 
   newPassword = '';
   repeatPassword = '';
@@ -42,7 +41,6 @@ export class Profile {
   protected readonly passwordPattern = '^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$';
   passwordSaving = signal(false);
   passwordError = signal<string | null>(null);
-  passwordSaved = signal(false);
 
   protected registrationDate(): string | null {
     const createdAt = this.auth.user()?.created_at;
@@ -56,20 +54,16 @@ export class Profile {
     const file = input.files?.[0];
     if (!file) return;
 
-    this.avatarError.set(null);
     this.avatarUploading.set(true);
     const { error } = await this.auth.uploadAvatar(file);
     if (error) {
-      this.avatarError.set(error.message);
+      this.modal.error(error.message);
     }
     this.avatarUploading.set(false);
     input.value = '';
   }
 
   async saveIdentity() {
-    this.identityError.set(null);
-    this.identitySaved.set(false);
-
     if (!this.nickname.trim()) {
       return;
     }
@@ -83,9 +77,9 @@ export class Profile {
     this.identitySaving.set(false);
 
     if (error) {
-      this.identityError.set(error.message);
+      this.modal.error(error.message);
     } else {
-      this.identitySaved.set(true);
+      this.modal.success(this.localeService.t('saved_message'));
     }
   }
 
@@ -95,7 +89,6 @@ export class Profile {
 
   async savePassword() {
     this.passwordError.set(null);
-    this.passwordSaved.set(false);
 
     if (!this.isPasswordStrong(this.newPassword)) {
       this.passwordError.set(this.localeService.t('password_pattern_hint') + '.');
@@ -112,9 +105,9 @@ export class Profile {
     this.passwordSaving.set(false);
 
     if (error) {
-      this.passwordError.set(error.message);
+      this.modal.error(error.message);
     } else {
-      this.passwordSaved.set(true);
+      this.modal.success(this.localeService.t('saved_message'));
       this.newPassword = '';
       this.repeatPassword = '';
     }

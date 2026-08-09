@@ -39,7 +39,73 @@
       </h1>
 
       <div class="flex items-center gap-3 flex-wrap">
-        <div class="flex border border-gold rounded overflow-hidden text-sm">
+        <app-araldica></app-araldica>
+
+        <app-auth-form variant="header"></app-auth-form>
+
+        @if (activeCampaign.current()) {
+          <button
+            (click)="appNav.setTab('hub')"
+            class="text-xs px-3 py-1 border border-gold rounded-full hover:bg-gold hover:text-fantasy-black transition-colors flex items-center gap-1"
+          >
+            📍 {{ activeCampaign.current()?.name }}
+          </button>
+        }
+      </div>
+    </div>
+  </header>
+
+    <!-- Navigazione a schede -->
+    <nav class="bg-fantasy-black border-b border-gold">
+      <div class="px-4 flex items-center justify-between gap-3">
+        <div class="flex gap-1 whitespace-nowrap overflow-x-auto">
+          <button
+            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
+            [class.border-fantasy-gold]="appNav.activeTab() === 'board'"
+            [class.border-transparent]="appNav.activeTab() !== 'board'"
+            (click)="goToBoard()"
+          >
+            {{ localeService.t('tab_board') }}
+          </button>
+          @if (auth.isMaster()) {
+            <button
+              class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
+              [class.border-fantasy-gold]="appNav.activeTab() === 'campaign'"
+              [class.border-transparent]="appNav.activeTab() !== 'campaign'"
+              (click)="appNav.setTab('campaign')"
+            >
+              {{ localeService.t('tab_campaign') }}
+            </button>
+          }
+          <button
+            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
+            [class.border-fantasy-gold]="appNav.activeTab() === 'characters'"
+            [class.border-transparent]="appNav.activeTab() !== 'characters'"
+            (click)="appNav.setTab('characters')"
+          >
+            {{ localeService.t('tab_characters') }}
+          </button>
+          <button
+            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
+            [class.border-fantasy-gold]="appNav.activeTab() === 'catalog'"
+            [class.border-transparent]="appNav.activeTab() !== 'catalog'"
+            (click)="appNav.setTab('catalog')"
+          >
+            {{ localeService.t('tab_catalog') }}
+          </button>
+          @if (auth.isAdmin()) {
+            <button
+              class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
+              [class.border-fantasy-gold]="appNav.activeTab() === 'manage'"
+              [class.border-transparent]="appNav.activeTab() !== 'manage'"
+              (click)="appNav.setTab('manage')"
+            >
+              {{ localeService.t('tab_manage') }}
+            </button>
+          }
+        </div>
+
+        <div class="flex border border-gold rounded overflow-hidden text-sm shrink-0">
           <button
             class="px-3 py-1"
             [class.bg-gold]="localeService.locale() === 'it'"
@@ -57,68 +123,6 @@
             EN
           </button>
         </div>
-
-        <app-auth-form variant="header"></app-auth-form>
-
-        @if (activeCampaign.current()) {
-          <button
-            (click)="appNav.setTab('hub')"
-            class="text-xs px-3 py-1 border border-gold rounded-full hover:bg-gold hover:text-fantasy-black transition-colors flex items-center gap-1"
-          >
-            📍 {{ activeCampaign.current()?.name }}
-          </button>
-        }
-      </div>
-    </div>
-  </header>
-
-    <!-- Navigazione a schede -->
-    <nav class="bg-fantasy-black border-b border-gold overflow-x-auto">
-      <div class="px-4 flex gap-1 whitespace-nowrap">
-        <button
-          class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-          [class.border-fantasy-gold]="appNav.activeTab() === 'board'"
-          [class.border-transparent]="appNav.activeTab() !== 'board'"
-          (click)="goToBoard()"
-        >
-          {{ localeService.t('tab_board') }}
-        </button>
-        @if (auth.isMaster()) {
-          <button
-            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-            [class.border-fantasy-gold]="appNav.activeTab() === 'campaign'"
-            [class.border-transparent]="appNav.activeTab() !== 'campaign'"
-            (click)="appNav.setTab('campaign')"
-          >
-            {{ localeService.t('tab_campaign') }}
-          </button>
-        }
-        <button
-          class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-          [class.border-fantasy-gold]="appNav.activeTab() === 'characters'"
-          [class.border-transparent]="appNav.activeTab() !== 'characters'"
-          (click)="appNav.setTab('characters')"
-        >
-          {{ localeService.t('tab_characters') }}
-        </button>
-        <button
-          class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-          [class.border-fantasy-gold]="appNav.activeTab() === 'catalog'"
-          [class.border-transparent]="appNav.activeTab() !== 'catalog'"
-          (click)="appNav.setTab('catalog')"
-        >
-          {{ localeService.t('tab_catalog') }}
-        </button>
-        @if (auth.isAdmin()) {
-          <button
-            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-            [class.border-fantasy-gold]="appNav.activeTab() === 'manage'"
-            [class.border-transparent]="appNav.activeTab() !== 'manage'"
-            (click)="appNav.setTab('manage')"
-          >
-            {{ localeService.t('tab_manage') }}
-          </button>
-        }
       </div>
     </nav>
 
@@ -219,4 +223,6 @@
       </div>
     </footer>
   }
+
+  <app-modal></app-modal>
 </div>

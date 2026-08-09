@@ -1,4 +1,12 @@
-<section class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4">
+<section class="relative overflow-hidden bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  @if (!hasOwnCharacterAlready() && classImagePath(); as classImg) {
+    <img
+      [src]="classImg" alt=""
+      class="absolute inset-y-0 right-0 h-full w-1/2 object-cover opacity-10 pointer-events-none [-webkit-mask-image:linear-gradient(to_left,black,transparent)] [mask-image:linear-gradient(to_left,black,transparent)]"
+    />
+  }
+
+  <div class="relative space-y-4">
   <h2 class="font-display text-2xl text-fantasy-gold">
     @if (campaignStore.current() && hasOwnCharacterAlready()) {
       {{ localeService.t('your_character_title') }} "{{ campaignStore.current()?.name }}"
@@ -43,7 +51,7 @@
         <div class="flex flex-col gap-1">
           <label class="text-sm font-semibold">{{ localeService.t('class_label') }} <span class="text-red-300">*</span></label>
           <select
-            name="class" [(ngModel)]="classId" required
+            name="class" [ngModel]="classId" (ngModelChange)="onClassChange($event)" required
             class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
@@ -84,7 +92,7 @@
         <div class="flex flex-col gap-1">
           <label class="text-sm font-semibold">{{ localeService.t('level_label') }}</label>
           <select
-            name="level" [(ngModel)]="level"
+            name="level" [ngModel]="level" (ngModelChange)="onLevelChange($event)"
             class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             @for (lvl of levels; track lvl) {
@@ -288,12 +296,7 @@
         {{ localeService.t('create_character_button') }}
       </button>
 
-      @if (errorMsg()) {
-        <p class="text-sm text-red-300">{{ errorMsg() }}</p>
-      }
-      @if (successMsg()) {
-        <p class="text-sm text-forest font-semibold">{{ successMsg() }}</p>
-      }
     </form>
   }
+  </div>
 </section>

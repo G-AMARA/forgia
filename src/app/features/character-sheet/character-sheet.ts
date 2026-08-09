@@ -4,6 +4,7 @@ import { CharacterStore } from '../../core/character-store';
 import { ContentStore, normalizeAbilityBonuses } from '../../core/content-store';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 import { SKILLS } from '../../core/skills';
 import { getClassImagePath } from '../../core/class-images';
 import { getAbilityImagePath } from '../../core/ability-images';
@@ -26,6 +27,7 @@ export class CharacterSheet implements OnInit {
   private contentStore = inject(ContentStore);
   private auth = inject(Auth);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   // Se valorizzato (es. dalla rotta /scheda-personaggio/:id), la scheda mostra
   // quel personaggio specifico invece del personaggio dell'utente loggato
@@ -36,7 +38,9 @@ export class CharacterSheet implements OnInit {
     this.characterId ? this.characterStore.selectedCharacter() : this.characterStore.myCharacter()
   );
 
-  protected classImagePath = computed(() => getClassImagePath(this.character()?.class_name));
+  protected classImagePath = computed(() =>
+    getClassImagePath(this.character()?.class_name, this.character()?.sex)
+  );
   protected getAbilityImagePath = getAbilityImagePath;
 
   // Vero se l'utente loggato non è il proprietario: usato per bloccare ogni modifica
@@ -121,8 +125,6 @@ export class CharacterSheet implements OnInit {
   spellFilterSchool = signal('');
   spellFilterLevel = signal('');
 
-  savedMsg = signal<string | null>(null);
-  avatarError = signal<string | null>(null);
   avatarUploading = signal(false);
   isModalOpen = signal(false);
 
@@ -334,8 +336,6 @@ export class CharacterSheet implements OnInit {
     const c = this.character();
     if (!c || this.readOnly()) return;
 
-    this.actionError.set(null);
-
     // Rimuove dagli ability_scores il bonus applicato in precedenza e vi somma
     // quello nuovo (razziale o background, in base alla selezione corrente):
     // così le statistiche restano coerenti quando razza/background cambiano.
@@ -368,7 +368,7 @@ export class CharacterSheet implements OnInit {
     });
 
     if (error) {
-      this.actionError.set(error.message);
+      this.modal.error(error.message);
       return;
     }
 
@@ -407,8 +407,7 @@ export class CharacterSheet implements OnInit {
   }
 
   private showSaved() {
-    this.savedMsg.set(this.localeService.t('saved_message'));
-    setTimeout(() => this.savedMsg.set(null), 2000);
+    this.modal.success(this.localeService.t('saved_message'));
   }
 
   async onAvatarSelected(event: Event) {
@@ -418,13 +417,12 @@ export class CharacterSheet implements OnInit {
     const userId = this.auth.user()?.id;
     if (!file || !c || !userId || this.readOnly()) return;
 
-    this.avatarError.set(null);
     this.avatarUploading.set(true);
 
     const { error } = await this.characterStore.uploadAvatar(c.id, userId, file);
 
     if (error) {
-      this.avatarError.set(error.message);
+      this.modal.error(error.message);
     }
 
     this.avatarUploading.set(false);
@@ -440,15 +438,12 @@ export class CharacterSheet implements OnInit {
     return equipment.filter((item: any) => item.name.toLowerCase().includes(term));
   });
 
-  actionError = signal<string | null>(null);
-
   async addItem() {
     const c = this.character();
     if (!c || !this.selectedEquipmentId || this.readOnly()) return;
-    this.actionError.set(null);
     const { error } = await this.characterStore.addInventoryItem(c.id, this.selectedEquipmentId, this.addQuantity);
     if (error) {
-      this.actionError.set(error.message);
+      this.modal.error(error.message);
       return;
     }
     this.selectedEquipmentId = '';
@@ -458,17 +453,15 @@ export class CharacterSheet implements OnInit {
   async removeItem(rowId: string) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    this.actionError.set(null);
     const { error } = await this.characterStore.removeInventoryItem(c.id, rowId);
-    if (error) this.actionError.set(error.message);
+    if (error) this.modal.error(error.message);
   }
 
   async toggleEquip(rowId: string, currentlyEquipped: boolean) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    this.actionError.set(null);
     const { error } = await this.characterStore.toggleEquipped(c.id, rowId, !currentlyEquipped);
-    if (error) this.actionError.set(error.message);
+    if (error) this.modal.error(error.message);
   }
 
   private allWeaponsCatalog = this.contentStore.getContent('weapons');
@@ -481,14 +474,13 @@ export class CharacterSheet implements OnInit {
     const c = this.character();
     if (!c || !this.selectedWeaponId || this.readOnly()) return;
 
-    this.actionError.set(null);
     const { error } = await this.characterStore.addWeapon(c.id, {
       weaponId: this.selectedWeaponId,
       quantity: this.weaponQuantity,
     });
 
     if (error) {
-      this.actionError.set(error.message);
+      this.modal.error(error.message);
       return;
     }
 
@@ -503,9 +495,8 @@ export class CharacterSheet implements OnInit {
   async removeWeapon(rowId: string) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    this.actionError.set(null);
     const { error } = await this.characterStore.removeWeapon(c.id, rowId);
-    if (error) this.actionError.set(error.message);
+    if (error) this.modal.error(error.message);
   }
 
   // Nome inglese canonico della classe del personaggio, risalito dal suo id: sia
@@ -621,8 +612,6 @@ export class CharacterSheet implements OnInit {
     const c = this.character();
     if (!c || !this.selectedSpellIdToAdd || this.readOnly()) return;
 
-    this.actionError.set(null);
-
     // Applica il limite di trucchetti/incantesimi conosciuti calcolato da classe+livello
     // (nessun limite se la classe non è tra quelle riconosciute in spellcasting.ts).
     const info = this.spellcastingInfo();
@@ -632,18 +621,18 @@ export class CharacterSheet implements OnInit {
 
       if (spellLevel === 0) {
         if (this.knownCantripsCount() >= info.cantripsKnown) {
-          this.actionError.set(this.localeService.t('cantrip_limit_reached'));
+          this.modal.error(this.localeService.t('cantrip_limit_reached'));
           return;
         }
       } else if (info.spellsKnownLimit !== null && this.knownLeveledSpellsCount() >= info.spellsKnownLimit) {
-        this.actionError.set(this.localeService.t('spell_limit_reached'));
+        this.modal.error(this.localeService.t('spell_limit_reached'));
         return;
       }
     }
 
     const { error } = await this.characterStore.addSpellToCharacter(c.id, this.selectedSpellIdToAdd);
     if (error) {
-      this.actionError.set(error.message);
+      this.modal.error(error.message);
       return;
     }
     this.selectedSpellIdToAdd = '';
@@ -652,17 +641,15 @@ export class CharacterSheet implements OnInit {
   async removeSpell(rowId: string) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    this.actionError.set(null);
     const { error } = await this.characterStore.removeSpellFromCharacter(c.id, rowId);
-    if (error) this.actionError.set(error.message);
+    if (error) this.modal.error(error.message);
   }
 
   async toggleSpellPrepared(rowId: string, currentlyPrepared: boolean) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    this.actionError.set(null);
     const { error } = await this.characterStore.togglePrepared(c.id, rowId, !currentlyPrepared);
-    if (error) this.actionError.set(error.message);
+    if (error) this.modal.error(error.message);
   }
 
   openModal(data?: any) {

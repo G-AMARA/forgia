@@ -53,9 +53,6 @@
       <!-- Roster -->
       <div>
         <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('roster_title') }}</h3>
-        @if (deleteError()) {
-          <p class="text-sm text-red-300 mb-2">{{ deleteError() }}</p>
-        }
         @if (characterStore.characters().length === 0) {
           <p class="text-slate-arcane italic">{{ localeService.t('no_characters_yet') }}</p>
         } @else {

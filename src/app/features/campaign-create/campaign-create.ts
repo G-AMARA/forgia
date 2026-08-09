@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 import { CAMPAIGN_COVERS, getCoverImagePath } from '../../core/campaign-covers';
 
 @Component({
@@ -15,6 +16,7 @@ export class CampaignCreate {
   protected campaignStore = inject(ActiveCampaign);
   protected auth = inject(Auth);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   readonly maxDescriptionLength = 700;
 
@@ -26,11 +28,9 @@ export class CampaignCreate {
   editionCode = '5e-2014';
   coverKey = CAMPAIGN_COVERS[0].key;
 
-  errorMsg = signal<string | null>(null);
   loading = signal(false);
 
   async submit() {
-    this.errorMsg.set(null);
     this.loading.set(true);
 
     const { error } = await this.campaignStore.createCampaign(
@@ -41,25 +41,26 @@ export class CampaignCreate {
     );
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     } else {
       this.name = '';
       this.description = '';
       this.coverKey = CAMPAIGN_COVERS[0].key;
+      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
   }
 
   async deleteCampaign(campaignId: string, campaignName: string) {
-    const confirmed = window.confirm(
+    const confirmed = await this.modal.confirm(
       `${this.localeService.t('confirm_delete_campaign')} "${campaignName}"?`
     );
     if (!confirmed) return;
 
     const { error } = await this.campaignStore.deleteCampaign(campaignId);
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     }
   }
 }

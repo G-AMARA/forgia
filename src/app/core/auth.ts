@@ -92,6 +92,23 @@ export class Auth {
     return { data, error: null };
   }
 
+  // Riusa la stessa RPC del login (SECURITY DEFINER, bypassa la RLS che altrimenti
+  // limiterebbe la select su profiles alla sola riga dell'utente): se restituisce
+  // un'email, quel nickname è già occupato da un altro account.
+  async nicknameExists(nickname: string): Promise<boolean> {
+    const { data } = await this.supabase.client.rpc('get_email_for_nickname', {
+      p_nickname: nickname,
+    });
+    return !!data;
+  }
+
+  // Come nicknameExists ma sull'email: richiede l'RPC SECURITY DEFINER email_exists,
+  // perché l'email vive in auth.users (non in profiles) e non è leggibile via client.
+  async emailExists(email: string): Promise<boolean> {
+    const { data } = await this.supabase.client.rpc('email_exists', { p_email: email });
+    return !!data;
+  }
+
   async signInWithNickname(nickname: string, password: string) {
     const { data: email, error: rpcError } = await this.supabase.client.rpc(
       'get_email_for_nickname',
@@ -185,11 +202,17 @@ export class Auth {
 
     const { data: urlData } = this.supabase.client.storage.from('avatars').getPublicUrl(path);
 
+    // getPublicUrl() è deterministico sul path: se si ricarica una foto con la stessa
+    // estensione, l'URL torna identico a quello già salvato. Senza cache-bust né il
+    // signal (stesso valore = nessun re-render) né il browser (stesso URL = cache) si
+    // accorgono che l'immagine è cambiata, quindi l'utente non vede alcun aggiornamento.
+    const cacheBustedUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+
     // .update() senza .select() non segnala nulla se la RLS blocca la riga: PostgREST
     // risponde "successo, 0 righe toccate" senza errore. Il .select() forza a scoprirlo.
     const { data: updateData, error: updateError } = await this.supabase.client
       .from('profiles')
-      .update({ avatar_url: urlData.publicUrl })
+      .update({ avatar_url: cacheBustedUrl })
       .eq('id', userId)
       .select();
 

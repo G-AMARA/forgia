@@ -5,6 +5,7 @@ import { ActiveCampaign } from '../../core/active-campaign';
 import { AppNav } from '../../core/app-nav';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 import { getCover, CampaignCover, getCoverImagePath } from '../../core/campaign-covers';
 
 interface BoardCampaign {
@@ -30,6 +31,7 @@ export class Dashboard implements OnInit {
   private appNav = inject(AppNav);
   protected auth = inject(Auth);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   boardCampaigns = signal<BoardCampaign[]>([]);
   loading = signal(true);
@@ -106,13 +108,15 @@ export class Dashboard implements OnInit {
   async deleteCampaign(event: Event, campaign: BoardCampaign) {
     event.stopPropagation(); // evita che il click apra anche enterCampaign()
 
-    const confirmed = window.confirm(
+    const confirmed = await this.modal.confirm(
       `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`
     );
     if (!confirmed) return;
 
     const { error } = await this.activeCampaign.deleteCampaign(campaign.id);
-    if (!error) {
+    if (error) {
+      this.modal.error(error.message);
+    } else {
       await this.loadBoard();
     }
   }

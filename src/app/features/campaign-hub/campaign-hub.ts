@@ -1,10 +1,11 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { CharacterStore } from '../../core/character-store';
 import { Auth } from '../../core/auth';
 import { AppNav } from '../../core/app-nav';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 import { getCover, getCoverImagePath } from '../../core/campaign-covers';
 
 @Component({
@@ -18,6 +19,7 @@ export class CampaignHub {
   protected auth = inject(Auth);
   protected appNav = inject(AppNav);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
   private router = inject(Router);
 
   cover = computed(() => {
@@ -58,20 +60,17 @@ export class CampaignHub {
     this.router.navigate(['/scheda-personaggio', characterId]);
   }
 
-  deleteError = signal<string | null>(null);
-
   async deleteCharacter(event: Event, characterId: string, characterName: string) {
     event.stopPropagation(); // evita che il click apra anche la scheda
 
-    const confirmed = window.confirm(
+    const confirmed = await this.modal.confirm(
       `${this.localeService.t('confirm_delete_character')} "${characterName}"?`
     );
     if (!confirmed) return;
 
-    this.deleteError.set(null);
     const { error } = await this.characterStore.deleteCharacter(characterId);
     if (error) {
-      this.deleteError.set(error.message);
+      this.modal.error(error.message);
     }
   }
 

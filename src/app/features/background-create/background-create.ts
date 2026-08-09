@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 
 const SKILL_KEYS = [
   'acrobatics', 'animal_handling', 'arcana', 'athletics', 'deception', 'history',
@@ -20,6 +21,7 @@ export class BackgroundCreate {
   private supabase = inject(Supabase);
   private contentStore = inject(ContentStore);
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
 
   protected backgrounds = this.contentStore.getContent('backgrounds');
 
@@ -31,7 +33,6 @@ export class BackgroundCreate {
 
   editingId: string | null = null;
 
-  errorMsg = signal<string | null>(null);
   loading = signal(false);
 
   toggleSkill(key: string) {
@@ -80,7 +81,6 @@ export class BackgroundCreate {
   }
 
   async submit() {
-    this.errorMsg.set(null);
     this.loading.set(true);
 
     const payload = {
@@ -94,10 +94,11 @@ export class BackgroundCreate {
       : await this.supabase.client.from('backgrounds').insert(payload);
 
     if (error) {
-      this.errorMsg.set(error.message);
+      this.modal.error(error.message);
     } else {
       this.resetForm();
       await this.refreshBackgrounds();
+      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
@@ -112,11 +113,13 @@ export class BackgroundCreate {
   }
 
   async deleteBackground(id: string, name: string) {
-    const confirmed = window.confirm(`${this.localeService.t('confirm_delete_background')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_background')} "${name}"?`);
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('backgrounds').delete().eq('id', id);
-    if (!error) {
+    if (error) {
+      this.modal.error(error.message);
+    } else {
       await this.refreshBackgrounds();
     }
   }

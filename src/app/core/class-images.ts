@@ -8,8 +8,15 @@ function slugify(className: string): string {
     .replace(/\s+/g, '-');
 }
 
-/** Path dell'immagine di sfondo della classe, dentro public/classes/{classe}.png. */
-export function getClassImagePath(className: string | null | undefined): string | null {
+/**
+ * Path dell'immagine di sfondo della classe, dentro public/classes/{classe}[F].png.
+ * Le versioni femminili sono file a parte con suffisso F (es. bardo.png / bardoF.png).
+ */
+export function getClassImagePath(
+  className: string | null | undefined,
+  sex?: 'M' | 'F' | null
+): string | null {
   if (!className) return null;
-  return `/classes/${slugify(className)}.png`;
+  const suffix = sex === 'F' ? 'F' : '';
+  return `/classes/${slugify(className)}${suffix}.png`;
 }

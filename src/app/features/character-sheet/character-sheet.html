@@ -22,9 +22,6 @@
               {{ avatarUploading() ? localeService.t('loading') : localeService.t('upload_photo_button') }}
               <input type="file" accept="image/*" class="hidden" [disabled]="avatarUploading()" (change)="onAvatarSelected($event)" />
             </label>
-            @if (avatarError()) {
-              <p class="text-xs text-red-300 text-center max-w-40">{{ avatarError() }}</p>
-            }
           }
         </div>
   
@@ -86,13 +83,6 @@
           {{ localeService.t('subtab_weapons') }}
         </button>
       </div>
-  
-      @if (savedMsg()) {
-        <p class="text-sm text-forest font-semibold">✓ {{ savedMsg() }}</p>
-      }
-      @if (actionError()) {
-        <p class="text-sm text-red-300 font-semibold">{{ actionError() }}</p>
-      }
   
       <!-- GENERALE -->
       @if (activeSubTab() === 'general') {
