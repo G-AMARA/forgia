@@ -1,0 +1,28 @@
+/* Animazione di rotolamento frenetico */
+@keyframes roll-animation {
+  0% { transform: rotate(0deg) scale(1) translateY(0); }
+  25% { transform: rotate(90deg) scale(1.1) translateY(-10px); }
+  50% { transform: rotate(180deg) scale(1) translateY(0); }
+  75% { transform: rotate(270deg) scale(1.1) translateY(-10px); }
+  100% { transform: rotate(360deg) scale(1) translateY(0); }
+}
+
+.animate-roll {
+  animation: roll-animation 0.3s linear infinite;
+  filter: blur(1px); 
+}
+
+/* Regole rigide per il motore 3D */
+:host ::ng-deep #dice-box-container {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+:host ::ng-deep #dice-box-container canvas {
+  width: 100% !important;
+  height: 98% !important;
+  display: block;
+  outline: none;
+}

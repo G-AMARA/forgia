@@ -11,7 +11,7 @@ import { CharacterStore } from '../../core/character-store';
 import { CharacterSheet } from '../character-sheet/character-sheet';
 import { LocaleService } from '../../core/locale';
 import { AppNav } from '../../core/app-nav';
-
+import { DiceRoller } from '../../shared/dice-roller/dice-roller';
 function rollAbilityScore(): number {
   // 4d6, scarta il più basso: il metodo classico D&D
   const rolls = Array.from({ length: 4 }, () => Math.ceil(Math.random() * 6));
@@ -22,7 +22,7 @@ function rollAbilityScore(): number {
 @Component({
   selector: 'app-character-create',
   standalone: true,
-  imports: [FormsModule, CharacterSheet],
+  imports: [FormsModule, CharacterSheet, DiceRoller],
   templateUrl: './character-create.html',
 })
 export class CharacterCreate {
@@ -74,6 +74,7 @@ export class CharacterCreate {
   readonly backgroundBonusPerAbilityMax = 2;
 
   selectedSpellIds = signal<Set<string>>(new Set());
+  protected diceRollerOpen = signal(false);
 
   loading = signal(false);
 
@@ -275,5 +276,13 @@ export class CharacterCreate {
 
     this.appNav.setTab('character-sheet');
     this.router.navigate(['/scheda-personaggio', characterId]);
+  }
+
+  rollYourScores() {
+    this.diceRollerOpen.set(true);
+  }
+
+  closeDiceRoller() {
+    this.diceRollerOpen.set(false);
   }
 }
