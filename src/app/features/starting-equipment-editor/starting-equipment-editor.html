@@ -1,0 +1,109 @@
+<div class="flex flex-col gap-2">
+  <label class="text-sm font-semibold">{{ localeService.t('starting_equipment_editor_title') }}</label>
+  <p class="text-xs text-slate-arcane">{{ localeService.t('starting_equipment_editor_hint') }}</p>
+
+  @for (group of groups(); track $index; let groupIndex = $index) {
+    <div class="flex flex-col gap-2 border border-gold rounded p-2 bg-fantasy-black/50">
+      <div class="flex items-center gap-2">
+        <span class="text-xs uppercase text-slate-arcane">{{ localeService.t('starting_equipment_group_label') }}</span>
+        <input
+          type="text" [ngModel]="group.key" (ngModelChange)="setGroupKey(groupIndex, $event)"
+          [name]="'group-key-' + groupIndex" [placeholder]="localeService.t('starting_equipment_group_key_placeholder')"
+          class="flex-1 px-2 py-1 text-sm rounded border border-gold bg-fantasy-black/40"
+        />
+        <button type="button" (click)="removeGroup(groupIndex)" class="text-xs text-red-300 underline">
+          {{ localeService.t('remove_button') }}
+        </button>
+      </div>
+
+      @for (option of group.options; track $index; let optionIndex = $index) {
+        <div class="flex flex-col gap-1 border border-gold/40 rounded p-2 ml-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs uppercase text-slate-arcane">{{ localeService.t('starting_equipment_option_label') }} {{ optionIndex + 1 }}</span>
+            <button type="button" (click)="removeOption(groupIndex, optionIndex)" class="text-xs text-red-300 underline">
+              {{ localeService.t('remove_button') }}
+            </button>
+          </div>
+
+          @for (ref of option.refs; track $index; let refIndex = $index) {
+            <div class="flex flex-wrap items-center gap-1">
+              <select
+                [ngModel]="ref.kind" (ngModelChange)="setRefKind(groupIndex, optionIndex, refIndex, $event)"
+                [name]="'ref-kind-' + groupIndex + '-' + optionIndex + '-' + refIndex"
+                class="px-2 py-1 text-sm rounded border border-gold bg-fantasy-black/40"
+              >
+                <option value="item">{{ localeService.t('starting_equipment_ref_kind_item') }}</option>
+                <option value="category">{{ localeService.t('starting_equipment_ref_kind_category') }}</option>
+              </select>
+
+              <select
+                [ngModel]="ref.table" (ngModelChange)="setRefTable(groupIndex, optionIndex, refIndex, $event)"
+                [name]="'ref-table-' + groupIndex + '-' + optionIndex + '-' + refIndex"
+                class="px-2 py-1 text-sm rounded border border-gold bg-fantasy-black/40"
+              >
+                <option value="weapons">{{ localeService.t('starting_equipment_ref_table_weapons') }}</option>
+                <option value="equipment">{{ localeService.t('starting_equipment_ref_table_equipment') }}</option>
+              </select>
+
+              @if (ref.kind === 'item') {
+                <select
+                  [ngModel]="ref.name" (ngModelChange)="setRefName(groupIndex, optionIndex, refIndex, $event)"
+                  [name]="'ref-name-' + groupIndex + '-' + optionIndex + '-' + refIndex"
+                  class="flex-1 min-w-32 px-2 py-1 text-sm rounded border border-gold bg-fantasy-black/40"
+                >
+                  <option value="">{{ localeService.t('select_placeholder') }}</option>
+                  @for (item of itemOptionsFor(ref); track item.id) {
+                    <option [value]="item.raw.name">{{ item.name }}</option>
+                  }
+                </select>
+              } @else {
+                <select
+                  [ngModel]="ref.category" (ngModelChange)="setRefCategory(groupIndex, optionIndex, refIndex, $event)"
+                  [name]="'ref-category-' + groupIndex + '-' + optionIndex + '-' + refIndex"
+                  class="flex-1 min-w-32 px-2 py-1 text-sm rounded border border-gold bg-fantasy-black/40"
+                >
+                  @for (tag of (ref.table === 'weapons' ? weaponCategoryTags : toolCategoryTags); track tag) {
+                    <option [value]="tag">{{ categoryLabel(ref.table, tag) }}</option>
+                  }
+                </select>
+              }
+
+              <input
+                type="number" min="1" [ngModel]="ref.quantity ?? 1"
+                (ngModelChange)="setRefQuantity(groupIndex, optionIndex, refIndex, $event)"
+                [name]="'ref-quantity-' + groupIndex + '-' + optionIndex + '-' + refIndex"
+                [title]="localeService.t('quantity_label')"
+                class="w-16 px-2 py-1 text-sm rounded border border-gold bg-fantasy-black/40"
+              />
+
+              <button type="button" (click)="removeRef(groupIndex, optionIndex, refIndex)" class="text-xs text-red-300 underline">
+                {{ localeService.t('remove_button') }}
+              </button>
+            </div>
+          }
+
+          <button
+            type="button" (click)="addRef(groupIndex, optionIndex)"
+            class="self-start text-xs text-fantasy-gold underline"
+          >
+            {{ localeService.t('starting_equipment_add_ref_button') }}
+          </button>
+        </div>
+      }
+
+      <button
+        type="button" (click)="addOption(groupIndex)"
+        class="self-start ml-2 text-xs text-fantasy-gold underline"
+      >
+        {{ localeService.t('starting_equipment_add_option_button') }}
+      </button>
+    </div>
+  }
+
+  <button
+    type="button" (click)="addGroup()"
+    class="self-start px-3 py-1.5 text-xs border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    {{ localeService.t('starting_equipment_add_group_button') }}
+  </button>
+</div>

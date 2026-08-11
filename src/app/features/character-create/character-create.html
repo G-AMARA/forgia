@@ -79,7 +79,7 @@
         <div class="flex flex-col gap-1">
           <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
           <select
-            name="background" [(ngModel)]="backgroundId"
+            name="background" [ngModel]="backgroundId" (ngModelChange)="onBackgroundChange($event)"
             class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             <option value="">{{ localeService.t('subclass_none') }}</option>
@@ -141,33 +141,6 @@
             <option [ngValue]="false">{{ localeService.t('darkvision_no') }}</option>
             <option [ngValue]="true">{{ localeService.t('darkvision_yes') }}</option>
           </select>
-        </div>
-      </div>
-
-      <!-- Monete: scritta colorata per distinguere subito oro/argento/rame. -->
-      <div class="grid grid-cols-3 gap-4">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('gold_coins_label') }}</label>
-          <input
-            type="number" min="0" name="goldCoins" [(ngModel)]="goldCoins"
-            class="px-3 py-2 rounded border border-fantasy-gold bg-fantasy-black/40 text-fantasy-gold focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          />
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold text-fantasy-moonstone">{{ localeService.t('silver_coins_label') }}</label>
-          <input
-            type="number" min="0" name="silverCoins" [(ngModel)]="silverCoins"
-            class="px-3 py-2 rounded border border-fantasy-moonstone bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          />
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold text-copper">{{ localeService.t('copper_coins_label') }}</label>
-          <input
-            type="number" min="0" name="copperCoins" [(ngModel)]="copperCoins"
-            class="px-3 py-2 rounded border border-copper bg-fantasy-black/40 text-copper focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          />
         </div>
       </div>
 
@@ -263,12 +236,21 @@
       @if (availableSpells().length > 0) {
         <div class="flex flex-col gap-2">
           <label class="text-sm font-semibold">{{ localeService.t('spells_known_label') }}</label>
+          @if (currentSpellcastingInfo(); as info) {
+            <p class="text-xs text-slate-arcane">
+              {{ localeService.t('cantrips_known_label') }}: {{ knownCantripsCount() }}/{{ info.cantripsKnown }}
+              @if (info.spellsKnownLimit !== null) {
+                · {{ localeService.t('spells_know_label') }}: {{ knownLeveledSpellsCount() }}/{{ info.spellsKnownLimit }}
+              }
+            </p>
+          }
           <div class="max-h-48 overflow-y-auto border border-gold rounded p-2 grid grid-cols-1 sm:grid-cols-2 gap-1 bg-fantasy-black/50">
             @for (spell of availableSpells(); track spell.id) {
-              <label class="flex items-center gap-2 text-sm">
+              <label class="flex items-center gap-2 text-sm" [class.opacity-50]="!canSelectSpell(spell)">
                 <input
                   type="checkbox"
                   [checked]="isSpellSelected(spell.id)"
+                  [disabled]="!canSelectSpell(spell)"
                   (change)="toggleSpell(spell.id)"
                 />
                 {{ spell.name }}
@@ -280,6 +262,70 @@
           </div>
         </div>
       }
+
+      @if (startingEquipmentGroups().length > 0) {
+        <div class="flex flex-col gap-3">
+          <label class="text-sm font-semibold">{{ localeService.t('starting_equipment_title') }}</label>
+
+          @if (classEquipmentGroups().length > 0) {
+            <div class="flex flex-col gap-2">
+              <span class="text-xs uppercase tracking-wide text-slate-arcane">{{ localeService.t('starting_equipment_class_title') }}</span>
+              <ng-container *ngTemplateOutlet="equipmentGroupsTpl; context: { groups: classEquipmentGroups() }"></ng-container>
+            </div>
+          }
+
+          @if (backgroundEquipmentGroups().length > 0 || startingGoldPreview() > 0) {
+            <div class="flex flex-col gap-2">
+              <span class="text-xs uppercase tracking-wide text-slate-arcane">{{ localeService.t('starting_equipment_background_title') }}</span>
+              @if (startingGoldPreview() > 0) {
+                <span class="text-sm text-slate-arcane">{{ localeService.t('starting_gold_label') }}: {{ startingGoldPreview() }}</span>
+              }
+              <ng-container *ngTemplateOutlet="equipmentGroupsTpl; context: { groups: backgroundEquipmentGroups() }"></ng-container>
+            </div>
+          }
+        </div>
+      }
+
+      <ng-template #equipmentGroupsTpl let-groups="groups">
+        @for (entry of groups; track entry.groupKey) {
+          <div class="flex flex-col gap-1 border border-gold rounded p-2 bg-fantasy-black/50">
+            @for (option of entry.group.options; track $index) {
+              @if (entry.group.options.length > 1) {
+                <label class="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio" [name]="entry.groupKey"
+                    [checked]="selectedOptionIndex(entry.groupKey) === $index"
+                    (change)="selectEquipmentOption(entry.groupKey, $index)"
+                  />
+                  {{ optionLabel(option.refs) }}
+                </label>
+              } @else {
+                <span class="text-sm text-slate-arcane">{{ optionLabel(option.refs) }}</span>
+              }
+
+              @if (selectedOptionIndex(entry.groupKey) === $index) {
+                @for (ref of option.refs; track $index; let refIndex = $index) {
+                  @if (ref.kind === 'category') {
+                    @for (slot of categoryPickSlots(ref); track slot) {
+                      <select
+                        class="ml-6 px-2 py-1 text-sm rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                        [ngModel]="getCategoryPick(entry.groupKey, refIndex, slot)"
+                        (ngModelChange)="setCategoryPick(entry.groupKey, refIndex, slot, $event)"
+                        [name]="entry.groupKey + '-' + refIndex + '-' + slot"
+                      >
+                        <option value="">{{ localeService.t('starting_equipment_choose_item_label') }}</option>
+                        @for (item of categoryOptionsFor(ref); track item.id) {
+                          <option [value]="item.id">{{ categoryItemName(item) }}</option>
+                        }
+                      </select>
+                    }
+                  }
+                }
+              }
+            }
+          </div>
+        }
+      </ng-template>
 
       <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold">{{ localeService.t('backstory_label') }}</label>

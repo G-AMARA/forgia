@@ -60,6 +60,11 @@ export class CharacterSheet implements OnInit {
 
   currentHp = 0;
   maxHp = 0;
+  copper = 0;
+  silver = 0;
+  electrum = 0;
+  gold = 0;
+  platinum = 0;
   selectedArmorId = '';
   shieldEquipped = false;
   abilityScores: Record<string, number> = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
@@ -92,9 +97,6 @@ export class CharacterSheet implements OnInit {
   identityXp = 0;
   identitySex: 'M' | 'F' = 'M';
   identityDarkvision = false;
-  identityGoldCoins = 0;
-  identitySilverCoins = 0;
-  identityCopperCoins = 0;
 
   // Bonus attualmente "cotto" dentro abilityScores (razziale o background, sono alternativi):
   // serve a calcolare la differenza esatta da applicare quando razza/background cambiano.
@@ -117,6 +119,9 @@ export class CharacterSheet implements OnInit {
 
   selectedEquipmentId = '';
   addQuantity = 1;
+  // Quantità da rimuovere per ogni riga d'inventario, tenuta per rowId perché ogni
+  // oggetto ha il proprio input accanto al bottone Rimuovi (default 1 finché non toccato).
+  private removeQuantities: Record<string, number> = {};
   selectedSpellIdToAdd = '';
   spellSearchTerm = signal('');
   spellFilterSchool = signal('');
@@ -138,11 +143,13 @@ export class CharacterSheet implements OnInit {
         this.identityXp = c.experience_points;
         this.identitySex = c.sex ?? 'M';
         this.identityDarkvision = c.darkvision;
-        this.identityGoldCoins = c.gold_coins;
-        this.identitySilverCoins = c.silver_coins;
-        this.identityCopperCoins = c.copper_coins;
         this.currentHp = c.current_hp ?? 0;
         this.maxHp = c.max_hp ?? 0;
+        this.copper = c.copper ?? 0;
+        this.silver = c.silver ?? 0;
+        this.electrum = c.electrum ?? 0;
+        this.gold = c.gold ?? 0;
+        this.platinum = c.platinum ?? 0;
         this.selectedArmorId = c.equipped_armor_id ?? '';
         this.shieldEquipped = c.shield_equipped;
         this.abilityScores = { ...c.ability_scores };
@@ -358,9 +365,6 @@ export class CharacterSheet implements OnInit {
       appliedBonus: newAppliedBonus,
       sex: this.identitySex,
       darkvision: this.identityDarkvision,
-      goldCoins: this.identityGoldCoins,
-      silverCoins: this.identitySilverCoins,
-      copperCoins: this.identityCopperCoins,
     });
 
     if (error) {
@@ -395,6 +399,19 @@ export class CharacterSheet implements OnInit {
     const c = this.character();
     if (!c || this.readOnly()) return;
     await this.characterStore.updateNotes(c.id, this.backstory);
+    this.showSaved();
+  }
+
+  async saveCurrency() {
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+    await this.characterStore.updateCurrency(c.id, {
+      copper: this.copper,
+      silver: this.silver,
+      electrum: this.electrum,
+      gold: this.gold,
+      platinum: this.platinum,
+    });
     this.showSaved();
   }
 
@@ -446,11 +463,24 @@ export class CharacterSheet implements OnInit {
     this.addQuantity = 1;
   }
 
-  async removeItem(rowId: string) {
+  removeQty(rowId: string): number {
+    return this.removeQuantities[rowId] ?? 1;
+  }
+
+  setRemoveQty(rowId: string, value: number) {
+    this.removeQuantities[rowId] = Math.max(1, Math.floor(value) || 1);
+  }
+
+  async removeItem(rowId: string, currentQuantity: number) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    const { error } = await this.characterStore.removeInventoryItem(c.id, rowId);
-    if (error) this.modal.error(error.message);
+    const quantityToRemove = Math.min(this.removeQty(rowId), currentQuantity);
+    const { error } = await this.characterStore.removeInventoryItem(c.id, rowId, quantityToRemove, currentQuantity);
+    if (error) {
+      this.modal.error(error.message);
+      return;
+    }
+    delete this.removeQuantities[rowId];
   }
 
   async toggleEquip(rowId: string, currentlyEquipped: boolean) {
