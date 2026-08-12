@@ -34,6 +34,9 @@ export class CharacterCreate {
   private appNav = inject(AppNav);
   private router = inject(Router);
   private modal = inject(Modal);
+  isDiceRollerOpen = false;
+  activeAbilityForRoll: (keyof typeof this.abilityScores) | null = null;
+  isAbilityRollMode = false;
 
   races = this.contentStore.getContent('races');
   classes = this.contentStore.getContent('classes');
@@ -278,11 +281,24 @@ export class CharacterCreate {
     this.router.navigate(['/scheda-personaggio', characterId]);
   }
 
-  rollYourScores() {
-    this.diceRollerOpen.set(true);
+  // Quando apri la modale, TypeScript riconosce 'key' come tipo valido
+  openDiceRollerForAbility(key: keyof typeof this.abilityScores) {
+    this.activeAbilityForRoll = key;
+    this.isAbilityRollMode = true;  // Attiva la regola dei 4d6 bloccati
+    this.isDiceRollerOpen = true;
   }
 
+  // Intercetta il risultato totale emesso dal DiceRoller
+  handleRollResult(total: number) {
+    if (this.activeAbilityForRoll) {
+      // Assegna il totale dei dadi direttamente al punteggio base della caratteristica (es. Forza, Destrezza...)
+      this.abilityScores[this.activeAbilityForRoll] = total;
+    }
+  }
+  // Chiude la modale pulendo lo stato
   closeDiceRoller() {
-    this.diceRollerOpen.set(false);
+    this.isDiceRollerOpen = false;
+    this.activeAbilityForRoll = null;
+    this.isAbilityRollMode = false; // Reset della modalità
   }
 }
