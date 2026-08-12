@@ -503,7 +503,7 @@
                         [ngModel]="removeQty(item.rowId)" (ngModelChange)="setRemoveQty(item.rowId, $event)"
                         class="w-14 px-1 py-0.5 rounded border border-gold bg-fantasy-black/60 text-xs text-center"
                       />
-                      <button (click)="removeItem(item.rowId, item.quantity)" class="text-xs text-red-300 underline">
+                      <button (click)="openModal(item, removeQty(item.rowId))" class="text-xs text-red-300 underline">
                         {{ localeService.t('remove_button') }}
                       </button>
                     }

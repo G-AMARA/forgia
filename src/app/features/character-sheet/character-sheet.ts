@@ -475,10 +475,14 @@ export class CharacterSheet implements OnInit {
     this.removeQuantities[rowId] = Math.max(1, Math.floor(value) || 1);
   }
 
-  async removeItem(rowId: string, currentQuantity: number) {
+  async removeItem(rowId: string, currentQuantity: number, customQtyToRemove?: number) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    const quantityToRemove = Math.min(this.removeQty(rowId), currentQuantity);
+    
+    // Utilizza la quantità personalizzata passata (es. dalla modale) oppure ripiega sull'input della riga
+    const qtySelected = customQtyToRemove ?? this.removeQty(rowId);
+    const quantityToRemove = Math.min(qtySelected, currentQuantity);
+
     const { error } = await this.characterStore.removeInventoryItem(c.id, rowId, quantityToRemove, currentQuantity);
     if (error) {
       this.modal.error(error.message);
@@ -682,9 +686,15 @@ export class CharacterSheet implements OnInit {
     if (error) this.modal.error(error.message);
   }
 
-  openModal(data?: any) {
-    this.modalItemName = data.name;
-    this.modaldata = data;
+  openModal(data?: any, quantityToRemove?: number) {
+    const qty = quantityToRemove ?? data.quantity ?? 1;
+    // Se la quantità è maggiore di 1, mostriamo il moltiplicatore nel titolo della modale
+    this.modalItemName = qty > 1 ? `${qty}× ${data.name}` : data.name;
+    
+    this.modaldata = { 
+      ...data, 
+      quantityToRemove: qty 
+    };
     this.isModalOpen.set(true);
   }
 
@@ -693,7 +703,17 @@ export class CharacterSheet implements OnInit {
   }
 
   onConfirm() {
-    this.removeItem(this.modaldata.rowId);
+    if (!this.modaldata) return;
+
+    // Distinguiamo se stiamo rimuovendo un oggetto dall'inventario o un'arma
+    if (this.modaldata.rowId && this.modaldata.quantity !== undefined && this.modaldata.quantityToRemove !== undefined) {
+      // È un oggetto dell'inventario: passiamo la quantità esatta selezionata dall'utente
+      this.removeItem(this.modaldata.rowId, this.modaldata.quantity, this.modaldata.quantityToRemove);
+    } else if (this.modaldata.rowId) {
+      // È un'arma (rimozione intera)
+      this.removeWeapon(this.modaldata.rowId);
+    }
+
     this.closeModal();
   }
 }
