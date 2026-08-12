@@ -4,11 +4,13 @@ import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
+import { EquipmentChoiceGroup } from '../../core/starting-equipment';
+import { StartingEquipmentEditor } from '../starting-equipment-editor/starting-equipment-editor';
 
 @Component({
   selector: 'app-class-create',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, StartingEquipmentEditor],
   templateUrl: './class-create.html',
 })
 export class ClassCreate {
@@ -25,6 +27,7 @@ export class ClassCreate {
   hitDie = 8;
   description = '';
   savingThrows = new Set<string>();
+  startingEquipment = signal<EquipmentChoiceGroup[]>([]);
 
   editingId: string | null = null;
 
@@ -54,6 +57,7 @@ export class ClassCreate {
     this.hitDie = 8;
     this.description = '';
     this.savingThrows = new Set();
+    this.startingEquipment.set([]);
   }
 
   startEdit(cls: any) {
@@ -65,6 +69,7 @@ export class ClassCreate {
       typeof p === 'string' ? p : p.index ?? p.name
     );
     this.savingThrows = new Set(proficiencies);
+    this.startingEquipment.set(structuredClone(cls.raw.starting_equipment ?? []));
   }
 
   cancelEdit() {
@@ -79,6 +84,7 @@ export class ClassCreate {
       hit_die: this.hitDie,
       description: this.description || null,
       saving_throw_proficiencies: Array.from(this.savingThrows),
+      starting_equipment: this.startingEquipment(),
     };
 
     const { error } = this.editingId

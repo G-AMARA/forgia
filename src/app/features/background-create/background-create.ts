@@ -4,6 +4,8 @@ import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
+import { EquipmentChoiceGroup } from '../../core/starting-equipment';
+import { StartingEquipmentEditor } from '../starting-equipment-editor/starting-equipment-editor';
 
 const SKILL_KEYS = [
   'acrobatics', 'animal_handling', 'arcana', 'athletics', 'deception', 'history',
@@ -14,7 +16,7 @@ const SKILL_KEYS = [
 @Component({
   selector: 'app-background-create',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, StartingEquipmentEditor],
   templateUrl: './background-create.html',
 })
 export class BackgroundCreate {
@@ -30,6 +32,8 @@ export class BackgroundCreate {
   name = '';
   description = '';
   selectedSkills = new Set<string>();
+  startingGold: number | null = null;
+  startingEquipment = signal<EquipmentChoiceGroup[]>([]);
 
   editingId: string | null = null;
 
@@ -58,6 +62,8 @@ export class BackgroundCreate {
     this.name = '';
     this.description = '';
     this.selectedSkills = new Set();
+    this.startingGold = null;
+    this.startingEquipment.set([]);
   }
 
   // Le competenze arrivano come stringhe piatte (homebrew), oggetti SRD con index
@@ -74,6 +80,8 @@ export class BackgroundCreate {
     this.description = background.raw.description ?? '';
     const proficiencies = (background.raw.skill_proficiencies ?? []).map((p: any) => this.toSkillKey(p));
     this.selectedSkills = new Set(proficiencies);
+    this.startingGold = background.raw.starting_gold ?? null;
+    this.startingEquipment.set(structuredClone(background.raw.starting_equipment ?? []));
   }
 
   cancelEdit() {
@@ -87,6 +95,8 @@ export class BackgroundCreate {
       name: this.name,
       description: this.description || null,
       skill_proficiencies: Array.from(this.selectedSkills),
+      starting_gold: this.startingGold,
+      starting_equipment: this.startingEquipment(),
     };
 
     const { error } = this.editingId

@@ -63,6 +63,7 @@ export class EquipmentList {
     'Armor': 'equipment_type_armor',
     'Mounts and Vehicles': 'equipment_type_mounts_and_vehicles',
     'Tools': 'equipment_type_tools',
+    'Pack': 'equipment_type_pack',
   };
 
   typeLabel(type: string): string {

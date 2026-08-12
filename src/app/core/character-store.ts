@@ -151,10 +151,12 @@ export class CharacterStore {
     backstory: string;
     sex: 'M' | 'F';
     darkvision: boolean;
-    goldCoins: number;
-    silverCoins: number;
-    copperCoins: number;
     spellIds: string[];
+    startingItems: { table: 'weapons' | 'equipment'; id: string; quantity: number }[];
+    equippedArmorId: string | null;
+    shieldEquipped: boolean;
+    equippedEquipmentIds: string[];
+    startingGold: number;
   }): Promise<{ error: { message: string } | null; characterId?: string }> {
     const campaign = this.activeCampaign.current();
     const userId = this.auth.user()?.id;
@@ -178,9 +180,9 @@ export class CharacterStore {
         notes: params.backstory,
         sex: params.sex,
         darkvision: params.darkvision,
-        gold_coins: params.goldCoins,
-        silver_coins: params.silverCoins,
-        copper_coins: params.copperCoins,
+        equipped_armor_id: params.equippedArmorId,
+        shield_equipped: params.shieldEquipped,
+        gold: params.startingGold,
       })
       .select('id')
       .single();
@@ -216,6 +218,31 @@ export class CharacterStore {
       }
     }
 
+    const startingWeapons = params.startingItems.filter((i) => i.table === 'weapons');
+    if (startingWeapons.length > 0) {
+      const { error: weaponError } = await this.supabase.client.from('character_weapons').insert(
+        startingWeapons.map((i) => ({ character_id: character.id, weapon_id: i.id, quantity: i.quantity }))
+      );
+      if (weaponError) {
+        return { error: weaponError };
+      }
+    }
+
+    const startingEquipment = params.startingItems.filter((i) => i.table === 'equipment');
+    if (startingEquipment.length > 0) {
+      const { error: inventoryError } = await this.supabase.client.from('character_inventory').insert(
+        startingEquipment.map((i) => ({
+          character_id: character.id,
+          equipment_id: i.id,
+          quantity: i.quantity,
+          equipped: params.equippedEquipmentIds.includes(i.id),
+        }))
+      );
+      if (inventoryError) {
+        return { error: inventoryError };
+      }
+    }
+
     await this.loadForActiveCampaign();
 
     return { error: null, characterId: character.id };
@@ -233,9 +260,9 @@ export class CharacterStore {
 
   private static readonly FULL_CHARACTER_SELECT = `
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
-    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, ability_scores, applied_bonus, race_id, background_id,
+    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, background_id,
     skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
-    sex, darkvision, gold_coins, silver_coins, copper_coins,
+    sex, darkvision,
     races ( name ),
     backgrounds ( name ),
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
@@ -300,6 +327,11 @@ export class CharacterStore {
       armor_class: row.armor_class,
       equipped_armor_id: row.equipped_armor_id ?? null,
       shield_equipped: row.shield_equipped ?? false,
+      copper: row.copper ?? 0,
+      silver: row.silver ?? 0,
+      electrum: row.electrum ?? 0,
+      gold: row.gold ?? 0,
+      platinum: row.platinum ?? 0,
       ability_scores: row.ability_scores ?? {},
       applied_bonus: row.applied_bonus ?? {},
       skill_proficiencies: row.skill_proficiencies ?? [],
@@ -308,9 +340,6 @@ export class CharacterStore {
       condition_immunities: row.condition_immunities ?? [],
       sex: row.sex ?? null,
       darkvision: row.darkvision ?? false,
-      gold_coins: row.gold_coins ?? 0,
-      silver_coins: row.silver_coins ?? 0,
-      copper_coins: row.copper_coins ?? 0,
       race_id: row.race_id ?? null,
       race_name: translations['races']?.[row.race_id] ?? row.races?.name ?? null,
       background_id: row.background_id ?? null,
@@ -462,9 +491,6 @@ export class CharacterStore {
       appliedBonus: Record<string, number>;
       sex: 'M' | 'F';
       darkvision: boolean;
-      goldCoins: number;
-      silverCoins: number;
-      copperCoins: number;
     }
   ) {
     const { error: charError } = await this.supabase.client
@@ -480,9 +506,6 @@ export class CharacterStore {
         applied_bonus: updates.appliedBonus,
         sex: updates.sex,
         darkvision: updates.darkvision,
-        gold_coins: updates.goldCoins,
-        silver_coins: updates.silverCoins,
-        copper_coins: updates.copperCoins,
       })
       .eq('id', characterId);
 
@@ -517,6 +540,22 @@ export class CharacterStore {
     const { error } = await this.supabase.client
       .from('characters')
       .update({ notes })
+      .eq('id', characterId);
+
+    if (!error) {
+      await this.refreshCharacter(characterId);
+    }
+
+    return { error };
+  }
+
+  async updateCurrency(
+    characterId: string,
+    currency: { copper: number; silver: number; electrum: number; gold: number; platinum: number }
+  ) {
+    const { error } = await this.supabase.client
+      .from('characters')
+      .update(currency)
       .eq('id', characterId);
 
     if (!error) {
@@ -563,8 +602,22 @@ export class CharacterStore {
     return { error };
   }
 
-  async removeInventoryItem(characterId: string, rowId: string) {
-    const { error } = await this.supabase.client.from('character_inventory').delete().eq('id', rowId);
+  // quantityToRemove >= currentQuantity elimina la riga; altrimenti decrementa solo
+  // la quantità, così non serve più rimuovere l'intero stack per toglierne una parte.
+  async removeInventoryItem(
+    characterId: string,
+    rowId: string,
+    quantityToRemove: number,
+    currentQuantity: number
+  ) {
+    const { error } =
+      quantityToRemove >= currentQuantity
+        ? await this.supabase.client.from('character_inventory').delete().eq('id', rowId)
+        : await this.supabase.client
+            .from('character_inventory')
+            .update({ quantity: currentQuantity - quantityToRemove })
+            .eq('id', rowId);
+
     if (!error) {
       await this.refreshCharacter(characterId);
     }
@@ -653,6 +706,11 @@ export interface CharacterFull {
   armor_class: number | null;
   equipped_armor_id: string | null;
   shield_equipped: boolean;
+  copper: number;
+  silver: number;
+  electrum: number;
+  gold: number;
+  platinum: number;
   ability_scores: Record<string, number>;
   applied_bonus: Record<string, number>;
   skill_proficiencies: string[];
@@ -661,9 +719,6 @@ export interface CharacterFull {
   condition_immunities: string[];
   sex: 'M' | 'F' | null;
   darkvision: boolean;
-  gold_coins: number;
-  silver_coins: number;
-  copper_coins: number;
   race_id: string | null;
   race_name: string | null;
   background_id: string | null;
