@@ -105,6 +105,14 @@
           }
         </div>
 
+        <div class="flex items-center gap-2">
+          <button
+            (click)="openDiceRollerModal()"
+            class="px-3 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-sm uppercase tracking-wider rounded-lg shadow-lg transition-all hover:scale-[1.02] active:scale-95 z-20"
+          >
+            {{ localeService.t('tab_dice_roller') }}
+          </button>
+        </div>
         <div class="flex border border-gold rounded overflow-hidden text-sm shrink-0">
           <button
             class="px-3 py-1"
@@ -223,6 +231,8 @@
       </div>
     </footer>
   }
-
+  @if (diceRollerOpen()) {
+    <app-dice-roller (close)="closeDiceRoller()"></app-dice-roller>
+  }
   <app-modal></app-modal>
 </div>

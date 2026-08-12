@@ -192,33 +192,6 @@
             </div>
           </div>
 
-          <!-- Monete: scritta colorata per distinguere subito oro/argento/rame. -->
-          <div class="grid grid-cols-3 gap-4">
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('gold_coins_label') }}</label>
-              <input
-                type="number" min="0" [(ngModel)]="identityGoldCoins" [disabled]="readOnly()"
-                class="px-3 py-2 rounded border border-fantasy-gold bg-fantasy-black/40 text-fantasy-gold focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
-              />
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold text-fantasy-moonstone">{{ localeService.t('silver_coins_label') }}</label>
-              <input
-                type="number" min="0" [(ngModel)]="identitySilverCoins" [disabled]="readOnly()"
-                class="px-3 py-2 rounded border border-fantasy-moonstone bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
-              />
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold text-copper">{{ localeService.t('copper_coins_label') }}</label>
-              <input
-                type="number" min="0" [(ngModel)]="identityCopperCoins" [disabled]="readOnly()"
-                class="px-3 py-2 rounded border border-copper bg-fantasy-black/40 text-copper focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
-              />
-            </div>
-          </div>
-
           <!-- Bonus Razziale: automatico dalla razza scelta. Nascosto se c'è un background: i due bonus sono alternativi. -->
           @if (!identityBackgroundId) {
             <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
@@ -431,6 +404,55 @@
       <!-- INVENTARIO -->
       @if (activeSubTab() === 'inventory') {
         <app-card contentClass="space-y-4">
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold">{{ localeService.t('currency_title') }}</label>
+            <div class="flex flex-wrap items-end gap-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs">{{ localeService.t('currency_copper_label') }}</label>
+                <input
+                  type="number" min="0" [(ngModel)]="copper" [disabled]="readOnly()"
+                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs">{{ localeService.t('currency_silver_label') }}</label>
+                <input
+                  type="number" min="0" [(ngModel)]="silver" [disabled]="readOnly()"
+                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs">{{ localeService.t('currency_electrum_label') }}</label>
+                <input
+                  type="number" min="0" [(ngModel)]="electrum" [disabled]="readOnly()"
+                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs">{{ localeService.t('currency_gold_label') }}</label>
+                <input
+                  type="number" min="0" [(ngModel)]="gold" [disabled]="readOnly()"
+                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs">{{ localeService.t('currency_platinum_label') }}</label>
+                <input
+                  type="number" min="0" [(ngModel)]="platinum" [disabled]="readOnly()"
+                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                />
+              </div>
+              @if (!readOnly()) {
+                <button
+                  (click)="saveCurrency()"
+                  class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+                >
+                  {{ localeService.t('save_button') }}
+                </button>
+              }
+            </div>
+          </div>
+
           @if (!readOnly()) {
             <div class="space-y-2">
               <input
@@ -476,7 +498,12 @@
                       {{ localeService.t('equipped_label') }}
                     </label>
                     @if (!readOnly()) {
-                      <button (click)="openModal(item)" class="text-xs text-red-300 underline cursor-pointer hover:text-red-500 transition-colors">
+                      <input
+                        type="number" min="1" [max]="item.quantity"
+                        [ngModel]="removeQty(item.rowId)" (ngModelChange)="setRemoveQty(item.rowId, $event)"
+                        class="w-14 px-1 py-0.5 rounded border border-gold bg-fantasy-black/60 text-xs text-center"
+                      />
+                      <button (click)="removeItem(item.rowId, item.quantity)" class="text-xs text-red-300 underline">
                         {{ localeService.t('remove_button') }}
                       </button>
                     }

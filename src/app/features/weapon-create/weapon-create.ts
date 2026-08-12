@@ -30,6 +30,7 @@ export class WeaponCreate {
   damageType = '';
   versatileDamage = '';
   rangeCategory: 'melee' | 'ranged' = 'melee';
+  weaponCategory: 'simple' | 'martial' | '' = '';
   normalRange: number | null = null;
   longRange: number | null = null;
   weight: number | null = null;
@@ -71,6 +72,7 @@ export class WeaponCreate {
     this.damageType = '';
     this.versatileDamage = '';
     this.rangeCategory = 'melee';
+    this.weaponCategory = '';
     this.normalRange = null;
     this.longRange = null;
     this.weight = null;
@@ -91,6 +93,7 @@ export class WeaponCreate {
     this.damageType = weapon.raw.damage_type ?? '';
     this.versatileDamage = weapon.raw.versatile_damage ?? '';
     this.rangeCategory = weapon.raw.range_category ?? 'melee';
+    this.weaponCategory = weapon.raw.weapon_category ?? '';
     this.normalRange = weapon.raw.normal_range ?? null;
     this.longRange = weapon.raw.long_range ?? null;
     this.weight = weapon.raw.weight ?? null;
@@ -144,6 +147,7 @@ export class WeaponCreate {
       damage_type: this.damageType,
       versatile_damage: this.versatileDamage || null,
       range_category: this.rangeCategory,
+      weapon_category: this.weaponCategory || null,
       normal_range: this.rangeCategory === 'ranged' ? this.normalRange : null,
       long_range: this.rangeCategory === 'ranged' ? this.longRange : null,
       weight: this.weight,

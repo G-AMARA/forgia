@@ -21,6 +21,7 @@ import { Auth } from './core/auth';
 import { AppNav } from './core/app-nav';
 import { ActiveCampaign } from './core/active-campaign';
 import { NavigationTracker } from './core/navigation-tracker';
+import { DiceRoller } from './shared/dice-roller/dice-roller';
 
 @Component({
   selector: 'app-root',
@@ -42,6 +43,7 @@ import { NavigationTracker } from './core/navigation-tracker';
     Profile,
     Araldica,
     AppModal,
+    DiceRoller,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -56,6 +58,7 @@ export class App {
   // Mai referenziato altrove: injectarlo qui basta a istanziare il service (providedIn:
   // 'root') e avviare il suo effect() che segue auth.isLoggedIn() per far partire il tracker.
   private navigationTracker = inject(NavigationTracker);
+  protected diceRollerOpen = signal(false);
 
   constructor() {
     // URL richiesto dal browser al caricamento (prima che il redirect '' -> 'dashboard'
@@ -102,5 +105,13 @@ export class App {
   goToBoard() {
     this.appNav.setTab('board');
     this.router.navigate(['/dashboard']);
+  }
+
+  openDiceRollerModal() {
+    this.diceRollerOpen.set(true);
+  }
+
+  closeDiceRoller() {
+    this.diceRollerOpen.set(false);
   }
 }
