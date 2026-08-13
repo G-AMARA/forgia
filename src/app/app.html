@@ -31,6 +31,24 @@
       </div>
     </div>
   } @else {
+  <!-- Immagine decorativa in trasparenza, fissa rispetto al viewport (non al contenuto):
+       così il cavaliere resta sempre alla stessa scala qualunque sia la tab attiva, invece
+       di stirarsi/rimpicciolirsi in base a quanto contenuto ha la pagina. Header/nav/main/
+       footer arrivano dopo nel DOM e la coprono dove hanno uno sfondo opaco: resta visibile
+       solo nelle colonne laterali vuote. -->
+  <div class="fixed inset-0 flex justify-between pointer-events-none">
+    <img
+      src="themes/wallpapersx.png" alt=""
+      class="h-full object-contain object-bottom opacity-10"
+      style="width: max(0px, calc((100% - 40rem) / 2))"
+    />
+    <img
+      src="themes/wallpaperdx.png" alt=""
+      class="h-full object-contain object-bottom opacity-10"
+      style="width: max(0px, calc((100% - 40rem) / 2))"
+    />
+  </div>
+
   <!-- Header -->
   <header class="relative bg-header-portal text-fantasy-moonstone border-b-4 border-gold">
     <div class="px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -137,20 +155,6 @@
     </nav>
 
     <div class="relative flex-1 overflow-hidden">
-      <!-- Immagine decorativa in trasparenza: visibile solo nelle colonne vuote ai lati del contenuto centrale. -->
-      <div class="absolute inset-0 flex justify-between pointer-events-none">
-        <img
-          src="themes/wallpapersx.png" alt=""
-          class="h-full object-cover opacity-10"
-          style="width: max(0px, calc((100% - 62rem) / 2))"
-        />
-        <img
-          src="themes/wallpaperdx.png" alt=""
-          class="h-full object-cover opacity-10"
-          style="width: max(0px, calc((100% - 62rem) / 2))"
-        />
-      </div>
-
       <main class="relative max-w-5xl mx-auto px-4 py-6 space-y-8 w-full">
       @switch (appNav.activeTab()) {
         @case ('board') {
