@@ -432,10 +432,12 @@ export class CharacterCreate {
     this.backgroundBonuses[key] = next;
   }
 
-  // Il bonus razziale e quello di background sono alternativi, non cumulativi:
-  // se è stato scelto un background, il suo bonus manuale sostituisce quello automatico della razza.
+  // Bonus di background disattivato su richiesta: resta solo il bonus razziale, sia con
+  // che senza background selezionato. Logica originale (bonus manuale alternativo a quello
+  // razziale quando si sceglie un background) commentata, non rimossa, per poterla riattivare.
   getAppliedBonus(key: keyof typeof this.abilityScores): number {
-    return this.backgroundId ? this.backgroundBonuses[key] : this.getRaceBonus(key);
+    return this.getRaceBonus(key);
+    // return this.backgroundId ? this.backgroundBonuses[key] : this.getRaceBonus(key);
   }
 
   getTotalScore(key: keyof typeof this.abilityScores): number {

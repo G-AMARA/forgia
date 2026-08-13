@@ -27,9 +27,17 @@
                   @for (item of group.items; track item.id) {
                     <div class="flex bg-fantasy-black/60 border border-gold rounded-lg overflow-hidden">
                       <div class="w-1.5 bg-slate-arcane shrink-0"></div>
-                      <div class="p-3 flex-1 flex justify-between items-center">
-                        <span class="text-sm">{{ item.name }}</span>
-                        <span class="text-xs text-slate-arcane text-right">
+                      @if (item.raw.image_url) {
+                        <img [src]="item.raw.image_url" alt="" class="w-12 h-12 my-3 ml-3 rounded object-cover shrink-0" />
+                      }
+                      <div class="p-3 flex-1 flex justify-between items-start gap-2">
+                        <div class="min-w-0">
+                          <span class="text-sm">{{ item.name }}</span>
+                          @if (item.description) {
+                            <p class="text-xs text-slate-arcane/80 mt-0.5">{{ item.description }}</p>
+                          }
+                        </div>
+                        <span class="text-xs text-slate-arcane text-right shrink-0">
                           @if (formatArmorClass(item)) {
                             {{ formatArmorClass(item) }}<br />
                           }

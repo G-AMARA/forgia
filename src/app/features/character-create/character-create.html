@@ -157,32 +157,32 @@
         </div>
 
         <!-- Bonus Razziale: automatico, definito dalla razza scelta in Gestione > Razze.
-             Nascosto se è stato scelto un background: i due bonus sono alternativi, non cumulativi. -->
-        @if (!backgroundId) {
-          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
-            <div class="col-span-3 sm:col-span-6 mb-1">
-              <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('racial_bonus_label') }}</label>
-              @if (!raceId) {
-                <p class="text-xs italic text-slate-arcane">{{ localeService.t('select_race_first_hint') }}</p>
-              }
-            </div>
-            @for (key of abilityKeys; track key) {
-              <div class="flex flex-col gap-1">
-                <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
-                <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
-                  @if (getRaceBonus(key) > 0) {
-                    +{{ getRaceBonus(key) }}
-                  } @else {
-                    —
-                  }
-                </div>
-              </div>
+             Sempre visibile (anche con background selezionato): il bonus di background
+             manuale è disattivato, vedi blocco commentato sotto. -->
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
+          <div class="col-span-3 sm:col-span-6 mb-1">
+            <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('racial_bonus_label') }}</label>
+            @if (!raceId) {
+              <p class="text-xs italic text-slate-arcane">{{ localeService.t('select_race_first_hint') }}</p>
             }
           </div>
-        }
+          @for (key of abilityKeys; track key) {
+            <div class="flex flex-col gap-1">
+              <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+              <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
+                @if (getRaceBonus(key) > 0) {
+                  +{{ getRaceBonus(key) }}
+                } @else {
+                  —
+                }
+              </div>
+            </div>
+          }
+        </div>
 
-        <!-- Bonus Background: manuale, max 3 punti totali (tre +1, o un +2 e un +1).
-             Sostituisce il bonus razziale quando è stato scelto un background. -->
+        <!-- Bonus Background disattivato su richiesta: con un background selezionato si applica
+             comunque solo il bonus razziale (vedi getAppliedBonus in character-create.ts).
+             Blocco originale lasciato commentato per poterlo riattivare in futuro.
         @if (backgroundId) {
           <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
             <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
@@ -206,6 +206,7 @@
             }
           </div>
         }
+        -->
 
         <!-- Punteggi Base + Totali -->
         <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">

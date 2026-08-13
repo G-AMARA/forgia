@@ -591,10 +591,28 @@ export class CharacterStore {
     return { error: updateError };
   }
 
+  // Se il personaggio ha già questo oggetto in inventario, ne incrementa la quantità sulla riga
+  // esistente invece di crearne una seconda (altrimenti "aggiungi" duplica la riga ogni volta).
   async addInventoryItem(characterId: string, equipmentId: string, quantity: number) {
-    const { error } = await this.supabase.client
+    const { data: existing, error: findError } = await this.supabase.client
       .from('character_inventory')
-      .insert({ character_id: characterId, equipment_id: equipmentId, quantity, equipped: false });
+      .select('id, quantity')
+      .eq('character_id', characterId)
+      .eq('equipment_id', equipmentId)
+      .maybeSingle();
+
+    if (findError) {
+      return { error: findError };
+    }
+
+    const { error } = existing
+      ? await this.supabase.client
+          .from('character_inventory')
+          .update({ quantity: existing.quantity + quantity })
+          .eq('id', existing.id)
+      : await this.supabase.client
+          .from('character_inventory')
+          .insert({ character_id: characterId, equipment_id: equipmentId, quantity, equipped: false });
 
     if (!error) {
       await this.refreshCharacter(characterId);
@@ -635,12 +653,28 @@ export class CharacterStore {
     return { error };
   }
 
+  // Stessa logica di addInventoryItem: incrementa la riga esistente invece di duplicarla.
   async addWeapon(characterId: string, weapon: { weaponId: string; quantity: number }) {
-    const { error } = await this.supabase.client.from('character_weapons').insert({
-      character_id: characterId,
-      weapon_id: weapon.weaponId,
-      quantity: weapon.quantity,
-    });
+    const { data: existing, error: findError } = await this.supabase.client
+      .from('character_weapons')
+      .select('id, quantity')
+      .eq('character_id', characterId)
+      .eq('weapon_id', weapon.weaponId)
+      .maybeSingle();
+
+    if (findError) {
+      return { error: findError };
+    }
+
+    const { error } = existing
+      ? await this.supabase.client
+          .from('character_weapons')
+          .update({ quantity: existing.quantity + weapon.quantity })
+          .eq('id', existing.id)
+      : await this.supabase.client
+          .from('character_weapons')
+          .insert({ character_id: characterId, weapon_id: weapon.weaponId, quantity: weapon.quantity });
+
     if (!error) {
       await this.refreshCharacter(characterId);
     }
