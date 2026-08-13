@@ -19,7 +19,7 @@ import { Araldica } from './features/araldica/araldica';
 import { AppModal } from './features/app-modal/app-modal';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
-import { AppNav } from './core/app-nav';
+import { AppNav, Tab } from './core/app-nav';
 import { ActiveCampaign } from './core/active-campaign';
 import { NavigationTracker } from './core/navigation-tracker';
 import { DiceRoller } from './shared/dice-roller/dice-roller';
@@ -61,6 +61,18 @@ export class App {
   // 'root') e avviare il suo effect() che segue auth.isLoggedIn() per far partire il tracker.
   private navigationTracker = inject(NavigationTracker);
   protected diceRollerOpen = signal(false);
+  protected mobileNavOpen = signal(false);
+
+  // Etichetta della tab attiva sul pulsante del menu mobile: fallback su "Menu" per le
+  // tab raggiungibili in altri modi (badge campagna, menu utente...) che non hanno una
+  // voce propria in questo menu.
+  private readonly mobileTabLabelKeys: Partial<Record<Tab, string>> = {
+    board: 'tab_board',
+    campaign: 'tab_campaign',
+    characters: 'tab_characters',
+    catalog: 'tab_catalog',
+    manage: 'tab_manage',
+  };
 
   constructor() {
     // URL richiesto dal browser al caricamento (prima che il redirect '' -> 'dashboard'
@@ -115,6 +127,20 @@ export class App {
   goToBoard() {
     this.appNav.setTab('board');
     this.router.navigate(['/dashboard']);
+  }
+
+  mobileTabLabel(): string {
+    const key = this.mobileTabLabelKeys[this.appNav.activeTab()];
+    return key ? this.localeService.t(key) : this.localeService.t('nav_menu_label');
+  }
+
+  selectMobileTab(tab: Tab) {
+    this.mobileNavOpen.set(false);
+    if (tab === 'board') {
+      this.goToBoard();
+    } else {
+      this.appNav.setTab(tab);
+    }
   }
 
   openDiceRollerModal() {
