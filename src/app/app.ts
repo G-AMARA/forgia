@@ -72,11 +72,12 @@ export class App {
     const initialPath = this.location.path(true);
     let hasHandledInitialAuth = false;
 
-    // Master e Giocatori atterrano sempre sulla Dashboard dopo il login
-    // (sia login esplicito che ripristino di una sessione già attiva) —
-    // TRANNE al primo caricamento, se l'utente aveva aperto un link diretto
-    // a una scheda personaggio: in quel caso va rispettato quel link,
-    // altrimenti un semplice refresh sulla pagina la renderebbe inutilizzabile.
+    // Master e Giocatori atterrano sempre sulla Dashboard dopo un vero login (esplicito,
+    // o un nuovo login nella stessa sessione di navigazione dopo un logout) — TRANNE al
+    // primo caricamento della pagina (refresh o ripristino di una sessione già attiva),
+    // dove va rispettata la tab su cui l'utente si trovava, per non perdere lavoro in corso
+    // (es. una scheda personaggio a metà) solo per aver ricaricato la pagina. Se l'utente
+    // aveva aperto un link diretto a una scheda personaggio, quel link ha comunque priorità.
     effect(() => {
       if (!this.auth.isLoggedIn()) return;
 
@@ -88,6 +89,10 @@ export class App {
         // (Supabase rileva il token nell'URL) mentre si trova ancora su /reset-password:
         // senza questo caso speciale verrebbe dirottato sulla dashboard prima di poter
         // impostare la nuova password, rendendo il link di recupero inutilizzabile.
+      } else if (!hasHandledInitialAuth) {
+        // Primo caricamento (refresh/sessione ripristinata) senza link diretto: la tab
+        // attiva è già stata letta da sessionStorage in AppNav, non la sovrascriviamo.
+        this.router.navigate(['/dashboard']);
       } else {
         // appNav.activeTab() sopravvive al logout: senza questo reset,
         // al login successivo lo switch mostrerebbe ancora l'ultima

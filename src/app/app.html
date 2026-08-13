@@ -35,7 +35,9 @@
   <header class="relative bg-header-portal text-fantasy-moonstone border-b-4 border-gold">
     <div class="px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h1 class="flex items-center">
-        <img src="themes/logoForgia.png" alt="Forgia" class="h-9 sm:h-11 w-auto" />
+        <button type="button" (click)="goToBoard()" title="Torna alla Dashboard" class="flex items-center">
+          <img src="themes/logoForgia.png" alt="Forgia" class="h-9 sm:h-11 w-auto" />
+        </button>
       </h1>
 
       <div class="flex items-center gap-3 flex-wrap">

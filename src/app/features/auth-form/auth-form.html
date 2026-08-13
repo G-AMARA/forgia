@@ -15,8 +15,8 @@
         </button>
 
         @if (userMenuOpen()) {
-          <button type="button" class="fixed inset-0 z-10 cursor-default" (click)="closeUserMenu()" aria-label="Chiudi menu"></button>
-          <div class="absolute right-0 top-full mt-2 w-44 bg-stone-dark border border-gold rounded shadow-lg overflow-hidden z-20">
+          <button type="button" class="fixed inset-0 z-30 cursor-default" (click)="closeUserMenu()" aria-label="Chiudi menu"></button>
+          <div class="absolute right-0 top-full mt-2 w-44 bg-stone-dark border border-gold rounded shadow-lg overflow-hidden z-40">
             <button
               type="button"
               (click)="goToSettings()"
@@ -41,7 +41,7 @@
   <div class="relative w-full max-w-4xl mx-auto flex flex-col sm:flex-row bg-stone-textured panel-carved border-2 border-gold rounded-xl overflow-hidden">
     <!-- Pannello sinistro: identità e ambientazione -->
     <div class="relative sm:w-2/5 bg-header-portal p-8 sm:p-10 flex flex-col justify-between overflow-hidden">
-      <img src="themes/maps.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+      <img src="/themes/maps.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
       <svg class="absolute top-3 left-3 w-6 h-6 text-gold pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M2 10 L2 4 Q2 2 4 2 L10 2" />
         <circle cx="2" cy="2" r="1.5" fill="currentColor" stroke="none" />
@@ -62,7 +62,7 @@
     <!-- Pannello destro: form, sfondo scuro solido con logo in filigrana -->
     <div class="relative sm:w-3/5 bg-stone-dark p-6 sm:p-10 flex flex-col justify-center overflow-hidden">
       <img
-        src="themes/logo.png" alt=""
+        src="/themes/logo.png" alt=""
         class="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none select-none filter-[brightness(0)_contrast(1.5)]"
       />
 
