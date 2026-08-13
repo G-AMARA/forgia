@@ -23,6 +23,9 @@ jobs:
     - name: Build project
       run: npm run build -- --configuration production --base-href "/forgia/"
 
+    - name: Copy index.html to 404.html (fallback SPA per GitHub Pages)
+      run: cp dist/fanta-project/browser/index.html dist/fanta-project/browser/404.html
+
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:

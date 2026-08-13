@@ -1,5 +1,6 @@
 import { Component, inject, signal, effect } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
+import { Location } from '@angular/common';
 import { AuthForm } from './features/auth-form/auth-form';
 import { CampaignHub } from './features/campaign-hub/campaign-hub';
 import { CampaignEdit } from './features/campaign-edit/campaign-edit';
@@ -55,6 +56,7 @@ export class App {
   protected appNav = inject(AppNav);
   protected activeCampaign = inject(ActiveCampaign);
   private router = inject(Router);
+  private location = inject(Location);
   // Mai referenziato altrove: injectarlo qui basta a istanziare il service (providedIn:
   // 'root') e avviare il suo effect() che segue auth.isLoggedIn() per far partire il tracker.
   private navigationTracker = inject(NavigationTracker);
@@ -64,7 +66,10 @@ export class App {
     // URL richiesto dal browser al caricamento (prima che il redirect '' -> 'dashboard'
     // o la guardia di autenticazione possano intervenire). Serve a distinguere un
     // refresh/link diretto su una pagina specifica da un vero login.
-    const initialPath = window.location.pathname + window.location.search;
+    // Location.path() (a differenza di window.location.pathname) è già relativo al
+    // <base href>, quindi funziona anche quando l'app è pubblicata in una sottocartella
+    // (es. GitHub Pages su /forgia/).
+    const initialPath = this.location.path(true);
     let hasHandledInitialAuth = false;
 
     // Master e Giocatori atterrano sempre sulla Dashboard dopo il login

@@ -144,7 +144,9 @@ export class Auth {
     }
 
     const { error } = await this.supabase.client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      // document.baseURI (non window.location.origin) rispetta il <base href>, quindi
+      // funziona anche quando l'app è pubblicata in una sottocartella (es. GitHub Pages /forgia/).
+      redirectTo: `${document.baseURI}reset-password`,
     });
     return { error };
   }
