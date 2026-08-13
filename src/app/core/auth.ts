@@ -78,7 +78,14 @@ export class Auth {
     const { data, error } = await this.supabase.client.auth.signUp({
       email,
       password,
-      options: { data: { nickname, is_master: isMaster } },
+      options: {
+        data: { nickname, is_master: isMaster },
+        // Senza questo, Supabase reindirizza il link di conferma email al "Site URL"
+        // configurato da dashboard (che va comunque tenuto allineato, altrimenti questo
+        // valore viene ignorato). document.baseURI rispetta il <base href>, quindi
+        // funziona sia in locale che pubblicato in una sottocartella (GitHub Pages /forgia/).
+        emailRedirectTo: document.baseURI,
+      },
     });
 
     if (error || !data.user) {
