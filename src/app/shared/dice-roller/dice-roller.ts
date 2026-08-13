@@ -49,7 +49,7 @@ export class DiceRoller implements AfterViewInit{
   ngAfterViewInit() {
     setTimeout(() => {
       this.diceBox = new DiceBox("#dice-box-container", {
-        assetPath: '/dice-box/assets/',
+        assetPath: 'dice-box/assets/',
         theme: 'default',
         themeColor: '#d97706',
         scale: 11,

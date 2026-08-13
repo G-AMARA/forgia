@@ -3,7 +3,7 @@
   @if (!auth.isLoggedIn()) {
     <!-- Vista di login: schermo intero, senza header né footer -->
     <div class="relative min-h-screen flex items-center justify-center px-4 py-8 overflow-hidden">
-      <img src="/themes/maps.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+      <img src="themes/maps.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
 
       <div class="absolute top-4 right-4 flex border border-gold rounded overflow-hidden text-sm bg-fantasy-black/40 backdrop-blur-sm z-10">
         <button
@@ -25,7 +25,7 @@
       </div>
 
       <div class="relative w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
-        <img src="/themes/logoForgia.png" alt="Forgia" class="h-16 sm:h-20 w-auto" />
+        <img src="themes/logoForgia.png" alt="Forgia" class="h-16 sm:h-20 w-auto" />
 
         <app-auth-form variant="landing" class="block w-full"></app-auth-form>
       </div>
@@ -35,7 +35,7 @@
   <header class="relative bg-header-portal text-fantasy-moonstone border-b-4 border-gold">
     <div class="px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h1 class="flex items-center">
-        <img src="/themes/logoForgia.png" alt="Forgia" class="h-9 sm:h-11 w-auto" />
+        <img src="themes/logoForgia.png" alt="Forgia" class="h-9 sm:h-11 w-auto" />
       </h1>
 
       <div class="flex items-center gap-3 flex-wrap">
@@ -138,12 +138,12 @@
       <!-- Immagine decorativa in trasparenza: visibile solo nelle colonne vuote ai lati del contenuto centrale. -->
       <div class="absolute inset-0 flex justify-between pointer-events-none">
         <img
-          src="/themes/wallpapersx.png" alt=""
+          src="themes/wallpapersx.png" alt=""
           class="h-full object-cover opacity-10"
           style="width: max(0px, calc((100% - 62rem) / 2))"
         />
         <img
-          src="/themes/wallpaperdx.png" alt=""
+          src="themes/wallpaperdx.png" alt=""
           class="h-full object-cover opacity-10"
           style="width: max(0px, calc((100% - 62rem) / 2))"
         />
@@ -213,7 +213,7 @@
 
     <!-- Footer -->
     <footer class="footer-slant relative bg-fantasy-black mt-12 overflow-hidden">
-      <img src="/themes/maps.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+      <img src="themes/maps.png" alt="" class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
       <svg class="absolute top-0 left-0 w-full h-8 text-gold animate-pulse pointer-events-none" viewBox="0 0 100 32" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="2">
         <polyline
           points="0.0,16.0 2.5,19.83 5.0,23.07 7.5,25.24 10.0,26.0 12.5,25.24 15.0,23.07 17.5,19.83 20.0,16.0 22.5,12.17 25.0,8.93 27.5,6.76 30.0,6.0 32.5,6.76 35.0,8.93 37.5,12.17 40.0,16.0 42.5,19.83 45.0,23.07 47.5,25.24 50.0,26.0 52.5,25.24 55.0,23.07 57.5,19.83 60.0,16.0 62.5,12.17 65.0,8.93 67.5,6.76 70.0,6.0 72.5,6.76 75.0,8.93 77.5,12.17 80.0,16.0 82.5,19.83 85.0,23.07 87.5,25.24 90.0,26.0 92.5,25.24 95.0,23.07 97.5,19.83 100.0,16.0"
@@ -222,7 +222,7 @@
       </svg>
 
       <div class="max-w-5xl mx-auto px-4 pt-8 pb-6 flex flex-col items-center gap-2 text-center">
-        <img src="/themes/logo.png" alt="" class="w-9 h-9" />
+        <img src="themes/logo.png" alt="" class="w-9 h-9" />
         <div class="w-24 h-px bg-gold/40"></div>
         <p class="text-xs text-slate-arcane">{{ localeService.t('footer_credit') }}</p>
         <p class="text-[11px] text-slate-arcane/70 leading-relaxed max-w-md mt-2">

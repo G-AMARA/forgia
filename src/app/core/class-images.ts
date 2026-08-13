@@ -18,5 +18,5 @@ export function getClassImagePath(
 ): string | null {
   if (!className) return null;
   const suffix = sex === 'F' ? 'F' : '';
-  return `/classes/${slugify(className)}${suffix}.png`;
+  return `classes/${slugify(className)}${suffix}.png`;
 }
