@@ -361,10 +361,12 @@
   </div>
 </section>
 
-@if (isDiceRollerOpen) {
-  <app-dice-roller 
-    [abilityMode]="isAbilityRollMode"
-    (rollResults)="handleRollResult($event)" 
-    (close)="closeDiceRoller()">
-  </app-dice-roller>
+@defer (when isDiceRollerOpen) {
+  @if (isDiceRollerOpen) {
+    <app-dice-roller
+      [abilityMode]="isAbilityRollMode"
+      (rollResults)="handleRollResult($event)"
+      (close)="closeDiceRoller()">
+    </app-dice-roller>
+  }
 }

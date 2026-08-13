@@ -231,8 +231,10 @@
       </div>
     </footer>
   }
-  @if (diceRollerOpen()) {
-    <app-dice-roller (close)="closeDiceRoller()"></app-dice-roller>
+  @defer (when diceRollerOpen()) {
+    @if (diceRollerOpen()) {
+      <app-dice-roller (close)="closeDiceRoller()"></app-dice-roller>
+    }
   }
   <app-modal></app-modal>
 </div>
