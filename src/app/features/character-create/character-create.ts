@@ -18,6 +18,7 @@ import { CharacterStore } from '../../core/character-store';
 import { CharacterSheet } from '../character-sheet/character-sheet';
 import { LocaleService } from '../../core/locale';
 import { AppNav } from '../../core/app-nav';
+import { DiceRoller } from '../../shared/dice-roller/dice-roller';
 import { Supabase } from '../../core/supabase';
 
 function rollAbilityScore(): number {
@@ -30,7 +31,7 @@ function rollAbilityScore(): number {
 @Component({
   selector: 'app-character-create',
   standalone: true,
-  imports: [FormsModule, NgTemplateOutlet, CharacterSheet],
+  imports: [FormsModule, NgTemplateOutlet, CharacterSheet, DiceRoller],
   templateUrl: './character-create.html',
 })
 export class CharacterCreate {
@@ -42,6 +43,9 @@ export class CharacterCreate {
   private appNav = inject(AppNav);
   private router = inject(Router);
   private modal = inject(Modal);
+  isDiceRollerOpen = false;
+  activeAbilityForRoll: (keyof typeof this.abilityScores) | null = null;
+  isAbilityRollMode = false;
   private supabase = inject(Supabase);
 
   races = this.contentStore.getContent('races');
@@ -104,6 +108,7 @@ export class CharacterCreate {
   }
 
   selectedSpellIds = signal<Set<string>>(new Set());
+  protected diceRollerOpen = signal(false);
 
   // Scelte di equipaggiamento iniziale: optionIndex scelto per ciascun gruppo (classe/background
   // uniti, chiave prefissata "class:"/"bg:" per evitare collisioni), e oggetti concreti scelti per
@@ -560,5 +565,26 @@ export class CharacterCreate {
 
     this.appNav.setTab('character-sheet');
     this.router.navigate(['/scheda-personaggio', characterId]);
+  }
+
+  // Quando apri la modale, TypeScript riconosce 'key' come tipo valido
+  openDiceRollerForAbility(key: keyof typeof this.abilityScores) {
+    this.activeAbilityForRoll = key;
+    this.isAbilityRollMode = true;  // Attiva la regola dei 4d6 bloccati
+    this.isDiceRollerOpen = true;
+  }
+
+  // Intercetta il risultato totale emesso dal DiceRoller
+  handleRollResult(total: number) {
+    if (this.activeAbilityForRoll) {
+      // Assegna il totale dei dadi direttamente al punteggio base della caratteristica (es. Forza, Destrezza...)
+      this.abilityScores[this.activeAbilityForRoll] = total;
+    }
+  }
+  // Chiude la modale pulendo lo stato
+  closeDiceRoller() {
+    this.isDiceRollerOpen = false;
+    this.activeAbilityForRoll = null;
+    this.isAbilityRollMode = false; // Reset della modalità
   }
 }

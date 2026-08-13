@@ -1,0 +1,114 @@
+<!-- Sfondo Modale -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-fantasy-black/70 backdrop-blur-xl transition-opacity">
+  <!-- Contenitore Principale Modale -->
+  <div class="w-11/12 max-w-6xl h-[80vh] bg-stone-900 border-2 border-stone-600 rounded-xl shadow-2xl flex overflow-hidden">
+    <!-- COLONNA SINISTRA: Selezione Dadi + Pulsante di Lancio -->
+    <div class="w-1/4 bg-stone-800 p-6 flex flex-col border-r border-stone-700">
+      <h2 class="text-2xl font-bold text-amber-500 mb-6 text-center tracking-widest font-serif">
+        Riserva Dadi
+      </h2>
+
+      <!-- Griglia pulsanti dadi -->
+      <div class="grid grid-cols-4 gap-3 mb-4">
+        <button *ngFor="let dice of availableDice" 
+                (click)="addDiceToBoard(dice)"
+                [disabled]="abilityMode"
+                class="group relative flex aspect-square items-center justify-center p-2 
+                      bg-stone-800 hover:bg-stone-700 
+                      border-2 border-amber-600/50 hover:border-amber-400 
+                      text-amber-500 hover:text-amber-300
+                      rounded-xl transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+                [style.background-image]="'url(/dice-icons/' + dice.type + '.svg)'"
+                [style.background-size]="'50% 50%'"
+                [style.background-position]="'center'"
+                [style.background-repeat]="'no-repeat'"
+                [attr.title]="abilityMode ? 'Modalità Caratteristica: 4d6 fissi' : ('Aggiungi un ' + dice.label)">
+          
+          <span class="absolute bottom-1 right-1.5 font-bold text-[10px] font-serif text-stone-300">
+            {{ dice.label }}
+          </span>
+        </button>
+      </div>
+      <!-- Azioni generali in basso -->
+       <!-- Pulsante di Lancio Principale -->
+      <!-- Pulsanti di azione in basso -->
+      <div class="mt-4 flex flex-col gap-2 border-t border-stone-700 pt-4">
+        <button (click)="trigger3DRoll()" 
+          [disabled]="board.length === 0 || isRolling3D || (abilityMode && !canClose)"
+          class="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-base uppercase tracking-wider rounded-lg shadow-lg disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-95 z-20 disabled:cursor-not-allowed">
+          @if (board.length === 0) {
+            Attendere...
+          } @else {
+            Tira i Dadi!
+          }
+        </button>
+        
+        @if (!abilityMode) {
+          <button (click)="clearBoard()" class="py-2 text-stone-400 hover:text-red-400 uppercase text-xs font-bold tracking-wider">
+            Svuota Plancia
+          </button>
+        } @else {
+          <div class="text-[11px] text-amber-400/80 text-center italic py-1">
+            Regola D&D 5e: 4d6 (scarta il peggiore)
+          </div>
+        }
+
+        <button (click)="closeModal()" 
+                [disabled]="abilityMode || !canClose"
+                class="py-2.5 bg-red-800 hover:bg-red-700 text-white rounded-lg font-bold text-sm shadow-md disabled:opacity-40 disabled:cursor-not-allowed">
+          @if (!canClose) {
+            Attendere...
+          } @else {
+            Chiudi
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- COLONNA DESTRA: La Plancia (Spazio di roll massimizzato) -->
+    <div class="w-3/4 p-6 relative flex flex-col bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] overflow-hidden">
+      
+      <!-- Testata Plancia più compatta (Ridotto il margine inferiore) -->
+     <div class="relative z-25 flex flex-wrap justify-between items-center gap-3 mb-4">
+
+        <!-- Area Chips Riepilogo (Occupa lo spazio disponibile ma va a capo se troppe) -->
+        <div class="flex-1 min-w-[200px] max-w-full"> 
+          <div *ngIf="board.length > 0 && !isRolling3D" class="flex gap-2 flex-wrap">
+            <span *ngFor="let dice of board" class="px-3 py-1 bg-stone-800/90 text-amber-500 rounded-full border border-stone-600 text-xs font-bold cursor-pointer hover:bg-red-900 hover:text-white shadow transition-all whitespace-nowrap" (click)="removeDice(dice.id)" title="Rimuovi">
+              {{ dice.type }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- Totale e Pulsante X fissi e protetti dal trabocamento -->
+        <div class="flex items-center gap-4 shrink-0">
+          <!-- Totale dinamico compatto -->
+          <div class="bg-black/60 px-5 py-1.5 rounded-full border border-stone-600 shadow-md flex items-center">
+            <span class="text-stone-400 uppercase tracking-widest text-xs mr-2">Totale:</span>
+            <span class="text-2xl font-bold text-amber-400">{{ rollTotal }}</span>
+          </div>
+
+          <!-- Pulsante X di chiusura -->
+          <button (click)="closeModal()" [disabled]="abilityMode || !canClose" class="p-1.5 text-stone-500 hover:text-red-500 hover:bg-black/40 rounded-full transition-all focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed" title="Chiudi">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+    </div>
+
+    <!-- Area Tratteggiata di sfondo (Ora sfrutta quasi tutta l'altezza verticale) -->
+    <div class="relative z-0 flex-1 rounded-xl border-2 border-dashed border-stone-700/60 bg-black/30 shadow-inner p-4 flex items-center justify-center">
+      @if(board.length === 0){
+        <div class="text-center text-stone-500 italic text-base pointer-events-none">
+          Aggiungi dei dadi dal menu a sinistra...
+        </div>
+      }
+      <!-- Motore 3D a tutto schermo nella colonna -->
+      <div id="dice-box-container" class="absolute inset-0 z-10 pointer-events-none"></div>
+
+    </div>
+
+    </div>
+  </div>
+</div>
