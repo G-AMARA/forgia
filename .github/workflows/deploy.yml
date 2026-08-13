@@ -1,0 +1,30 @@
+name: Deploy Angular to GitHub Pages
+
+on:
+  push:
+  branches: [ main ] # Sostituisci con 'master' se usi quel branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # Usa la versione di Node compatibile con il tuo Angular
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build -- --configuration production --base-href "/forgia/"
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist/fanta-project/browser # Controlla il percorso esatto della build in base alla versione di Angular (es. dist/tuo-progetto)
