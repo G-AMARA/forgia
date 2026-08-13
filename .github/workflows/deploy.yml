@@ -2,7 +2,7 @@ name: Deploy Angular to GitHub Pages
 
 on:
   push:
-  branches: [ main ] # Sostituisci con 'master' se usi quel branch
+    branches: [ main ] # Sostituisci con 'master' se usi quel branch
 
 jobs:
   build-and-deploy:
