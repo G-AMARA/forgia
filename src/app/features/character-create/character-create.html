@@ -38,7 +38,7 @@
         <div class="flex flex-col gap-1">
           <label class="text-sm font-semibold">{{ localeService.t('race_label') }} <span class="text-red-300">*</span></label>
           <select
-            name="race" [(ngModel)]="raceId" required
+            name="race" [ngModel]="raceId" (ngModelChange)="onRaceChange($event)" required
             class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
           >
             <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
@@ -46,7 +46,28 @@
               <option [value]="race.id">{{ race.name }}</option>
             }
           </select>
+          @if (getRaceDescription(); as desc) {
+            <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+          }
         </div>
+
+        @if (availableSubraces().length > 0) {
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('subrace_label') }}</label>
+            <select
+              name="subrace" [ngModel]="subraceId" (ngModelChange)="onSubraceChange($event)"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            >
+              <option value="">{{ localeService.t('subrace_none') }}</option>
+              @for (sub of availableSubraces(); track sub.id) {
+                <option [value]="sub.id">{{ sub.name }}</option>
+              }
+            </select>
+            @if (getSubraceDescription(); as desc) {
+              <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+            }
+          </div>
+        }
 
         <div class="flex flex-col gap-1">
           <label class="text-sm font-semibold">{{ localeService.t('class_label') }} <span class="text-red-300">*</span></label>
@@ -170,8 +191,8 @@
             <div class="flex flex-col gap-1">
               <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
               <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
-                @if (getRaceBonus(key) > 0) {
-                  +{{ getRaceBonus(key) }}
+                @if (getRaceBonus(key) + getSubraceBonus(key) > 0) {
+                  +{{ getRaceBonus(key) + getSubraceBonus(key) }}
                 } @else {
                   —
                 }
@@ -179,6 +200,33 @@
             </div>
           }
         </div>
+
+        <!-- Bonus a Scelta: monte punti dato da razza/sottorazza "a scelta libera" (es. Umano
+             Variante, Draconide Cromatico), distribuito liberamente dal giocatore entro il tetto
+             per caratteristica. Visibile solo se razza/sottorazza scelte ne concedono almeno uno. -->
+        @if (freeBonusPoints() > 0) {
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
+            <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
+              <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('free_bonus_label') }}</label>
+              <span class="text-xs font-semibold" [class]="freeBonusRemaining() > 0 ? 'text-fantasy-gold' : 'text-fantasy-red'">
+                {{ localeService.t('points_remaining_label') }}: {{ freeBonusRemaining() }}/{{ freeBonusPoints() }}
+              </span>
+            </div>
+            @for (key of abilityKeys; track key) {
+              <div class="flex flex-col gap-1">
+                <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+                <input
+                  type="number" min="0" [attr.max]="maxFreeBonus(key)"
+                  [ngModel]="freeBonuses[key]"
+                  (ngModelChange)="setFreeBonus(key, $event)"
+                  [disabled]="freeBonuses[key] === 0 && freeBonusRemaining() === 0"
+                  [name]="'free_bonus_' + key"
+                  class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm disabled:opacity-50"
+                />
+              </div>
+            }
+          </div>
+        }
 
         <!-- Bonus Background disattivato su richiesta: con un background selezionato si applica
              comunque solo il bonus razziale (vedi getAppliedBonus in character-create.ts).

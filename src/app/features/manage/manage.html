@@ -12,6 +12,14 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+      [class.border-fantasy-gold]="activeSection() === 'subraces'"
+      [class.border-transparent]="activeSection() !== 'subraces'"
+      (click)="setSection('subraces')"
+    >
+      {{ localeService.t('tab_subrace_manage') }}
+    </button>
+    <button
+      class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
       [class.border-fantasy-gold]="activeSection() === 'classes'"
       [class.border-transparent]="activeSection() !== 'classes'"
       (click)="setSection('classes')"
@@ -58,15 +66,25 @@
     >
       {{ localeService.t('tab_equipment_manage') }}
     </button>
+    <button
+      class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+      [class.border-fantasy-gold]="activeSection() === 'bestiary'"
+      [class.border-transparent]="activeSection() !== 'bestiary'"
+      (click)="setSection('bestiary')"
+    >
+      {{ localeService.t('tab_bestiary_manage') }}
+    </button>
   </div>
 
   @switch (activeSection()) {
     @case ('races') { <app-race-create></app-race-create> }
+    @case ('subraces') { <app-subrace-create></app-subrace-create> }
     @case ('classes') { <app-class-create></app-class-create> }
     @case ('subclasses') { <app-subclass-create></app-subclass-create> }
     @case ('backgrounds') { <app-background-create></app-background-create> }
     @case ('weapons') { <app-weapon-create></app-weapon-create> }
     @case ('spells') { <app-spell-create></app-spell-create> }
     @case ('equipment') { <app-equipment-create></app-equipment-create> }
+    @case ('bestiary') { <app-bestiary-manage></app-bestiary-manage> }
   }
 </section>

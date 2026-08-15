@@ -49,6 +49,7 @@ export class CharacterCreate {
   private supabase = inject(Supabase);
 
   races = this.contentStore.getContent('races');
+  private allSubraces = this.contentStore.getContent('subraces');
   classes = this.contentStore.getContent('classes');
   backgrounds = this.contentStore.getContent('backgrounds');
   private allSubclasses = this.contentStore.getContent('subclasses');
@@ -70,6 +71,7 @@ export class CharacterCreate {
 
   name = '';
   raceId = '';
+  subraceId = '';
   classId = '';
   backgroundId = '';
   subclassId = '';
@@ -82,6 +84,9 @@ export class CharacterCreate {
 
   abilityScores = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
   backgroundBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  // Punti "a scelta libera" concessi da razza/sottorazza (es. Umano Variante, Draconide
+  // Cromatico): allocati liberamente dal giocatore entro freeBonusPerAbilityMax().
+  freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   abilityKeys: (keyof typeof this.abilityScores)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
 
   // Punti massimi assegnabili come Bonus Background e valore massimo per singola caratteristica:
@@ -128,6 +133,34 @@ export class CharacterCreate {
     return this.allSubclasses().filter(
       (sub: any) => sub.raw.class_id === this.classId && sub.raw.unlocked_at_level <= this.level
     );
+  }
+
+  // Sottorazze disponibili per la razza scelta. Stesso pattern di availableSubclasses(): metodo,
+  // non computed, perché raceId è un campo ngModel normale.
+  availableSubraces(): any[] {
+    if (!this.raceId) return [];
+    return this.allSubraces().filter((sub: any) => sub.raw.race_id === this.raceId);
+  }
+
+  onRaceChange(raceId: string) {
+    this.raceId = raceId;
+    this.subraceId = '';
+    this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  }
+
+  onSubraceChange(subraceId: string) {
+    this.subraceId = subraceId;
+    this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  }
+
+  // Descrizione della razza/sottorazza scelta: per le "a scelta libera" (Umano Variante,
+  // Draconide Cromatico, ...) è l'unico posto dove il giocatore legge come va speso il bonus.
+  getRaceDescription(): string | null {
+    return this.races().find((r: any) => r.id === this.raceId)?.description ?? null;
+  }
+
+  getSubraceDescription(): string | null {
+    return this.allSubraces().find((s: any) => s.id === this.subraceId)?.description ?? null;
   }
 
   // Immagine di sfondo della classe scelta, versione femminile o maschile a seconda del
@@ -412,6 +445,50 @@ export class CharacterCreate {
     return normalizeAbilityBonuses(race?.raw?.ability_bonuses)[key] ?? 0;
   }
 
+  // Bonus di sottorazza: si somma a quello della razza madre (regole 5e standard).
+  getSubraceBonus(key: keyof typeof this.abilityScores): number {
+    const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
+    return normalizeAbilityBonuses(subrace?.raw?.ability_bonuses)[key] ?? 0;
+  }
+
+  // Monte punti "a scelta libera" della razza/sottorazza scelte, sommati (nei dati reali non
+  // capitano mai entrambi valorizzati insieme). Metodi, non computed: stesso motivo di
+  // availableSubraces() (raceId/subraceId sono ngModel, non signal).
+  freeBonusPoints(): number {
+    const race = this.races().find((r: any) => r.id === this.raceId);
+    const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
+    return (race?.raw?.free_bonus_points ?? 0) + (subrace?.raw?.free_bonus_points ?? 0);
+  }
+
+  freeBonusPerAbilityMax(): number {
+    const race = this.races().find((r: any) => r.id === this.raceId);
+    const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
+    return Math.max(race?.raw?.free_bonus_max_per_ability ?? 0, subrace?.raw?.free_bonus_max_per_ability ?? 0);
+  }
+
+  freeBonusTotal(): number {
+    return this.abilityKeys.reduce((sum, k) => sum + this.freeBonuses[k], 0);
+  }
+
+  freeBonusRemaining(): number {
+    return this.freeBonusPoints() - this.freeBonusTotal();
+  }
+
+  maxFreeBonus(key: keyof typeof this.abilityScores): number {
+    return Math.min(this.freeBonusPerAbilityMax(), this.freeBonuses[key] + this.freeBonusRemaining());
+  }
+
+  setFreeBonus(key: keyof typeof this.abilityScores, value: number) {
+    let next = Math.max(0, Math.min(this.freeBonusPerAbilityMax(), Math.floor(value) || 0));
+    const othersSum = this.abilityKeys
+      .filter((k) => k !== key)
+      .reduce((sum, k) => sum + this.freeBonuses[k], 0);
+    if (othersSum + next > this.freeBonusPoints()) {
+      next = Math.max(0, this.freeBonusPoints() - othersSum);
+    }
+    this.freeBonuses[key] = next;
+  }
+
   backgroundBonusTotal(): number {
     return this.abilityKeys.reduce((sum, k) => sum + this.backgroundBonuses[k], 0);
   }
@@ -441,7 +518,7 @@ export class CharacterCreate {
   // che senza background selezionato. Logica originale (bonus manuale alternativo a quello
   // razziale quando si sceglie un background) commentata, non rimossa, per poterla riattivare.
   getAppliedBonus(key: keyof typeof this.abilityScores): number {
-    return this.getRaceBonus(key);
+    return this.getRaceBonus(key) + this.getSubraceBonus(key) + this.freeBonuses[key];
     // return this.backgroundId ? this.backgroundBonuses[key] : this.getRaceBonus(key);
   }
 
@@ -538,6 +615,7 @@ export class CharacterCreate {
     const { error, characterId } = await this.characterStore.createCharacter({
       name: this.name,
       raceId: this.raceId,
+      subraceId: this.subraceId || null,
       classId: this.classId,
       subclassId: this.subclassId || null,
       backgroundId: this.backgroundId || null,

@@ -1,0 +1,31 @@
+<section class="border border-gold rounded-lg overflow-hidden">
+  <button
+    (click)="toggle.emit()"
+    class="w-full flex items-center justify-between px-4 py-3 bg-fantasy-black font-display text-lg text-fantasy-gold"
+  >
+    <span>{{ localeService.t('subraces_title') }} ({{ subraces().length }})</span>
+    <span>{{ expanded ? '▾' : '▸' }}</span>
+  </button>
+
+  @if (expanded) {
+    <div class="p-4">
+      @if (subraces().length === 0) {
+        <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          @for (sub of subraces(); track sub.id) {
+            <div class="flex bg-fantasy-black/60 border border-gold rounded-lg overflow-hidden">
+              <div class="w-1.5 bg-forest shrink-0"></div>
+              <div class="p-3 flex-1">
+                <h3 class="font-display text-base text-fantasy-moonstone">{{ sub.name }}</h3>
+                <p class="text-xs text-slate-arcane">
+                  {{ raceName(sub) }}@if (bonusSummary(sub)) { · {{ bonusSummary(sub) }} }
+                </p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</section>

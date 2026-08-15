@@ -251,6 +251,10 @@
             [expanded]="appNav.expandedCatalogSection() === 'races'"
             (toggle)="appNav.toggleCatalogSection('races')"
           ></app-race-list>
+          <app-subrace-list
+            [expanded]="appNav.expandedCatalogSection() === 'subraces'"
+            (toggle)="appNav.toggleCatalogSection('subraces')"
+          ></app-subrace-list>
           <app-class-list
             [expanded]="appNav.expandedCatalogSection() === 'classes'"
             (toggle)="appNav.toggleCatalogSection('classes')"

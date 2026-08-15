@@ -7,6 +7,7 @@ import { CampaignEdit } from './features/campaign-edit/campaign-edit';
 import { CampaignCreate } from './features/campaign-create/campaign-create';
 import { CharacterCreate } from './features/character-create/character-create';
 import { RaceList } from './features/race-list/race-list';
+import { SubraceList } from './features/subrace-list/subrace-list';
 import { ClassList } from './features/class-list/class-list';
 import { SubclassList } from './features/subclass-list/subclass-list';
 import { BackgroundList } from './features/background-list/background-list';
@@ -34,6 +35,7 @@ import { DiceRoller } from './shared/dice-roller/dice-roller';
     CampaignCreate,
     CharacterCreate,
     RaceList,
+    SubraceList,
     ClassList,
     SubclassList,
     BackgroundList,

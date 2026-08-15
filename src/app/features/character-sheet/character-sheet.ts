@@ -77,6 +77,7 @@ export class CharacterSheet implements OnInit {
   private allEquipment = this.contentStore.getContent('equipment');
   private allSpells = this.contentStore.getContent('spells');
   protected races = this.contentStore.getContent('races');
+  private allSubraces = this.contentStore.getContent('subraces');
   protected classesContent = this.contentStore.getContent('classes');
   protected backgroundsContent = this.contentStore.getContent('backgrounds');
   private allSubclasses = this.contentStore.getContent('subclasses');
@@ -90,6 +91,7 @@ export class CharacterSheet implements OnInit {
   identityName = '';
   identityLevel = 1;
   identityRaceId = '';
+  identitySubraceId = '';
   identityClassId = '';
   identitySubclassId = '';
   identityBackgroundId = '';
@@ -105,6 +107,9 @@ export class CharacterSheet implements OnInit {
   identityBackgroundBonuses: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   readonly backgroundBonusMax = 3;
   readonly backgroundBonusPerAbilityMax = 2;
+  // Punti "a scelta libera" concessi da razza/sottorazza (es. Umano Variante, Draconide
+  // Cromatico), ricostruiti da applied_bonus al caricamento (vedi effect() sotto).
+  freeBonuses: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
 
   // Sottoclassi disponibili per la classe scelta, sbloccate al livello selezionato o prima.
   // Metodo (non computed): identityClassId/identityLevel sono campi ngModel, non
@@ -115,6 +120,23 @@ export class CharacterSheet implements OnInit {
     return this.allSubclasses().filter(
       (sub: any) => sub.raw.class_id === this.identityClassId && sub.raw.unlocked_at_level <= this.identityLevel
     );
+  }
+
+  // Sottorazze disponibili per la razza scelta. Stesso pattern metodo di availableSubclasses().
+  availableSubraces(): any[] {
+    if (!this.identityRaceId) return [];
+    return this.allSubraces().filter((sub: any) => sub.raw.race_id === this.identityRaceId);
+  }
+
+  onIdentityRaceChange(raceId: string) {
+    this.identityRaceId = raceId;
+    this.identitySubraceId = '';
+    this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  }
+
+  onIdentitySubraceChange(subraceId: string) {
+    this.identitySubraceId = subraceId;
+    this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   }
 
   selectedEquipmentId = '';
@@ -136,6 +158,7 @@ export class CharacterSheet implements OnInit {
         this.identityName = c.name;
         this.identityLevel = c.level;
         this.identityRaceId = c.race_id ?? '';
+        this.identitySubraceId = c.subrace_id ?? '';
         this.identityClassId = c.class_id ?? '';
         this.identitySubclassId = c.subclass_id ?? '';
         this.identityBackgroundId = c.background_id ?? '';
@@ -157,6 +180,16 @@ export class CharacterSheet implements OnInit {
         this.identityBackgroundBonuses = c.background_id
           ? { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus }
           : { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+        // Ricostruisce la quota "a scelta libera" per differenza rispetto ai bonus fissi di
+        // razza/sottorazza: applied_bonus contiene solo il totale, non la distribuzione scelta.
+        this.freeBonuses = c.background_id
+          ? { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 }
+          : Object.fromEntries(
+              this.abilityKeys.map((key) => [
+                key,
+                Math.max(0, (c.applied_bonus[key] ?? 0) - this.getRaceBonus(key) - this.getSubraceBonus(key)),
+              ])
+            );
         this.skillProficiencies = new Set(c.skill_proficiencies);
         this.damageResistancesText = c.damage_resistances.join(', ');
         this.damageImmunitiesText = c.damage_immunities.join(', ');
@@ -261,6 +294,10 @@ export class CharacterSheet implements OnInit {
     return this.allSubclasses().find((s: any) => s.id === this.identitySubclassId)?.description ?? null;
   }
 
+  getSubraceDescription(): string | null {
+    return this.allSubraces().find((s: any) => s.id === this.identitySubraceId)?.description ?? null;
+  }
+
   getBackgroundDescription(): string | null {
     return this.backgroundsContent().find((b: any) => b.id === this.identityBackgroundId)?.description ?? null;
   }
@@ -286,6 +323,11 @@ export class CharacterSheet implements OnInit {
     return subclass?.name ?? rawName;
   }
 
+  // La sottorazza è sempre homebrew (niente content_translations), il nome grezzo è già quello finale.
+  getTranslatedSubraceName(rawName: string | null | undefined): string {
+    return rawName ?? '';
+  }
+
   // Traduce il nome grezzo inglese del background al nome tradotto dal catalogo.
   getTranslatedBackgroundName(rawName: string | null | undefined): string {
     if (!rawName) return '';
@@ -303,6 +345,49 @@ export class CharacterSheet implements OnInit {
   getRaceBonus(key: keyof typeof this.abilityScores): number {
     const race = this.races().find((r: any) => r.id === this.identityRaceId);
     return normalizeAbilityBonuses(race?.raw?.ability_bonuses)[key] ?? 0;
+  }
+
+  // Bonus di sottorazza: si somma a quello della razza madre (regole 5e standard).
+  getSubraceBonus(key: keyof typeof this.abilityScores): number {
+    const subrace = this.allSubraces().find((s: any) => s.id === this.identitySubraceId);
+    return normalizeAbilityBonuses(subrace?.raw?.ability_bonuses)[key] ?? 0;
+  }
+
+  // Monte punti "a scelta libera" di razza/sottorazza scelte, sommati. Stesso pattern metodo
+  // (non computed) di availableSubraces(): identityRaceId/identitySubraceId sono ngModel.
+  freeBonusPoints(): number {
+    const race = this.races().find((r: any) => r.id === this.identityRaceId);
+    const subrace = this.allSubraces().find((s: any) => s.id === this.identitySubraceId);
+    return (race?.raw?.free_bonus_points ?? 0) + (subrace?.raw?.free_bonus_points ?? 0);
+  }
+
+  freeBonusPerAbilityMax(): number {
+    const race = this.races().find((r: any) => r.id === this.identityRaceId);
+    const subrace = this.allSubraces().find((s: any) => s.id === this.identitySubraceId);
+    return Math.max(race?.raw?.free_bonus_max_per_ability ?? 0, subrace?.raw?.free_bonus_max_per_ability ?? 0);
+  }
+
+  freeBonusTotal(): number {
+    return this.abilityKeys.reduce((sum, k) => sum + this.freeBonuses[k], 0);
+  }
+
+  freeBonusRemaining(): number {
+    return this.freeBonusPoints() - this.freeBonusTotal();
+  }
+
+  maxFreeBonus(key: keyof typeof this.abilityScores): number {
+    return Math.min(this.freeBonusPerAbilityMax(), this.freeBonuses[key] + this.freeBonusRemaining());
+  }
+
+  setFreeBonus(key: keyof typeof this.abilityScores, value: number) {
+    let next = Math.max(0, Math.min(this.freeBonusPerAbilityMax(), Math.floor(value) || 0));
+    const othersSum = this.abilityKeys
+      .filter((k) => k !== key)
+      .reduce((sum, k) => sum + this.freeBonuses[k], 0);
+    if (othersSum + next > this.freeBonusPoints()) {
+      next = Math.max(0, this.freeBonusPoints() - othersSum);
+    }
+    this.freeBonuses[key] = next;
   }
 
   backgroundBonusTotal(): number {
@@ -332,7 +417,9 @@ export class CharacterSheet implements OnInit {
   // Bonus razziale e background sono alternativi, non cumulativi: quello del
   // background (se scelto) sostituisce quello automatico della razza.
   getAppliedBonus(key: keyof typeof this.abilityScores): number {
-    return this.identityBackgroundId ? this.identityBackgroundBonuses[key] : this.getRaceBonus(key);
+    return this.identityBackgroundId
+      ? this.identityBackgroundBonuses[key]
+      : this.getRaceBonus(key) + this.getSubraceBonus(key) + this.freeBonuses[key];
   }
 
   async saveIdentity() {
@@ -356,6 +443,7 @@ export class CharacterSheet implements OnInit {
       name: this.identityName,
       level: this.identityLevel,
       raceId: this.identityRaceId,
+      subraceId: this.identitySubraceId || null,
       classId: this.identityClassId,
       subclassId: this.identitySubclassId || null,
       backgroundId: this.identityBackgroundId || null,

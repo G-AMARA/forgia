@@ -6,6 +6,7 @@ import { LocaleService } from './locale';
 // Estendi questo tipo via via che aggiungi classes, spells, ecc.
 export type ContentTable =
   | 'races'
+  | 'subraces'
   | 'classes'
   | 'subclasses'
   | 'backgrounds'

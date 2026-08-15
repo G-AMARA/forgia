@@ -6,21 +6,22 @@ import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 
 @Component({
-  selector: 'app-race-create',
+  selector: 'app-subrace-create',
   standalone: true,
   imports: [FormsModule],
-  templateUrl: './race-create.html',
+  templateUrl: './subrace-create.html',
 })
-export class RaceCreate {
+export class SubraceCreate {
   private supabase = inject(Supabase);
   private contentStore = inject(ContentStore);
   protected localeService = inject(LocaleService);
   private modal = inject(Modal);
 
   protected races = this.contentStore.getContent('races');
+  protected subraces = this.contentStore.getContent('subraces');
 
   name = '';
-  speed = 9;
+  raceId = '';
   description = '';
   abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   abilityKeys: (keyof typeof this.abilityBonuses)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
@@ -31,28 +32,34 @@ export class RaceCreate {
 
   loading = signal(false);
 
-  private async refreshRaces() {
-    await this.contentStore.refresh('races');
+  private async refreshSubraces() {
+    await this.contentStore.refresh('subraces');
   }
 
   private resetForm() {
     this.editingId = null;
     this.name = '';
-    this.speed = 9;
+    this.raceId = '';
     this.description = '';
     this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
     this.freeBonusPoints = 0;
     this.freeBonusMaxPerAbility = 0;
   }
 
-  startEdit(race: any) {
-    this.editingId = race.id;
-    this.name = race.raw.name;
-    this.speed = race.raw.speed ?? 9;
-    this.description = race.raw.description ?? '';
-    this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...normalizeAbilityBonuses(race.raw.ability_bonuses) };
-    this.freeBonusPoints = race.raw.free_bonus_points ?? 0;
-    this.freeBonusMaxPerAbility = race.raw.free_bonus_max_per_ability ?? 0;
+  // Nome della razza genitrice, per mostrarlo nella lista del catalogo.
+  raceName(sub: any): string {
+    const race = this.races().find((r: any) => r.id === sub.raw.race_id);
+    return race?.name ?? '—';
+  }
+
+  startEdit(sub: any) {
+    this.editingId = sub.id;
+    this.name = sub.raw.name;
+    this.raceId = sub.raw.race_id;
+    this.description = sub.description ?? '';
+    this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...normalizeAbilityBonuses(sub.raw.ability_bonuses) };
+    this.freeBonusPoints = sub.raw.free_bonus_points ?? 0;
+    this.freeBonusMaxPerAbility = sub.raw.free_bonus_max_per_ability ?? 0;
   }
 
   cancelEdit() {
@@ -64,7 +71,7 @@ export class RaceCreate {
 
     const payload = {
       name: this.name,
-      speed: this.speed,
+      race_id: this.raceId,
       description: this.description || null,
       ability_bonuses: this.abilityBonuses,
       free_bonus_points: this.freeBonusPoints,
@@ -72,40 +79,40 @@ export class RaceCreate {
     };
 
     const { error } = this.editingId
-      ? await this.supabase.client.from('races').update(payload).eq('id', this.editingId)
-      : await this.supabase.client.from('races').insert(payload);
+      ? await this.supabase.client.from('subraces').update(payload).eq('id', this.editingId)
+      : await this.supabase.client.from('subraces').insert(payload);
 
     if (error) {
       this.modal.error(error.message);
     } else {
       this.resetForm();
-      await this.refreshRaces();
+      await this.refreshSubraces();
       this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
   }
 
-  bonusSummary(race: any): string {
-    const bonuses = normalizeAbilityBonuses(race.raw.ability_bonuses);
+  bonusSummary(sub: any): string {
+    const bonuses = normalizeAbilityBonuses(sub.raw.ability_bonuses);
     const parts = this.abilityKeys
       .filter((k) => bonuses[k] > 0)
       .map((k) => `+${bonuses[k]} ${this.localeService.t('ability_' + k)}`);
-    if (race.raw.free_bonus_points > 0) {
-      parts.push(`+${race.raw.free_bonus_points} ${this.localeService.t('free_bonus_summary_label')} (max +${race.raw.free_bonus_max_per_ability})`);
+    if (sub.raw.free_bonus_points > 0) {
+      parts.push(`+${sub.raw.free_bonus_points} ${this.localeService.t('free_bonus_summary_label')} (max +${sub.raw.free_bonus_max_per_ability})`);
     }
     return parts.join(', ') || '—';
   }
 
-  async deleteRace(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_race')} "${name}"?`);
+  async deleteSubrace(id: string, name: string) {
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_subrace')} "${name}"?`);
     if (!confirmed) return;
 
-    const { error } = await this.supabase.client.from('races').delete().eq('id', id);
+    const { error } = await this.supabase.client.from('subraces').delete().eq('id', id);
     if (error) {
       this.modal.error(error.message);
     } else {
-      await this.refreshRaces();
+      await this.refreshSubraces();
     }
   }
 }

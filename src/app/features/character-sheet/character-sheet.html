@@ -28,7 +28,9 @@
         <div class="flex-1 text-center sm:text-left">
           <h2 class="font-display text-2xl text-gold-bright">{{ c.name }}</h2>
           <p class="text-sm opacity-80">
-            {{ localeService.t('level_label') }} {{ c.level }} · {{ getTranslatedRaceName(c.race_name) }} · {{ getTranslatedClassName(c.class_name) }}
+            {{ localeService.t('level_label') }} {{ c.level }} · {{ getTranslatedRaceName(c.race_name) }}
+            @if (c.subrace_name) { ({{ getTranslatedSubraceName(c.subrace_name) }}) }
+            · {{ getTranslatedClassName(c.class_name) }}
             @if (c.subclass_name) { ({{ getTranslatedSubclassName(c.subclass_name) }}) }
           </p>
           <p class="text-xs opacity-70">
@@ -98,7 +100,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="flex flex-col gap-1">
               <label class="text-sm font-semibold">{{ localeService.t('race_label') }}</label>
-              <select [(ngModel)]="identityRaceId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
+              <select [ngModel]="identityRaceId" (ngModelChange)="onIdentityRaceChange($event)" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
                 <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
                 @for (race of races(); track race.id) {
                   <option [value]="race.id">{{ race.name }}</option>
@@ -108,6 +110,21 @@
                 <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
               }
             </div>
+
+            @if (availableSubraces().length > 0) {
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold">{{ localeService.t('subrace_label') }}</label>
+                <select [ngModel]="identitySubraceId" (ngModelChange)="onIdentitySubraceChange($event)" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
+                  <option value="">{{ localeService.t('subrace_none') }}</option>
+                  @for (sub of availableSubraces(); track sub.id) {
+                    <option [value]="sub.id">{{ sub.name }}</option>
+                  }
+                </select>
+                @if (getSubraceDescription(); as desc) {
+                  <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+                }
+              </div>
+            }
 
             <div class="flex flex-col gap-1">
               <label class="text-sm font-semibold">{{ localeService.t('class_label') }}</label>
@@ -202,12 +219,38 @@
                 <div class="flex flex-col gap-1">
                   <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
                   <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
-                    @if (getRaceBonus(key) > 0) {
-                      +{{ getRaceBonus(key) }}
+                    @if (getRaceBonus(key) + getSubraceBonus(key) > 0) {
+                      +{{ getRaceBonus(key) + getSubraceBonus(key) }}
                     } @else {
                       —
                     }
                   </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Bonus a Scelta: monte punti dato da razza/sottorazza "a scelta libera" (es. Umano
+               Variante, Draconide Cromatico). Nascosto se c'è un background (stessa alternanza
+               del Bonus Razziale) o se razza/sottorazza scelte non ne concedono nessuno. -->
+          @if (!identityBackgroundId && freeBonusPoints() > 0) {
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
+              <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
+                <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('free_bonus_label') }}</label>
+                <span class="text-xs font-semibold" [class]="freeBonusRemaining() > 0 ? 'text-fantasy-gold' : 'text-fantasy-red'">
+                  {{ localeService.t('points_remaining_label') }}: {{ freeBonusRemaining() }}/{{ freeBonusPoints() }}
+                </span>
+              </div>
+              @for (key of abilityKeys; track key) {
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
+                  <input
+                    type="number" min="0" [attr.max]="maxFreeBonus(key)"
+                    [disabled]="readOnly() || (freeBonuses[key] === 0 && freeBonusRemaining() === 0)"
+                    [ngModel]="freeBonuses[key]"
+                    (ngModelChange)="setFreeBonus(key, $event)"
+                    class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm disabled:opacity-50"
+                  />
                 </div>
               }
             </div>

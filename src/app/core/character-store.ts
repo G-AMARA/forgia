@@ -140,6 +140,7 @@ export class CharacterStore {
   async createCharacter(params: {
     name: string;
     raceId: string;
+    subraceId: string | null;
     classId: string;
     subclassId: string | null;
     backgroundId: string | null;
@@ -171,6 +172,7 @@ export class CharacterStore {
         owner_id: userId,
         name: params.name,
         race_id: params.raceId,
+        subrace_id: params.subraceId,
         background_id: params.backgroundId,
         level: params.level,
         alignment: params.alignment,
@@ -260,10 +262,11 @@ export class CharacterStore {
 
   private static readonly FULL_CHARACTER_SELECT = `
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
-    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, background_id,
+    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, subrace_id, background_id,
     skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
     sex, darkvision,
     races ( name ),
+    subraces ( name ),
     backgrounds ( name ),
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
     character_spells ( spell_id, prepared, spells ( name, level, school ) ),
@@ -342,6 +345,8 @@ export class CharacterStore {
       darkvision: row.darkvision ?? false,
       race_id: row.race_id ?? null,
       race_name: translations['races']?.[row.race_id] ?? row.races?.name ?? null,
+      subrace_id: row.subrace_id ?? null,
+      subrace_name: row.subraces?.name ?? null,
       background_id: row.background_id ?? null,
       background_name:
         translations['backgrounds']?.[row.background_id] ?? row.backgrounds?.name ?? null,
@@ -482,6 +487,7 @@ export class CharacterStore {
       name: string;
       level: number;
       raceId: string;
+      subraceId: string | null;
       classId: string;
       subclassId: string | null;
       backgroundId: string | null;
@@ -499,6 +505,7 @@ export class CharacterStore {
         name: updates.name,
         level: updates.level,
         race_id: updates.raceId,
+        subrace_id: updates.subraceId,
         background_id: updates.backgroundId,
         alignment: updates.alignment,
         experience_points: updates.experiencePoints,
@@ -755,6 +762,8 @@ export interface CharacterFull {
   darkvision: boolean;
   race_id: string | null;
   race_name: string | null;
+  subrace_id: string | null;
+  subrace_name: string | null;
   background_id: string | null;
   background_name: string | null;
   class_id: string | null;

@@ -21,6 +21,9 @@
                   <p class="text-xs text-slate-arcane mb-1">
                     {{ localeService.t('speed_label') }}: {{ race.raw.speed }}
                   </p>
+                  @if (freeBonusSummary(race)) {
+                    <p class="text-xs italic opacity-80">{{ freeBonusSummary(race) }}</p>
+                  }
                   @if (traitsSummary(race)) {
                     <p class="text-xs italic opacity-80">{{ traitsSummary(race) }}</p>
                   }
