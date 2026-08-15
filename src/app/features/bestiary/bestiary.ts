@@ -1,4 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA, Component, Input, OnInit, computed, inject, signal } from '@angular/core';
+import { Navigation, EffectCards } from 'swiper/modules';
 import { BestiaryMonster, BestiaryStore } from '../../core/bestiary-store';
 import { Auth } from '../../core/auth';
 import { ActiveCampaign } from '../../core/active-campaign';
@@ -19,6 +20,10 @@ export class Bestiary implements OnInit {
   protected localeService = inject(LocaleService);
 
   @Input() campaignId!: string;
+
+  // Passato a <swiper-container [modules]> nel template: con 'swiper/element' (non
+  // '/bundle') ogni istanza dichiara esplicitamente solo i moduli che usa.
+  protected readonly swiperModules = [Navigation, EffectCards];
 
   // Ricalcolato qui invece di fidarsi di un booleano passato dal parent: stessa logica
   // di CampaignHub.isOwner, per difesa in profondità (la RLS lato DB è comunque
