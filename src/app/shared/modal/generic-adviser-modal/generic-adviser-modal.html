@@ -2,6 +2,10 @@
   <!-- OVERLAY (Sfondo scuro semitrasparente). Cliccando qui si chiude la modale -->
   <div 
     class="fixed inset-0 z-50 flex items-center justify-center bg-fantasy-black/70 backdrop-blur-xl transition-opacity" 
+    [class.border-green-500]="variant() === 'success'"
+    [class.border-red-500]="variant() === 'error'"
+    [class.border-amber-500]="variant() === 'warning'"
+    [class.border-gold]="variant() === 'confirm'"
     (click)="onClose()">
     
     <!-- CONTENITORE MODALE. -->
@@ -10,35 +14,77 @@
       (click)="$event.stopPropagation()">
       
       <!-- HEADER  -->
-      <div class="mb-4 flex items-center justify-between border-b border-gold/30 pb-3">
-        <h2 class="text-xl font-display font-semibold text-fantasy-gold">
-          @if (modalTitle()) {
-            {{ modalTitle() }}
-          } @else {
-            <ng-content select="[modal-title]"></ng-content>
-          }
-        </h2>
+      <div class="mb-4 flex items-center justify-between border-b border-gold/30 ">
+        @if (modalCustomHeader()) {
+          <ng-content select="[modal-custom-title]"></ng-content>
+        } 
+        @else {
+          <div class="mb-4 w-full flex items-center justify-between">
+            <h2 class="text-xl font-display font-semibold text-fantasy-gold">
+              {{ title() }}
+            </h2>
+
+            <button 
+              (click)="onClose()"
+              class="text-fantasy-moonstone hover:text-fantasy-gold focus:outline-none rounded-full p-1 hover:bg-fantasy-gold/10 transition-colors">
+              <!-- Icona X in SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        }        
         
-        <button 
-          (click)="onClose()"
-          class="text-fantasy-moonstone hover:text-fantasy-gold focus:outline-none rounded-full p-1 hover:bg-fantasy-gold/10 transition-colors">
-          <!-- Icona X in SVG -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
       </div>
 
       <!-- BODY  -->
-      <div class="mb-6 text-fantasy-moonstone">
-        <ng-content select="[modal-body]"></ng-content>
+      <div class="mb-6 flex items-center gap-4 text-fantasy-moonstone">
+        @if (imageSrc()) {
+          <div class="h-28 w-28 shrink-0 overflow-hidden rounded-3xl  bg-fantasy-black/40">
+            <img [src]="imageSrc()" [alt]="imageAlt() ?? 'Modal image'" class="h-full w-full object-contain" />
+          </div>
+        }
+
+        <div class="min-w-0 flex-1">
+          @if (modalCustomBody()) {
+            <ng-content select="[modal-custom-body]"></ng-content>
+          } @else {
+            <p class="text-base leading-6 text-center text-fantasy-moonstone">
+              {{ modalMessage() }}
+            </p>
+          }
+        </div>
       </div>
 
       <!-- FOOTER -->
       <div class="flex justify-end gap-3 pt-3 border-t border-gold/30">
-        <ng-content select="[modal-footer]"></ng-content>
+        @if (modalCustomFooter()) {
+          <ng-content select="[modal-custom-footer]"></ng-content>
+        }
+        @else {
+          <div class="flex justify-end gap-3">
+            @if (!showCancelButton()) {
+            <button 
+              (click)="onConfirm()"
+              class="rounded-full bg-fantasy-gold px-4 py-2 text-sm font-semibold text-fantasy-black shadow-md hover:bg-fantasy-gold/90 focus:outline-none focus:ring-2 focus:ring-fantasy-gold focus:ring-offset-2 transition-colors">
+              OK
+            </button>
+            } 
+            @else{
+              <button 
+                (click)="onClose()"
+                class="rounded-full bg-fantasy-gold px-4 py-2 text-sm font-semibold text-fantasy-black shadow-md hover:bg-fantasy-gold/90 focus:outline-none focus:ring-2 focus:ring-fantasy-gold focus:ring-offset-2 transition-colors">
+                {{ cancelLabel() }}
+              </button>
+              <button 
+                (click)="onConfirm()" 
+                class="rounded-full bg-fantasy-gold px-4 py-2 text-sm font-semibold text-fantasy-black shadow-md hover:bg-fantasy-gold/90 focus:outline-none focus:ring-2 focus:ring-fantasy-gold focus:ring-offset-2 transition-colors">
+                {{ confirmLabel() }}
+              </button>
+            }
+          </div>
+        }
       </div>
-
     </div>
   </div>
 }

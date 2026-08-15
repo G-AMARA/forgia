@@ -64,7 +64,10 @@ export class CampaignHub {
     event.stopPropagation(); // evita che il click apra anche la scheda
 
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_character')} "${characterName}"?`
+      `${this.localeService.t('confirm_delete_character')} "${characterName}"?!`,
+      this.localeService.t('confirm_delete_character_title'),
+      this.localeService.t('confirm_delete_button_confirm'),
+      this.localeService.t('cancel_button'),
     );
     if (!confirmed) return;
 

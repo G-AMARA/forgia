@@ -65,7 +65,10 @@ export class CampaignEdit implements OnInit {
     if (!campaign) return;
 
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`
+      `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`,
+      `${this.localeService.t('confirm_delete_campaign_title')}`,
+      `${this.localeService.t('cancel_button')}`,
+      `${this.localeService.t('confirm_delete_button_confirm')}`,
     );
     if (!confirmed) return;
 

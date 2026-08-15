@@ -1,51 +1,77 @@
 import { Injectable, signal } from '@angular/core';
 
-type ModalKind = 'confirm' | 'error' | 'success';
+type ModalVariant = 'confirm' | 'success' | 'error' | 'warning';
 
-interface ModalState {
-  kind: ModalKind;
+export interface UtilityModalState {
   title: string;
-  message: string;
+  modalMessage: string;
+  imageSrc?: string | null;
+  imageAlt?: string | null;
+  variant: ModalVariant;
   confirmLabel?: string;
   cancelLabel?: string;
+  showCancelButton?: boolean;
 }
 
-// Sostituisce window.confirm() e i messaggi di errore/successo sparsi inline nei
-// template: un'unica modale globale (montata in app.html), pilotata da questo
-// signal. confirm() resta in sospeso finché l'utente non risponde da AppModal.
 @Injectable({ providedIn: 'root' })
 export class Modal {
-  readonly state = signal<ModalState | null>(null);
-
+  readonly state = signal<UtilityModalState | null>(null);
   private resolver: ((value: boolean) => void) | null = null;
 
   confirm(
     message: string,
-    options?: { title?: string; confirmLabel?: string; cancelLabel?: string }
+    title: string,
+    confirmLabel?: string,
+    cancelLabel?: string
   ): Promise<boolean> {
-    this.resolver?.(false); // una eventuale conferma già in sospeso viene annullata
+    this.resolver?.(false);
+
     this.state.set({
-      kind: 'confirm',
-      title: options?.title ?? 'Conferma',
-      message,
-      confirmLabel: options?.confirmLabel,
-      cancelLabel: options?.cancelLabel,
+      title: title,
+      modalMessage: message,
+      imageSrc: 'modal-png/allert-goblin.png',
+      imageAlt: 'Un goblin dietro un segnale triangolare di allerta',
+      variant: 'confirm',
+      confirmLabel: confirmLabel,
+      cancelLabel: cancelLabel,
+      showCancelButton: true,
     });
+
     return new Promise<boolean>((resolve) => {
       this.resolver = resolve;
     });
   }
 
-  error(message: string, title = 'Errore') {
+  error(message: string, title = 'Spiacente Avventuriero!') {
     this.resolver?.(false);
     this.resolver = null;
-    this.state.set({ kind: 'error', title, message });
+
+    this.state.set({
+      title,
+      imageSrc: 'modal-png/error-goblin.png',
+      imageAlt: 'Un goblin dietro un segnale tondo di errore',
+      modalMessage: message,
+      variant: 'error',
+      confirmLabel: 'OK',
+      cancelLabel: 'Chiudi',
+      showCancelButton: false,
+    });
   }
 
-  success(message: string, title = 'Fatto') {
+  success(message: string, title = 'Buone notizie Avventuriero!') {
     this.resolver?.(false);
     this.resolver = null;
-    this.state.set({ kind: 'success', title, message });
+
+    this.state.set({
+      title,
+      imageSrc: 'modal-png/success-goblin.png',
+      imageAlt: 'Un goblin dietro un segnale tondo di successo',
+      modalMessage: message,
+      variant: 'success',
+      confirmLabel: 'OK',
+      cancelLabel: 'Chiudi',
+      showCancelButton: false,
+    });
   }
 
   respond(result: boolean) {
@@ -54,7 +80,6 @@ export class Modal {
     this.state.set(null);
   }
 
-  // Chiudere senza scegliere (click fuori, es.) equivale sempre ad annullare, mai a confermare.
   dismiss() {
     this.respond(false);
   }

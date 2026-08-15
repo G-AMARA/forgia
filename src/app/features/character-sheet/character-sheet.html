@@ -734,43 +734,28 @@
     <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
   }
 
-<app-generic-modal 
-  [isOpen]="isModalOpen()" 
-  (closeModal)="closeModal()" 
-  modalTitle="Attenzione avventuriero!">
-  
-  <!-- Inietto il contenuto nel body -->
-  <div modal-body>
-    <div class="flex flex-row gap-4 items-center justify-center text-center">
-      <div class="flex items-center justify-center w-28 h-28 min-w-[7rem] min-h-[7rem] rounded-3xl overflow-hidden">
-        <img src="/modal-png/allert-goblin.png" alt="goblin con cartello di pericolo" class="h-full w-full object-contain" />
-      </div>
-      <div class="flex-1 text-left">
-         <p class="text-sm leading-6 text-fantasy-moonstone">
-           Hey avventuriero attenzione! Ti stavi quasi perdendo questo:
-         </p>
-          <p class="text-sm text-center py-2 leading-6 text-fantasy-moonstone">
-            <strong>{{ modalItemName }}</strong>
-          </p>
-          <p class="text-sm leading-6 text-fantasy-moonstone">
-            Sei sicuro di volertene separare?
-          </p>
-      </div>
-    </div>   
-  </div>
-
-  <!-- Inietto i pulsanti nel footer -->
-  <div class="flex gap-4 " modal-footer>
-    <button 
-      (click)="closeModal()" 
-      class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 cursor-pointer">
-      Annulla
-    </button>
-    <button 
-      (click)="onConfirm()" 
-      class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 cursor-pointer">
-      Sì, mollalo!
-    </button>
+<app-generic-modal
+  [isOpen]="isModalOpen()"
+  [title]="localModalTitle()"
+  [imageSrc]="localModalImageSrc()"
+  [imageAlt]="localModalImageAlt()"
+  [cancelLabel]="localModalCancelLabel()"
+  [confirmLabel]="localModalConfirmLabel()"
+  [variant]="localModalVariant()"
+  [modalCustomBody]="true"
+  (closeModal)="closeModal()"
+  (confirmModal)="onConfirm()">
+  <!-- Inietto il pattern del messaggio personalizzato nel body -->
+  <div modal-custom-body class="flex-1 text-left">
+      <p class="text-sm leading-6 text-fantasy-moonstone">
+        Hey avventuriero attenzione! Ti stavi quasi perdendo questo:
+      </p>
+      <p class="text-sm text-center py-2 leading-6 text-fantasy-moonstone">
+        <strong>{{ modalItemName }}</strong>
+      </p>
+      <p class="text-sm leading-6 text-fantasy-moonstone">
+        Sei sicuro di volertene separare?
+      </p>
   </div>
 </app-generic-modal>
   

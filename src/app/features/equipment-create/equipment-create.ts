@@ -290,7 +290,10 @@ export class EquipmentCreate {
   }
 
   async deleteEquipment(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_equipment')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_equipment')} "${name}"?`,
+                                                this.localeService.t('confirm_delete_button_confirm'),
+                                                this.localeService.t('cancel_button'),
+                                                this.localeService.t('confirm_delete_equipment_title'));
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('equipment').delete().eq('id', id);

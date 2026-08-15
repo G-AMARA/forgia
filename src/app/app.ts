@@ -15,12 +15,13 @@ import { WeaponList } from './features/weapon-list/weapon-list';
 import { Manage } from './features/manage/manage';
 import { Profile } from './features/profile/profile';
 import { Araldica } from './features/araldica/araldica';
-import { AppModal } from './features/app-modal/app-modal';
+import { GenericModalComponent } from './shared/modal/generic-adviser-modal/generic-adviser-modal';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
 import { AppNav } from './core/app-nav';
 import { ActiveCampaign } from './core/active-campaign';
 import { NavigationTracker } from './core/navigation-tracker';
+import { Modal } from './core/modal';
 import { DiceRoller } from './shared/dice-roller/dice-roller';
 
 @Component({
@@ -42,7 +43,7 @@ import { DiceRoller } from './shared/dice-roller/dice-roller';
     Manage,
     Profile,
     Araldica,
-    AppModal,
+    GenericModalComponent,
     DiceRoller,
   ],
   templateUrl: './app.html',
@@ -54,6 +55,7 @@ export class App {
   protected auth = inject(Auth);
   protected appNav = inject(AppNav);
   protected activeCampaign = inject(ActiveCampaign);
+  protected readonly modal = inject(Modal);
   private router = inject(Router);
   // Mai referenziato altrove: injectarlo qui basta a istanziare il service (providedIn:
   // 'root') e avviare il suo effect() che segue auth.isLoggedIn() per far partire il tracker.
@@ -106,6 +108,9 @@ export class App {
     this.appNav.setTab('board');
     this.router.navigate(['/dashboard']);
   }
+
+
+
 
   openDiceRollerModal() {
     this.diceRollerOpen.set(true);

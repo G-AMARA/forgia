@@ -54,8 +54,13 @@ export class CampaignCreate {
 
   async deleteCampaign(campaignId: string, campaignName: string) {
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_campaign')} "${campaignName}"?`
+      `${this.localeService.t('confirm_delete_campaign')}` + `"${campaignName}"?`,
+      `${this.localeService.t('confirm_delete_campaign_title')}`,
+      `${this.localeService.t('confirm_delete_button_confirm')}`,
+      `${this.localeService.t('cancel_button')}`,
+      
     );
+    console.log('Delete campaign confirmed:', confirmed);
     if (!confirmed) return;
 
     const { error } = await this.campaignStore.deleteCampaign(campaignId);

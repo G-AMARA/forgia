@@ -87,7 +87,10 @@ export class RaceCreate {
   }
 
   async deleteRace(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_race')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_race')} "${name}"?`,
+                                                this.localeService.t('confirm_delete_button_confirm'),
+                                                this.localeService.t('cancel_button'),
+                                                this.localeService.t('confirm_delete_race_title'));
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('races').delete().eq('id', id);

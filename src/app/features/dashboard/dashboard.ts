@@ -109,7 +109,10 @@ export class Dashboard implements OnInit {
     event.stopPropagation(); // evita che il click apra anche enterCampaign()
 
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`
+      `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`,
+      this.localeService.t('confirm_delete_campaign_title'),
+      this.localeService.t('confirm_delete_button_confirm'),
+      this.localeService.t('cancel_button'),
     );
     if (!confirmed) return;
 

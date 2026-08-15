@@ -111,7 +111,10 @@ export class ClassCreate {
   }
 
   async deleteClass(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_class')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_class')} "${name}"?`,
+                                                this.localeService.t('confirm_delete_button_confirm'),
+                                                this.localeService.t('cancel_button'),
+                                                this.localeService.t('confirm_delete_class_title'));
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('classes').delete().eq('id', id);

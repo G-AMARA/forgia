@@ -27,7 +27,14 @@ export class CharacterSheet implements OnInit {
   private contentStore = inject(ContentStore);
   private auth = inject(Auth);
   protected localeService = inject(LocaleService);
-  private modal = inject(Modal);
+  protected modal = inject(Modal);
+  protected modalIsOpen = signal(false);
+  protected localModalTitle = signal('');
+  protected localModalImageSrc = signal<string | null>(null);
+  protected localModalImageAlt = signal<string | null>(null);
+  protected localModalCancelLabel = signal('');
+  protected localModalConfirmLabel = signal('');
+  protected localModalVariant = signal<'success' | 'error' | 'warning' | 'confirm'>('confirm');
 
   // Se valorizzato (es. dalla rotta /scheda-personaggio/:id), la scheda mostra
   // quel personaggio specifico invece del personaggio dell'utente loggato
@@ -689,11 +696,18 @@ export class CharacterSheet implements OnInit {
   openModal(data?: any, quantityToRemove?: number) {
     const qty = quantityToRemove ?? data.quantity ?? 1;
     // Se la quantità è maggiore di 1, mostriamo il moltiplicatore nel titolo della modale
+    this.localModalTitle.set(this.localeService.t('Attenzione Avventuriero!'));
+    this.localModalImageSrc.set('modal-png/allert-goblin.png');
+    this.localModalImageAlt.set('un goblin dietro un cartello triangolare con un punto esclamativo');
+    this.localModalCancelLabel.set(this.localeService.t('No'));
+    this.localModalConfirmLabel.set(this.localeService.t('Si mollalo!'));
+    this.localModalVariant.set('warning');
     this.modalItemName = qty > 1 ? `${qty}× ${data.name}` : data.name;
     
     this.modaldata = { 
       ...data, 
-      quantityToRemove: qty 
+      quantityToRemove: qty,
+      quantity: data.quantity ?? 1
     };
     this.isModalOpen.set(true);
   }

@@ -85,7 +85,10 @@ export class SubclassCreate {
   }
 
   async deleteSubclass(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_subclass')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_subclass')} "${name}"?`,
+                                                this.localeService.t('confirm_delete_button_confirm'),
+                                                this.localeService.t('cancel_button'),
+                                                this.localeService.t('confirm_delete_subclass_title'));
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('subclasses').delete().eq('id', id);

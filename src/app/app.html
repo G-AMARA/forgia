@@ -234,5 +234,18 @@
   @if (diceRollerOpen()) {
     <app-dice-roller (close)="closeDiceRoller()"></app-dice-roller>
   }
-  <app-modal></app-modal>
+  <app-generic-modal 
+    [isOpen]="!!modal.state()"
+    [title]="modal.state()?.title ?? ''"
+    [imageSrc]="modal.state()?.imageSrc ?? null"
+    [imageAlt]="modal.state()?.imageAlt ?? null"
+    [modalMessage]="modal.state()?.modalMessage ?? ''"
+    [showCancelButton]="modal.state()?.showCancelButton ?? true"
+    [cancelLabel]="modal.state()?.cancelLabel ?? ''"
+    [confirmLabel]="modal.state()?.confirmLabel ?? ''"
+    [variant]="modal.state()?.variant ?? 'confirm'"
+    (closeModal)="modal.dismiss()"
+    (confirmModal)="modal.respond(true)">
+
+  </app-generic-modal>
 </div>
