@@ -53,7 +53,7 @@ export class CampaignEdit implements OnInit {
     if (error) {
       this.modal.error(error.message);
     } else {
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(this.localeService.t('update_campaign'));
       this.appNav.setTab('hub');
     }
 
@@ -66,9 +66,10 @@ export class CampaignEdit implements OnInit {
 
     const confirmed = await this.modal.confirm(
       `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`,
-      `${this.localeService.t('confirm_delete_campaign_title')}`,
-      `${this.localeService.t('cancel_button')}`,
-      `${this.localeService.t('confirm_delete_button_confirm')}`,
+      {
+        cancelLabel: this.localeService.t('cancel_button'),
+        confirmLabel: this.localeService.t('confirm_delete_button_confirm'),
+      }
     );
     if (!confirmed) return;
 
@@ -76,6 +77,10 @@ export class CampaignEdit implements OnInit {
     if (error) {
       this.modal.error(error.message);
     } else {
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('campaign_deleted_msg_1')} "${campaign.name}" ${this.localeService.t('campaign_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
       this.appNav.setTab('board');
     }
   }

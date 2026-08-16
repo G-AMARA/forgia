@@ -110,9 +110,10 @@ export class Dashboard implements OnInit {
 
     const confirmed = await this.modal.confirm(
       `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`,
-      this.localeService.t('confirm_delete_campaign_title'),
-      this.localeService.t('confirm_delete_button_confirm'),
-      this.localeService.t('cancel_button'),
+      {
+        confirmLabel: this.localeService.t('confirm_delete_campaign_button_confirm'),
+        cancelLabel: this.localeService.t('cancel_button')
+      }
     );
     if (!confirmed) return;
 
@@ -120,7 +121,11 @@ export class Dashboard implements OnInit {
     if (error) {
       this.modal.error(error.message);
     } else {
-      await this.loadBoard();
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('campaign_deleted_msg_1')} "${campaign.name}" ${this.localeService.t('campaign_deleted_msg_2')}`
+      );
+      if(!confirmed) return
+      this.loadBoard();
     }
   }
 }

@@ -46,7 +46,7 @@ export class CampaignCreate {
       this.name = '';
       this.description = '';
       this.coverKey = CAMPAIGN_COVERS[0].key;
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(`${this.localeService.t('campaign_well_created')}` )
     }
 
     this.loading.set(false);
@@ -55,17 +55,22 @@ export class CampaignCreate {
   async deleteCampaign(campaignId: string, campaignName: string) {
     const confirmed = await this.modal.confirm(
       `${this.localeService.t('confirm_delete_campaign')}` + `"${campaignName}"?`,
-      `${this.localeService.t('confirm_delete_campaign_title')}`,
-      `${this.localeService.t('confirm_delete_button_confirm')}`,
-      `${this.localeService.t('cancel_button')}`,
-      
+      { 
+        confirmLabel: this.localeService.t('confirm_delete_button_confirm'),
+        cancelLabel: this.localeService.t('cancel_button'),
+      }
     );
-    console.log('Delete campaign confirmed:', confirmed);
     if (!confirmed) return;
 
     const { error } = await this.campaignStore.deleteCampaign(campaignId);
     if (error) {
       this.modal.error(error.message);
+    }
+    else{
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('campaign_deleted_msg_1')} "${campaignName}" ${this.localeService.t('campaign_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }

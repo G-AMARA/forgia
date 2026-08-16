@@ -290,10 +290,13 @@ export class EquipmentCreate {
   }
 
   async deleteEquipment(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_equipment')} "${name}"?`,
-                                                this.localeService.t('confirm_delete_button_confirm'),
-                                                this.localeService.t('cancel_button'),
-                                                this.localeService.t('confirm_delete_equipment_title'));
+    const confirmed = await this.modal.confirm(
+      `${this.localeService.t('confirm_delete_equipment')} "${name}"?`,
+      {
+       cancelLabel: this.localeService.t('cancel_button'),
+       confirmLabel: this.localeService.t('confirm_delete_equipment_title')
+      }
+    );
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('equipment').delete().eq('id', id);
@@ -302,6 +305,10 @@ export class EquipmentCreate {
     } else {
       // Ripulisce eventuali traduzioni orfane rimaste agganciate a questo elemento.
       // equipment_contents si ripulisce da sé (ON DELETE CASCADE sulla FK).
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('equipment_deleted_msg_1')} "${name}" ${this.localeService.t('equipment_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
       await this.supabase.client
         .from('content_translations')
         .delete()

@@ -13,8 +13,8 @@ export class GenericModalComponent {
   imageSrc = input<string | null>(null);
   imageAlt = input<string | null>(null);
   modalMessage = input('');
-  confirmLabel = input('Conferma');
-  cancelLabel = input('Annulla');
+  confirmLabel = input('');
+  cancelLabel = input('');
   variant = input<'success' | 'error' | 'warning' | 'confirm'>('confirm');
   showCancelButton = input(true);
 

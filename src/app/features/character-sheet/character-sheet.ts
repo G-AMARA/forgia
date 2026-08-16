@@ -382,8 +382,7 @@ export class CharacterSheet implements OnInit {
       this.modal.error(error.message);
       return;
     }
-
-    this.showSaved();
+    this.modal.success(this.localeService.t('saved_message'));
   }
 
   async saveCombat() {
@@ -402,15 +401,14 @@ export class CharacterSheet implements OnInit {
       damageImmunities: this.splitList(this.damageImmunitiesText),
       conditionImmunities: this.splitList(this.conditionImmunitiesText),
     });
-
-    this.showSaved();
+    this.modal.success(this.localeService.t('saved_message'));
   }
 
   async saveBackstory() {
     const c = this.character();
     if (!c || this.readOnly()) return;
     await this.characterStore.updateNotes(c.id, this.backstory);
-    this.showSaved();
+    this.modal.success(this.localeService.t('saved_message'));
   }
 
   async saveCurrency() {
@@ -423,15 +421,11 @@ export class CharacterSheet implements OnInit {
       gold: this.gold,
       platinum: this.platinum,
     });
-    this.showSaved();
+    this.modal.success(this.localeService.t('saved_message'));
   }
 
   private splitList(text: string): string[] {
     return text.split(',').map((s) => s.trim()).filter(Boolean);
-  }
-
-  private showSaved() {
-    this.modal.success(this.localeService.t('saved_message'));
   }
 
   async onAvatarSelected(event: Event) {
@@ -696,11 +690,11 @@ export class CharacterSheet implements OnInit {
   openModal(data?: any, quantityToRemove?: number) {
     const qty = quantityToRemove ?? data.quantity ?? 1;
     // Se la quantità è maggiore di 1, mostriamo il moltiplicatore nel titolo della modale
-    this.localModalTitle.set(this.localeService.t('Attenzione Avventuriero!'));
+    this.localModalTitle.set(this.localeService.t('remove_character_item_modal_title'));
     this.localModalImageSrc.set('modal-png/allert-goblin.png');
     this.localModalImageAlt.set('un goblin dietro un cartello triangolare con un punto esclamativo');
-    this.localModalCancelLabel.set(this.localeService.t('No'));
-    this.localModalConfirmLabel.set(this.localeService.t('Si mollalo!'));
+    this.localModalCancelLabel.set(this.localeService.t('remove_character_item_modal_cancel'));
+    this.localModalConfirmLabel.set(this.localeService.t('remove_character_item_modal_confirm'));
     this.localModalVariant.set('warning');
     this.modalItemName = qty > 1 ? `${qty}× ${data.name}` : data.name;
     

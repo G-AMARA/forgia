@@ -232,7 +232,7 @@ export class SpellCreate {
       } else {
         this.resetForm();
         await this.contentStore.refresh('spells');
-        this.modal.success(this.localeService.t('saved_message'));
+        this.modal.success(this.localeService.t('well_created_spell'));
       }
 
       this.loading.set(false);
@@ -259,16 +259,23 @@ export class SpellCreate {
   }
 
   async deleteSpell(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_spell')} "${name}"?`, 
-                                                this.localeService.t('confirm_delete_button_confirm'), 
-                                                this.localeService.t('cancel_button'), 
-                                                this.localeService.t('confirm_delete_spell_title'));
+    const confirmed = await this.modal.confirm(
+      `${this.localeService.t('confirm_delete_spell')} "${name}"?`, 
+      {
+       cancelLabel: this.localeService.t('cancel_button'), 
+       confirmLabel: this.localeService.t('confirm_delete_spell_title')
+      }
+    );
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('spells').delete().eq('id', id);
     if (error) {
       this.modal.error(error.message);
     } else {
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('spell_deleted_msg_1')} "${name}" ${this.localeService.t('spell_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
       // Ripulisce eventuali traduzioni orfane rimaste agganciate a questo incantesimo.
       await this.supabase.client
         .from('content_translations')

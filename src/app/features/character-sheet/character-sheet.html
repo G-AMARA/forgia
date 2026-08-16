@@ -748,13 +748,13 @@
   <!-- Inietto il pattern del messaggio personalizzato nel body -->
   <div modal-custom-body class="flex-1 text-left">
       <p class="text-sm leading-6 text-fantasy-moonstone">
-        Hey avventuriero attenzione! Ti stavi quasi perdendo questo:
+        {{ localeService.t('remove_character_item_modal_message') }}
       </p>
       <p class="text-sm text-center py-2 leading-6 text-fantasy-moonstone">
         <strong>{{ modalItemName }}</strong>
       </p>
       <p class="text-sm leading-6 text-fantasy-moonstone">
-        Sei sicuro di volertene separare?
+        {{ localeService.t('remove_character_item_modal_message_2') }}
       </p>
   </div>
 </app-generic-modal>

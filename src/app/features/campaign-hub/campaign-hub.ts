@@ -62,18 +62,25 @@ export class CampaignHub {
 
   async deleteCharacter(event: Event, characterId: string, characterName: string) {
     event.stopPropagation(); // evita che il click apra anche la scheda
-
+    //controlla in giro per il codcie di inserire e creare le firme giuste per le modali di conferma.
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_character')} "${characterName}"?!`,
-      this.localeService.t('confirm_delete_character_title'),
-      this.localeService.t('confirm_delete_button_confirm'),
-      this.localeService.t('cancel_button'),
+      `${this.localeService.t('confirm_delete_character')} "${characterName}"?`,
+      {
+        cancelLabel: this.localeService.t('cancel_button'),
+        confirmLabel: this.localeService.t('confirm_delete_button_confirm'),
+      }
     );
     if (!confirmed) return;
 
     const { error } = await this.characterStore.deleteCharacter(characterId);
     if (error) {
       this.modal.error(error.message);
+    }
+    else{
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('character_deleted_msg_1')} "${characterName}" ${this.localeService.t('character_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 

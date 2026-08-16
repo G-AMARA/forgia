@@ -78,23 +78,32 @@ export class SubclassCreate {
     } else {
       this.resetForm();
       await this.refreshSubclasses();
-      this.modal.success(this.localeService.t('saved_message'));
+      !this.editingId
+      ? this.modal.success(this.localeService.t('well_subclasses_created'))
+      : this.modal.success(this.localeService.t('well_subclasses_updated'))
     }
 
     this.loading.set(false);
   }
 
   async deleteSubclass(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_subclass')} "${name}"?`,
-                                                this.localeService.t('confirm_delete_button_confirm'),
-                                                this.localeService.t('cancel_button'),
-                                                this.localeService.t('confirm_delete_subclass_title'));
+    const confirmed = await this.modal.confirm(
+      `${this.localeService.t('confirm_delete_subclass')} "${name}"?`,
+      {
+       cancelLabel: this.localeService.t('cancel_button'),
+       confirmLabel: this.localeService.t('confirm_delete_subclass_title')
+      }
+    );
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('subclasses').delete().eq('id', id);
     if (error) {
       this.modal.error(error.message);
     } else {
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('subclass_deleted_msg_1')} "${name}" ${this.localeService.t('subclass_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
       await this.refreshSubclasses();
     }
   }

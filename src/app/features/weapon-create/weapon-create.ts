@@ -185,7 +185,7 @@ export class WeaponCreate {
       } else {
         this.resetForm();
         await this.refreshWeapons();
-        this.modal.success(this.localeService.t('saved_message'));
+        this.modal.success(this.localeService.t('well_weapon_created'));
       }
 
       this.loading.set(false);
@@ -216,10 +216,13 @@ export class WeaponCreate {
   }
 
   async deleteWeapon(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_weapon')} "${name}"?`, 
-                                                this.localeService.t('confirm_delete_button_confirm'), 
-                                                this.localeService.t('cancel_button'), 
-                                                this.localeService.t('confirm_delete_weapon_title'));
+    const confirmed = await this.modal.confirm(
+      `${this.localeService.t('confirm_delete_weapon')} "${name}"?`, 
+      {
+       cancelLabel: this.localeService.t('cancel_button'), 
+       confirmLabel: this.localeService.t('confirm_delete_weapon_title')
+      }
+    );
     if (!confirmed) return;
 
     const { data, error } = await this.supabase.client.from('weapons').delete().eq('id', id).select();

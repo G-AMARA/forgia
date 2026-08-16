@@ -107,7 +107,7 @@ export class Profile {
     if (error) {
       this.modal.error(error.message);
     } else {
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(this.localeService.t('saved_password'));
       this.newPassword = '';
       this.repeatPassword = '';
     }
