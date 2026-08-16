@@ -11,14 +11,17 @@ import { getAbilityImagePath } from '../../core/ability-images';
 import { getSpellcastingInfo } from '../../core/spellcasting';
 import { calculateArmorClass } from '../../core/armor';
 import { translateSpellSchool } from '../../core/spell-schools';
+import { getSpellLevelTheme, type SpellLevelTheme } from '../../core/spell-level-theme';
 import { Card } from '../../shared/card/card';
+import { SpellLevelSeal } from '../../shared/spell-level-seal/spell-level-seal';
+import { SpellSchoolIcon } from '../../shared/spell-school-icon/spell-school-icon';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
 
 @Component({
   selector: 'app-character-sheet',
   standalone: true,
-  imports: [FormsModule, Card],
+  imports: [FormsModule, Card, SpellLevelSeal, SpellSchoolIcon],
   templateUrl: './character-sheet.html',
 })
 export class CharacterSheet implements OnInit {
@@ -233,22 +236,10 @@ export class CharacterSheet implements OnInit {
     return ac;
   }
 
-  // Colore distintivo per livello incantesimo: bordo + sfumatura leggera delle card.
-  private static readonly SPELL_LEVEL_COLORS: Record<number, string> = {
-    0: '#8C8C8C',
-    1: '#4E9F3D',
-    2: '#00A8E8',
-    3: '#FF6B00',
-    4: '#D62828',
-    5: '#8A2BE2',
-    6: '#4A0E4E',
-    7: '#FF007F',
-    8: '#FFD700',
-  };
-
-  spellLevelColor(level: number): string {
-    if (level >= 9) return '#1A1A1A';
-    return CharacterSheet.SPELL_LEVEL_COLORS[level] ?? '#8C8C8C';
+  // Tema cromatico per livello incantesimo (bordo, sigillo, icona scuola, glow hover
+  // delle card): centralizzato in core/spell-level-theme, non più una mappa locale.
+  spellLevelTheme(level: number): SpellLevelTheme {
+    return getSpellLevelTheme(level);
   }
 
   spellLevelOptionLabel(level: number): string {
@@ -706,11 +697,13 @@ export class CharacterSheet implements OnInit {
     for (const spell of c.spells) {
       const detail = catalogMap.get(spell.spellId);
       const level = detail?.raw?.level ?? spell.level ?? 0;
+      const schoolRaw = detail?.raw?.school ?? spell.school ?? '';
       const entry = {
         rowId: spell.rowId,
         name: detail?.name ?? spell.name,
         level,
-        school: translateSpellSchool(detail?.raw?.school ?? spell.school ?? '', locale),
+        school: translateSpellSchool(schoolRaw, locale),
+        schoolRaw,
         castingTime: detail?.raw?.casting_time ?? null,
         range: detail?.raw?.range ?? null,
         duration: detail?.raw?.duration ?? null,

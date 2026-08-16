@@ -1,0 +1,52 @@
+<svg
+  [attr.width]="size()"
+  [attr.height]="size()"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  [attr.role]="label() ? 'img' : null"
+  [attr.aria-label]="label() || null"
+  [attr.aria-hidden]="label() ? null : true"
+>
+  @switch (school()?.toLowerCase()) {
+    @case ('abjuration') {
+      <path d="M12 3l7 3v5c0 5-3.2 8-7 10-3.8-2-7-5-7-10V6l7-3z" />
+      <path d="M12 8.5v6M9.3 11.5h5.4" />
+    }
+    @case ('conjuration') {
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2.2" />
+      <path d="M12 3.5v2.3M12 18.2v2.3M3.5 12h2.3M18.2 12h2.3" />
+    }
+    @case ('divination') {
+      <path d="M2.5 12S6.7 6 12 6s9.5 6 9.5 6-4.2 6-9.5 6-9.5-6-9.5-6z" />
+      <circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none" />
+    }
+    @case ('enchantment') {
+      <path d="M12 19s-7-4.4-7-9.6A4.4 4.4 0 0112 6a4.4 4.4 0 017 3.4C19 14.6 12 19 12 19z" />
+      <circle cx="12" cy="10.4" r="1" fill="currentColor" stroke="none" />
+    }
+    @case ('evocation') {
+      <path d="M13 2 5 14h5l-1 8 9-13h-6l1-7z" fill="currentColor" stroke="none" />
+    }
+    @case ('illusion') {
+      <path d="M2.5 12S6.7 6 12 6s9.5 6 9.5 6-4.2 6-9.5 6-9.5-6-9.5-6z" />
+      <path d="M5 5l14 14" stroke-opacity="0.75" />
+    }
+    @case ('necromancy') {
+      <circle cx="12" cy="10.5" r="6" />
+      <path d="M9 11c.3-1.1 1.1-1.1 1.4 0M13.6 11c.3-1.1 1.1-1.1 1.4 0" />
+      <path d="M8.5 15.5h7M9.7 17.5h.8M13.5 17.5h.8" />
+    }
+    @case ('transmutation') {
+      <circle cx="12" cy="15" r="5" />
+      <path d="M12 4l5.2 9H6.8L12 4z" />
+    }
+    @default {
+      <circle cx="12" cy="12" r="7" />
+    }
+  }
+</svg>
