@@ -445,25 +445,34 @@ export class CharacterCreate {
     return normalizeAbilityBonuses(race?.raw?.ability_bonuses)[key] ?? 0;
   }
 
-  // Bonus di sottorazza: si somma a quello della razza madre (regole 5e standard).
+  // Bonus di sottorazza: SOSTITUISCE quello della razza madre (non regole 5e standard, scelta
+  // di design del progetto: la sottorazza scelta è l'unica fonte di bonus caratteristica).
   getSubraceBonus(key: keyof typeof this.abilityScores): number {
     const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
     return normalizeAbilityBonuses(subrace?.raw?.ability_bonuses)[key] ?? 0;
   }
 
-  // Monte punti "a scelta libera" della razza/sottorazza scelte, sommati (nei dati reali non
-  // capitano mai entrambi valorizzati insieme). Metodi, non computed: stesso motivo di
-  // availableSubraces() (raceId/subraceId sono ngModel, non signal).
+  // Bonus caratteristica effettivo: se è selezionata una sottorazza, conta solo il suo bonus;
+  // altrimenti quello della razza. Non si sommano mai i due.
+  getRaceOrSubraceBonus(key: keyof typeof this.abilityScores): number {
+    return this.subraceId ? this.getSubraceBonus(key) : this.getRaceBonus(key);
+  }
+
+  // Monte punti "a scelta libera": della sottorazza se selezionata, altrimenti della razza
+  // (mai sommati, stessa logica di getRaceOrSubraceBonus). Metodi, non computed: stesso motivo
+  // di availableSubraces() (raceId/subraceId sono ngModel, non signal).
   freeBonusPoints(): number {
     const race = this.races().find((r: any) => r.id === this.raceId);
     const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
-    return (race?.raw?.free_bonus_points ?? 0) + (subrace?.raw?.free_bonus_points ?? 0);
+    return this.subraceId ? (subrace?.raw?.free_bonus_points ?? 0) : (race?.raw?.free_bonus_points ?? 0);
   }
 
   freeBonusPerAbilityMax(): number {
     const race = this.races().find((r: any) => r.id === this.raceId);
     const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
-    return Math.max(race?.raw?.free_bonus_max_per_ability ?? 0, subrace?.raw?.free_bonus_max_per_ability ?? 0);
+    return this.subraceId
+      ? (subrace?.raw?.free_bonus_max_per_ability ?? 0)
+      : (race?.raw?.free_bonus_max_per_ability ?? 0);
   }
 
   freeBonusTotal(): number {
@@ -518,7 +527,7 @@ export class CharacterCreate {
   // che senza background selezionato. Logica originale (bonus manuale alternativo a quello
   // razziale quando si sceglie un background) commentata, non rimossa, per poterla riattivare.
   getAppliedBonus(key: keyof typeof this.abilityScores): number {
-    return this.getRaceBonus(key) + this.getSubraceBonus(key) + this.freeBonuses[key];
+    return this.getRaceOrSubraceBonus(key) + this.freeBonuses[key];
     // return this.backgroundId ? this.backgroundBonuses[key] : this.getRaceBonus(key);
   }
 
