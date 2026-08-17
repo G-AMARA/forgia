@@ -151,7 +151,6 @@ export class CharacterStore {
     appliedBonus: Record<string, number>;
     backstory: string;
     sex: 'M' | 'F';
-    darkvision: boolean;
     spellIds: string[];
     startingItems: { table: 'weapons' | 'equipment'; id: string; quantity: number }[];
     equippedArmorId: string | null;
@@ -181,7 +180,6 @@ export class CharacterStore {
         applied_bonus: params.appliedBonus,
         notes: params.backstory,
         sex: params.sex,
-        darkvision: params.darkvision,
         equipped_armor_id: params.equippedArmorId,
         shield_equipped: params.shieldEquipped,
         gold: params.startingGold,
@@ -264,7 +262,7 @@ export class CharacterStore {
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
     current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, subrace_id, background_id,
     skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
-    sex, darkvision,
+    sex,
     races ( name ),
     subraces ( name ),
     backgrounds ( name ),
@@ -342,7 +340,6 @@ export class CharacterStore {
       damage_immunities: row.damage_immunities ?? [],
       condition_immunities: row.condition_immunities ?? [],
       sex: row.sex ?? null,
-      darkvision: row.darkvision ?? false,
       race_id: row.race_id ?? null,
       race_name: translations['races']?.[row.race_id] ?? row.races?.name ?? null,
       subrace_id: row.subrace_id ?? null,
@@ -496,7 +493,6 @@ export class CharacterStore {
       abilityScores: Record<string, number>;
       appliedBonus: Record<string, number>;
       sex: 'M' | 'F';
-      darkvision: boolean;
     }
   ) {
     const { error: charError } = await this.supabase.client
@@ -512,7 +508,6 @@ export class CharacterStore {
         ability_scores: updates.abilityScores,
         applied_bonus: updates.appliedBonus,
         sex: updates.sex,
-        darkvision: updates.darkvision,
       })
       .eq('id', characterId);
 
@@ -759,7 +754,6 @@ export interface CharacterFull {
   damage_immunities: string[];
   condition_immunities: string[];
   sex: 'M' | 'F' | null;
-  darkvision: boolean;
   race_id: string | null;
   race_name: string | null;
   subrace_id: string | null;

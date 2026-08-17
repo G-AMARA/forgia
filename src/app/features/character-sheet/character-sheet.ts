@@ -101,7 +101,6 @@ export class CharacterSheet implements OnInit {
   identityAlignment = 'true_neutral';
   identityXp = 0;
   identitySex: 'M' | 'F' = 'M';
-  identityDarkvision = false;
 
   // Bonus attualmente "cotto" dentro abilityScores (razziale o background, sono alternativi):
   // serve a calcolare la differenza esatta da applicare quando razza/background cambiano.
@@ -168,7 +167,6 @@ export class CharacterSheet implements OnInit {
         this.identityAlignment = c.alignment ?? 'true_neutral';
         this.identityXp = c.experience_points;
         this.identitySex = c.sex ?? 'M';
-        this.identityDarkvision = c.darkvision;
         this.currentHp = c.current_hp ?? 0;
         this.maxHp = c.max_hp ?? 0;
         this.copper = c.copper ?? 0;
@@ -351,6 +349,16 @@ export class CharacterSheet implements OnInit {
     return this.identitySubraceId ? this.getSubraceBonus(key) : this.getRaceBonus(key);
   }
 
+  // Scurovisione: tratto della razza, sostituito da quello della sottorazza se selezionata
+  // (stessa logica "non cumulativa" di getRaceOrSubraceBonus). Si imposta in Gestione >
+  // Razze/Sottorazze, qui è di sola lettura.
+  hasDarkvision(): boolean {
+    if (this.identitySubraceId) {
+      return this.allSubraces().find((s: any) => s.id === this.identitySubraceId)?.raw?.darkvision ?? false;
+    }
+    return this.races().find((r: any) => r.id === this.identityRaceId)?.raw?.darkvision ?? false;
+  }
+
   // Monte punti "a scelta libera": della sottorazza se selezionata, altrimenti della razza
   // (mai sommati, stessa logica di getRaceOrSubraceBonus). Stesso pattern metodo (non computed)
   // di availableSubraces(): identityRaceId/identitySubraceId sono ngModel.
@@ -455,7 +463,6 @@ export class CharacterSheet implements OnInit {
       abilityScores: newAbilityScores,
       appliedBonus: newAppliedBonus,
       sex: this.identitySex,
-      darkvision: this.identityDarkvision,
     });
 
     if (error) {

@@ -22,6 +22,7 @@ export class RaceCreate {
   name = '';
   speed = 9;
   description = '';
+  darkvision = false;
   abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   abilityKeys: (keyof typeof this.abilityBonuses)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
   freeBonusPoints = 0;
@@ -40,6 +41,7 @@ export class RaceCreate {
     this.name = '';
     this.speed = 9;
     this.description = '';
+    this.darkvision = false;
     this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
     this.freeBonusPoints = 0;
     this.freeBonusMaxPerAbility = 0;
@@ -50,6 +52,7 @@ export class RaceCreate {
     this.name = race.raw.name;
     this.speed = race.raw.speed ?? 9;
     this.description = race.raw.description ?? '';
+    this.darkvision = race.raw.darkvision ?? false;
     this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...normalizeAbilityBonuses(race.raw.ability_bonuses) };
     this.freeBonusPoints = race.raw.free_bonus_points ?? 0;
     this.freeBonusMaxPerAbility = race.raw.free_bonus_max_per_ability ?? 0;
@@ -66,6 +69,7 @@ export class RaceCreate {
       name: this.name,
       speed: this.speed,
       description: this.description || null,
+      darkvision: this.darkvision,
       ability_bonuses: this.abilityBonuses,
       free_bonus_points: this.freeBonusPoints,
       free_bonus_max_per_ability: this.freeBonusMaxPerAbility,

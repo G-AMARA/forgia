@@ -80,7 +80,6 @@ export class CharacterCreate {
   experiencePoints = 0;
   backstory = '';
   sex: 'M' | 'F' = 'M';
-  darkvision = false;
 
   abilityScores = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
   backgroundBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
@@ -635,7 +634,6 @@ export class CharacterCreate {
       appliedBonus,
       backstory: this.backstory,
       sex: this.sex,
-      darkvision: this.darkvision,
       spellIds: Array.from(this.selectedSpellIds()),
       startingItems,
       equippedArmorId,
