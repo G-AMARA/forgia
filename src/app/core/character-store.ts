@@ -155,7 +155,6 @@ export class CharacterStore {
     startingItems: { table: 'weapons' | 'equipment'; id: string; quantity: number }[];
     equippedArmorId: string | null;
     shieldEquipped: boolean;
-    equippedEquipmentIds: string[];
     startingGold: number;
   }): Promise<{ error: { message: string } | null; characterId?: string }> {
     const campaign = this.activeCampaign.current();
@@ -235,7 +234,7 @@ export class CharacterStore {
           character_id: character.id,
           equipment_id: i.id,
           quantity: i.quantity,
-          equipped: params.equippedEquipmentIds.includes(i.id),
+          equipped: false,
         }))
       );
       if (inventoryError) {
@@ -268,8 +267,8 @@ export class CharacterStore {
     backgrounds ( name ),
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
     character_spells ( spell_id, prepared, spells ( name, level, school ) ),
-    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name ) ),
-    character_weapons ( id, weapon_id, quantity, weapons ( name, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability ) )
+    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name, image_url, weight ) ),
+    character_weapons ( id, weapon_id, quantity, weapons ( name, image_url, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability ) )
   `;
 
   // Recupera le traduzioni di tutti i contenuti referenziati da questa riga personaggio
@@ -368,6 +367,8 @@ export class CharacterStore {
         rowId: i.id,
         equipmentId: i.equipment_id,
         name: translations['equipment']?.[i.equipment_id] ?? i.equipment?.name ?? '?',
+        imageUrl: i.equipment?.image_url ?? null,
+        weight: i.equipment?.weight ?? 0,
         quantity: i.quantity,
         equipped: i.equipped,
       })),
@@ -375,6 +376,7 @@ export class CharacterStore {
         rowId: w.id,
         weaponId: w.weapon_id,
         name: translations['weapons']?.[w.weapon_id] ?? w.weapons?.name ?? '?',
+        imageUrl: w.weapons?.image_url ?? null,
         quantity: w.quantity,
         attackAbilities: w.weapons?.suggested_attack_ability ?? [],
         damageDice: w.weapons?.damage_dice ?? '',
@@ -767,11 +769,12 @@ export interface CharacterFull {
   hit_die: number | null;
   saving_throw_proficiencies: string[];
   spells: { rowId: string; spellId: string; name: string; level: number; school: string; prepared: boolean }[];
-  inventory: { rowId: string; equipmentId: string; name: string; quantity: number; equipped: boolean }[];
+  inventory: { rowId: string; equipmentId: string; name: string; imageUrl: string | null; weight: number; quantity: number; equipped: boolean }[];
   weapons: {
     rowId: string;
     weaponId: string;
     name: string;
+    imageUrl: string | null;
     quantity: number;
     attackAbilities: string[];
     damageDice: string;

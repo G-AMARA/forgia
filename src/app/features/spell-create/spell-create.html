@@ -21,6 +21,16 @@
       </div>
 
       <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('spell_school_label') }}</label>
+        <select [(ngModel)]="school" name="school" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+          <option value="">{{ localeService.t('spell_school_unset_option') }}</option>
+          @for (s of schools; track s) {
+            <option [value]="s">{{ schoolLabel(s) }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold">{{ localeService.t('spell_casting_time_label') }}</label>
         <input
           type="text" [(ngModel)]="castingTime" name="castingTime" placeholder="1 Azione"
@@ -130,6 +140,7 @@
                   <thead>
                     <tr class="border-b border-gold text-xs uppercase tracking-wide">
                       <th class="py-2 px-2">{{ localeService.t('spell_name_label') }}</th>
+                      <th class="py-2 px-2">{{ localeService.t('spell_school_label') }}</th>
                       <th class="py-2 px-2">{{ localeService.t('spell_casting_time_label') }}</th>
                       <th class="py-2 px-2">{{ localeService.t('spell_range_label') }}</th>
                       <th class="py-2 px-2">{{ localeService.t('spell_duration_label') }}</th>
@@ -149,6 +160,12 @@
                         <td class="py-2 px-2">
                           {{ s.name }}
                           <span class="text-[10px] uppercase text-slate-arcane ml-1">({{ s.sourcebook_code }})</span>
+                        </td>
+                        <td class="py-2 px-2">
+                          <span class="flex items-center gap-1.5">
+                            <app-spell-school-icon [school]="s.school" [size]="16" class="text-fantasy-gold shrink-0" />
+                            {{ schoolLabel(s.school) }}
+                          </span>
                         </td>
                         <td class="py-2 px-2">{{ s.casting_time }}</td>
                         <td class="py-2 px-2">{{ s.range }}</td>

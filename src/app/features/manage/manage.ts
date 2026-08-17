@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { WeaponCreate } from '../weapon-create/weapon-create';
 import { SpellCreate } from '../spell-create/spell-create';
 import { EquipmentCreate } from '../equipment-create/equipment-create';
+import { ArmorCreate } from '../armor-create/armor-create';
 import { RaceCreate } from '../race-create/race-create';
 import { SubraceCreate } from '../subrace-create/subrace-create';
 import { BackgroundCreate } from '../background-create/background-create';
@@ -10,12 +11,12 @@ import { SubclassCreate } from '../subclass-create/subclass-create';
 import { BestiaryManage } from './bestiary-manage/bestiary-manage';
 import { LocaleService } from '../../core/locale';
 
-type ManageSection = 'races' | 'subraces' | 'classes' | 'subclasses' | 'backgrounds' | 'weapons' | 'spells' | 'equipment' | 'bestiary';
+type ManageSection = 'races' | 'subraces' | 'classes' | 'subclasses' | 'backgrounds' | 'weapons' | 'spells' | 'equipment' | 'armors' | 'bestiary';
 
 @Component({
   selector: 'app-manage',
   standalone: true,
-  imports: [RaceCreate, SubraceCreate, ClassCreate, SubclassCreate, BackgroundCreate, WeaponCreate, SpellCreate, EquipmentCreate, BestiaryManage],
+  imports: [RaceCreate, SubraceCreate, ClassCreate, SubclassCreate, BackgroundCreate, WeaponCreate, SpellCreate, EquipmentCreate, ArmorCreate, BestiaryManage],
   templateUrl: './manage.html',
 })
 export class Manage {

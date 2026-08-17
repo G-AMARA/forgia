@@ -25,10 +25,17 @@ export class EquipmentCreate {
   // Come per weapons/spells: stessa fonte del catalogo, nome/descrizione già
   // tradotti nella lingua corrente via content_translations.
   protected equipment = this.contentStore.getContent('equipment');
+  // Le armature indossabili hanno un catalogo dedicato (Gestione > Armature, vedi
+  // armor-create.ts): niente doppione qui, né in lista né come tipo selezionabile. Gli
+  // scudi restano invece qui: sono anch'essi type = 'Armor' (dato SRD) ma concettualmente
+  // sono equipaggiamento generico, non "armatura indossata" in senso stretto.
+  private nonArmorEquipment = computed(() =>
+    this.equipment().filter((e: any) => e.raw.type !== 'Armor' || e.raw.armor_category === 'shield')
+  );
 
   private static readonly TYPE_KEYS: Record<string, string> = {
     'Adventuring Gear': 'equipment_type_adventuring_gear',
-    'Armor': 'equipment_type_armor',
+    'Armor': 'equipment_type_shield',
     'Mounts and Vehicles': 'equipment_type_mounts_and_vehicles',
     'Tools': 'equipment_type_tools',
     'Pack': 'equipment_type_pack',
@@ -42,7 +49,8 @@ export class EquipmentCreate {
   listSearchTerm = signal('');
   protected filteredEquipment = computed(() => {
     const term = this.listSearchTerm().trim().toLowerCase();
-    return term ? this.equipment().filter((e: any) => e.name.toLowerCase().includes(term)) : this.equipment();
+    const source = this.nonArmorEquipment();
+    return term ? source.filter((e: any) => e.name.toLowerCase().includes(term)) : source;
   });
 
   name = '';
@@ -51,8 +59,6 @@ export class EquipmentCreate {
   imageUrl: string | null = null;
   type: 'Adventuring Gear' | 'Armor' | 'Mounts and Vehicles' | 'Tools' | 'Pack' = 'Adventuring Gear';
   toolCategory: '' | 'artisan_tools' | 'musical_instrument' = '';
-  armorClass: number | null = null;
-  armorCategory: '' | 'light' | 'medium' | 'heavy' | 'shield' = '';
 
   editingId: string | null = null;
   // sourcebook_code dell'elemento in modifica: preservato al salvataggio così
@@ -135,8 +141,6 @@ export class EquipmentCreate {
     this.imageUrl = null;
     this.type = 'Adventuring Gear';
     this.toolCategory = '';
-    this.armorClass = null;
-    this.armorCategory = '';
     this.selectedContents = [];
     this.contentToAddId = '';
     this.contentToAddQuantity = 1;
@@ -155,8 +159,6 @@ export class EquipmentCreate {
     this.imageUrl = item.raw.image_url ?? null;
     this.type = item.raw.type ?? 'Adventuring Gear';
     this.toolCategory = item.raw.tool_category ?? '';
-    this.armorClass = item.raw.armor_class ?? null;
-    this.armorCategory = item.raw.armor_category ?? '';
     this.selectedContents = [...(this.contentsByParent().get(item.id) ?? [])];
   }
 
@@ -219,8 +221,9 @@ export class EquipmentCreate {
       weight: this.weight,
       type: this.type,
       tool_category: this.type === 'Tools' ? this.toolCategory || null : null,
-      armor_class: this.type === 'Armor' ? this.armorClass : null,
-      armor_category: this.type === 'Armor' ? this.armorCategory || null : null,
+      // "Scudo" nel select equivale a type Armor: qui l'unica armatura gestibile è lo
+      // scudo (armor_category fissa), le altre armature si gestiscono da Gestione > Armature.
+      armor_category: this.type === 'Armor' ? 'shield' : null,
       image_url: this.imageUrl,
       sourcebook_code: this.editingId ? (this.editingSourcebookCode ?? 'homebrew') : 'homebrew',
     };

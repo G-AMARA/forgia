@@ -6,22 +6,26 @@ import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { SKILLS } from '../../core/skills';
+import { DAMAGE_TYPES } from '../../core/damage-types';
 import { getClassImagePath } from '../../core/class-images';
-import { getAbilityImagePath } from '../../core/ability-images';
+import { getStatLabelImagePath } from '../../core/ability-images';
+import { getCoinImagePath } from '../../core/coin-images';
 import { getSpellcastingInfo } from '../../core/spellcasting';
 import { calculateArmorClass } from '../../core/armor';
 import { translateSpellSchool } from '../../core/spell-schools';
 import { getSpellLevelTheme, type SpellLevelTheme } from '../../core/spell-level-theme';
+import { getXpProgress } from '../../core/xp-progression';
 import { Card } from '../../shared/card/card';
 import { SpellLevelSeal } from '../../shared/spell-level-seal/spell-level-seal';
 import { SpellSchoolIcon } from '../../shared/spell-school-icon/spell-school-icon';
+import { DamageTypeIcon } from '../../shared/damage-type-icon/damage-type-icon';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
 
 @Component({
   selector: 'app-character-sheet',
   standalone: true,
-  imports: [FormsModule, Card, SpellLevelSeal, SpellSchoolIcon],
+  imports: [FormsModule, Card, SpellLevelSeal, SpellSchoolIcon, DamageTypeIcon],
   templateUrl: './character-sheet.html',
 })
 export class CharacterSheet implements OnInit {
@@ -43,7 +47,19 @@ export class CharacterSheet implements OnInit {
   protected classImagePath = computed(() =>
     getClassImagePath(this.character()?.class_name, this.character()?.sex)
   );
-  protected getAbilityImagePath = getAbilityImagePath;
+  protected getStatLabelImagePath = getStatLabelImagePath;
+  protected getCoinImagePath = getCoinImagePath;
+  // Illustrazione di sfondo del "libro" dettagli arma (tab Armi): cornice dorata + doppia
+  // pagina, vedi .book-container in tailwind.css.
+  protected weaponBookImage = 'themes/LIBRO.png';
+
+  // Progresso XP verso il prossimo livello, per la barra nel banner: ricalcolato da
+  // level + experience_points del personaggio corrente (soglie standard SRD).
+  protected xpProgress = computed(() => {
+    const c = this.character();
+    if (!c) return null;
+    return getXpProgress(c.level, c.experience_points);
+  });
 
   // Vero se l'utente loggato non è il proprietario: usato per bloccare ogni modifica
   // quando la scheda si apre dal roster della campagna (vista di un altro personaggio).
@@ -55,9 +71,21 @@ export class CharacterSheet implements OnInit {
     }
   }
   protected skills = SKILLS;
+  // Competenze divise in 3 colonne contigue (lette dall'alto in basso per colonna, poi si
+  // passa alla successiva): serve nel tab Abilità per i separatori orizzontali "per colonna"
+  // (divide-y su ogni colonna), che altrimenti con un'unica griglia row-first taglierebbero
+  // trasversalmente tutte e tre le colonne invece di restare dentro ciascuna.
+  protected skillColumns = this.chunkIntoColumns(SKILLS, 3);
+  // Stessa idea di skillColumns, per i 13 tipi di danno delle Resistenze.
+  protected resistanceColumns = this.chunkIntoColumns(DAMAGE_TYPES, 3);
   protected abilityKeys: ('str' | 'dex' | 'cos' | 'int' | 'wis' | 'cha')[] = [
     'str', 'dex', 'cos', 'int', 'wis', 'cha',
   ];
+
+  private chunkIntoColumns<T>(items: T[], columns: number): T[][] {
+    const perColumn = Math.ceil(items.length / columns);
+    return Array.from({ length: columns }, (_, i) => items.slice(i * perColumn, (i + 1) * perColumn));
+  }
 
   activeSubTab = signal<SubTab>('general');
 
@@ -72,7 +100,10 @@ export class CharacterSheet implements OnInit {
   shieldEquipped = false;
   abilityScores: Record<string, number> = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
   skillProficiencies = new Set<string>();
-  damageResistancesText = '';
+  resistanceProficiencies = new Set<string>();
+  // Immunità al danno e alle condizioni: non più modificabili da qui (sostituite dalle
+  // checkbox Resistenze), ma tenute in memoria per non perdere un valore già salvato in
+  // precedenza quando si preme Salva su questo tab (vedi saveCombat()).
   damageImmunitiesText = '';
   conditionImmunitiesText = '';
   backstory = '';
@@ -102,13 +133,9 @@ export class CharacterSheet implements OnInit {
   identityXp = 0;
   identitySex: 'M' | 'F' = 'M';
 
-  // Bonus attualmente "cotto" dentro abilityScores (razziale o background, sono alternativi):
-  // serve a calcolare la differenza esatta da applicare quando razza/background cambiano.
+  // Bonus attualmente "cotto" dentro abilityScores (sempre razziale/sottorazza): serve a
+  // calcolare la differenza esatta da applicare quando razza/sottorazza cambiano.
   appliedBonus: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
-  // Allocazione del Bonus Background mostrata/modificabile nel tab Generale.
-  identityBackgroundBonuses: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
-  readonly backgroundBonusMax = 3;
-  readonly backgroundBonusPerAbilityMax = 2;
   // Punti "a scelta libera" concessi da razza/sottorazza (es. Umano Variante, Draconide
   // Cromatico), ricostruiti da applied_bonus al caricamento (vedi effect() sotto).
   freeBonuses: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
@@ -153,20 +180,71 @@ export class CharacterSheet implements OnInit {
 
   avatarUploading = signal(false);
 
+  // Controlla la modale di modifica identità (tab Generale): i campi restano quelli
+  // esistenti (identityName, identityRaceId, ...), la modale è solo un contenitore.
+  identityModalOpen = signal(false);
+
+  // Popola i campi identità modificabili a partire dal personaggio salvato: usato sia
+  // al caricamento (effect sotto) sia per annullare le modifiche in corso quando si
+  // chiude la modale senza salvare (i campi sono ngModel semplici, non si auto-ripristinano).
+  private resetIdentityFields(c: ReturnType<typeof this.character>) {
+    if (!c) return;
+    this.identityName = c.name;
+    this.identityLevel = c.level;
+    this.identityRaceId = c.race_id ?? '';
+    this.identitySubraceId = c.subrace_id ?? '';
+    this.identityClassId = c.class_id ?? '';
+    this.identitySubclassId = c.subclass_id ?? '';
+    this.identityBackgroundId = c.background_id ?? '';
+    this.identityAlignment = c.alignment ?? 'true_neutral';
+    this.identityXp = c.experience_points;
+    this.identitySex = c.sex ?? 'M';
+    // Punteggi caratteristica: modificabili anche dalla modale identità (non solo dal tab
+    // Abilità), quindi vanno ripristinati qui se l'utente annulla senza salvare.
+    this.abilityScores = { ...c.ability_scores };
+    // Ricostruisce la quota "a scelta libera" per differenza rispetto ai bonus fissi di
+    // razza/sottorazza: applied_bonus contiene solo il totale, non la distribuzione scelta.
+    this.freeBonuses = Object.fromEntries(
+      this.abilityKeys.map((key) => [
+        key,
+        Math.max(0, (c.applied_bonus[key] ?? 0) - this.getRaceOrSubraceBonus(key)),
+      ])
+    );
+  }
+
+  openIdentityModal() {
+    this.identityModalOpen.set(true);
+  }
+
+  cancelIdentityEdit() {
+    this.resetIdentityFields(this.character());
+    this.identityModalOpen.set(false);
+  }
+
+  // Stessa idea di identityModalOpen/resetIdentityFields, per la modale di modifica
+  // dell'armatura indossata (tab Equipaggiamento).
+  armorModalOpen = signal(false);
+
+  private resetArmorFields(c: ReturnType<typeof this.character>) {
+    if (!c) return;
+    this.selectedArmorId = c.equipped_armor_id ?? '';
+    this.shieldEquipped = c.shield_equipped;
+  }
+
+  openArmorModal() {
+    this.armorModalOpen.set(true);
+  }
+
+  cancelArmorEdit() {
+    this.resetArmorFields(this.character());
+    this.armorModalOpen.set(false);
+  }
+
   constructor() {
     effect(() => {
       const c = this.character();
       if (c) {
-        this.identityName = c.name;
-        this.identityLevel = c.level;
-        this.identityRaceId = c.race_id ?? '';
-        this.identitySubraceId = c.subrace_id ?? '';
-        this.identityClassId = c.class_id ?? '';
-        this.identitySubclassId = c.subclass_id ?? '';
-        this.identityBackgroundId = c.background_id ?? '';
-        this.identityAlignment = c.alignment ?? 'true_neutral';
-        this.identityXp = c.experience_points;
-        this.identitySex = c.sex ?? 'M';
+        this.resetIdentityFields(c);
         this.currentHp = c.current_hp ?? 0;
         this.maxHp = c.max_hp ?? 0;
         this.copper = c.copper ?? 0;
@@ -174,25 +252,10 @@ export class CharacterSheet implements OnInit {
         this.electrum = c.electrum ?? 0;
         this.gold = c.gold ?? 0;
         this.platinum = c.platinum ?? 0;
-        this.selectedArmorId = c.equipped_armor_id ?? '';
-        this.shieldEquipped = c.shield_equipped;
-        this.abilityScores = { ...c.ability_scores };
+        this.resetArmorFields(c);
         this.appliedBonus = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
-        this.identityBackgroundBonuses = c.background_id
-          ? { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus }
-          : { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
-        // Ricostruisce la quota "a scelta libera" per differenza rispetto ai bonus fissi di
-        // razza/sottorazza: applied_bonus contiene solo il totale, non la distribuzione scelta.
-        this.freeBonuses = c.background_id
-          ? { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 }
-          : Object.fromEntries(
-              this.abilityKeys.map((key) => [
-                key,
-                Math.max(0, (c.applied_bonus[key] ?? 0) - this.getRaceOrSubraceBonus(key)),
-              ])
-            );
         this.skillProficiencies = new Set(c.skill_proficiencies);
-        this.damageResistancesText = c.damage_resistances.join(', ');
+        this.resistanceProficiencies = new Set(c.damage_resistances);
         this.damageImmunitiesText = c.damage_immunities.join(', ');
         this.conditionImmunitiesText = c.condition_immunities.join(', ');
         this.backstory = c.notes ?? '';
@@ -222,6 +285,26 @@ export class CharacterSheet implements OnInit {
     return this.allEquipment().filter(
       (e: any) => e.raw.type === 'Armor' && e.raw.armor_category !== 'shield' && e.raw.armor_class != null
     );
+  }
+
+  // Voce del catalogo per l'armatura attualmente selezionata: usata per mostrarne
+  // l'immagine (raw.image_url, caricata in Gestione > Equipaggiamento) sotto il select.
+  selectedArmor(): any {
+    return this.availableArmors().find((a: any) => a.id === this.selectedArmorId);
+  }
+
+  // Peso complessivo: armatura indossata + solo gli oggetti d'inventario spuntati come
+  // equipaggiati (quantità incluse), non l'intero inventario. weight è già in kg così
+  // com'è in DB (i form di Gestione lo chiedono esplicitamente in kg, "Peso (kg)"):
+  // nessuna conversione qui.
+  totalCarriedWeightKg(): string {
+    const c = this.character();
+    if (!c) return '0.0';
+    const armorWeight = this.selectedArmor()?.raw?.weight ?? 0;
+    const equippedWeight = c.inventory
+      .filter((item) => item.equipped)
+      .reduce((sum, item) => sum + item.weight * item.quantity, 0);
+    return (armorWeight + equippedWeight).toFixed(1);
   }
 
   // CA sempre calcolata da armatura scelta (+ scudo se spuntato) e Destrezza corrente: non è più
@@ -266,6 +349,27 @@ export class CharacterSheet implements OnInit {
 
   isSkillChecked(key: string): boolean {
     return this.skillProficiencies.has(key);
+  }
+
+  // Modificatore totale di una competenza: modificatore dell'abilità collegata, più il
+  // bonus competenza se la casella è spuntata (altrimenti solo il modificatore base).
+  skillModifier(ability: string, skillKey: string, level: number): number {
+    const abilityMod = this.abilityModifier(this.abilityScores[ability]);
+    return this.isSkillChecked(skillKey) ? abilityMod + this.proficiencyBonus(level) : abilityMod;
+  }
+
+  toggleResistance(key: string) {
+    const current = new Set(this.resistanceProficiencies);
+    if (current.has(key)) {
+      current.delete(key);
+    } else {
+      current.add(key);
+    }
+    this.resistanceProficiencies = current;
+  }
+
+  isResistanceChecked(key: string): boolean {
+    return this.resistanceProficiencies.has(key);
   }
 
   // Breve descrizione della razza/classe/sottoclasse/background attualmente selezionati nel form
@@ -349,6 +453,15 @@ export class CharacterSheet implements OnInit {
     return this.identitySubraceId ? this.getSubraceBonus(key) : this.getRaceBonus(key);
   }
 
+  // Riepilogo compatto del bonus razziale per il pannello informazioni (es. "+2 DES, +1 CAR"),
+  // per non dover ripetere l'intera griglia caratteristica per caratteristica fuori dalla modale.
+  racialBonusSummary(): string {
+    const parts = this.abilityKeys
+      .filter((k) => this.getRaceOrSubraceBonus(k) > 0)
+      .map((k) => `+${this.getRaceOrSubraceBonus(k)} ${this.localeService.t('ability_' + k)}`);
+    return parts.join(', ') || '—';
+  }
+
   // Scurovisione: tratto della razza, sostituito da quello della sottorazza se selezionata
   // (stessa logica "non cumulativa" di getRaceOrSubraceBonus). Si imposta in Gestione >
   // Razze/Sottorazze, qui è di sola lettura.
@@ -401,36 +514,10 @@ export class CharacterSheet implements OnInit {
     this.freeBonuses[key] = next;
   }
 
-  backgroundBonusTotal(): number {
-    return this.abilityKeys.reduce((sum, k) => sum + this.identityBackgroundBonuses[k], 0);
-  }
-
-  backgroundBonusRemaining(): number {
-    return this.backgroundBonusMax - this.backgroundBonusTotal();
-  }
-
-  // Tetto dinamico per l'input: non oltre il max per caratteristica, né oltre i punti rimasti.
-  maxBackgroundBonus(key: keyof typeof this.abilityScores): number {
-    return Math.min(this.backgroundBonusPerAbilityMax, this.identityBackgroundBonuses[key] + this.backgroundBonusRemaining());
-  }
-
-  setBackgroundBonus(key: keyof typeof this.abilityScores, value: number) {
-    let next = Math.max(0, Math.min(this.backgroundBonusPerAbilityMax, Math.floor(value) || 0));
-    const othersSum = this.abilityKeys
-      .filter((k) => k !== key)
-      .reduce((sum, k) => sum + this.identityBackgroundBonuses[k], 0);
-    if (othersSum + next > this.backgroundBonusMax) {
-      next = Math.max(0, this.backgroundBonusMax - othersSum);
-    }
-    this.identityBackgroundBonuses[key] = next;
-  }
-
-  // Bonus razziale e background sono alternativi, non cumulativi: quello del
-  // background (se scelto) sostituisce quello automatico della razza.
+  // Bonus caratteristica: sempre e solo da razza/sottorazza (più l'eventuale quota "a scelta
+  // libera"). Il background non concede più bonus caratteristica.
   getAppliedBonus(key: keyof typeof this.abilityScores): number {
-    return this.identityBackgroundId
-      ? this.identityBackgroundBonuses[key]
-      : this.getRaceOrSubraceBonus(key) + this.freeBonuses[key];
+    return this.getRaceOrSubraceBonus(key) + this.freeBonuses[key];
   }
 
   async saveIdentity() {
@@ -438,8 +525,8 @@ export class CharacterSheet implements OnInit {
     if (!c || this.readOnly()) return;
 
     // Rimuove dagli ability_scores il bonus applicato in precedenza e vi somma
-    // quello nuovo (razziale o background, in base alla selezione corrente):
-    // così le statistiche restano coerenti quando razza/background cambiano.
+    // quello nuovo (razza/sottorazza): così le statistiche restano coerenti
+    // quando razza o sottorazza cambiano.
     const newAppliedBonus = Object.fromEntries(
       this.abilityKeys.map((key) => [key, this.getAppliedBonus(key)])
     );
@@ -470,6 +557,7 @@ export class CharacterSheet implements OnInit {
       return;
     }
 
+    this.identityModalOpen.set(false);
     this.showSaved();
   }
 
@@ -485,11 +573,12 @@ export class CharacterSheet implements OnInit {
       shieldEquipped: this.shieldEquipped,
       abilityScores: this.abilityScores,
       skillProficiencies: Array.from(this.skillProficiencies),
-      damageResistances: this.splitList(this.damageResistancesText),
+      damageResistances: Array.from(this.resistanceProficiencies),
       damageImmunities: this.splitList(this.damageImmunitiesText),
       conditionImmunities: this.splitList(this.conditionImmunitiesText),
     });
 
+    this.armorModalOpen.set(false);
     this.showSaved();
   }
 
@@ -569,9 +658,11 @@ export class CharacterSheet implements OnInit {
     this.removeQuantities[rowId] = Math.max(1, Math.floor(value) || 1);
   }
 
-  async removeItem(rowId: string, currentQuantity: number) {
+  async removeItem(rowId: string, currentQuantity: number, name: string) {
     const c = this.character();
     if (!c || this.readOnly()) return;
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_item')} "${name}"?`);
+    if (!confirmed) return;
     const quantityToRemove = Math.min(this.removeQty(rowId), currentQuantity);
     const { error } = await this.characterStore.removeInventoryItem(c.id, rowId, quantityToRemove, currentQuantity);
     if (error) {
@@ -616,12 +707,28 @@ export class CharacterSheet implements OnInit {
     return abilities.map((a) => this.localeService.t('ability_' + a)).join(' ' + this.localeService.t('or_label') + ' ');
   }
 
-  async removeWeapon(rowId: string) {
+  async removeWeapon(rowId: string, name: string) {
     const c = this.character();
     if (!c || this.readOnly()) return;
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_weapon')} "${name}"?`);
+    if (!confirmed) return;
     const { error } = await this.characterStore.removeWeapon(c.id, rowId);
     if (error) this.modal.error(error.message);
   }
+
+  // Riga arma selezionata nel tab Armi: un click la apre nel "libro" sotto la tabella
+  // (immagine a sinistra, dettagli a destra), un secondo click sulla stessa riga la chiude.
+  selectedWeaponRowId = signal<string | null>(null);
+
+  toggleWeaponSelection(rowId: string) {
+    this.selectedWeaponRowId.update((current) => (current === rowId ? null : rowId));
+  }
+
+  selectedWeaponDetail = computed(() => {
+    const c = this.character();
+    if (!c) return null;
+    return c.weapons.find((w) => w.rowId === this.selectedWeaponRowId()) ?? null;
+  });
 
   // Nome inglese canonico della classe del personaggio, risalito dal suo id: sia
   // getSpellcastingInfo() sia spell.raw.classes ragionano sul nome base SRD in inglese,

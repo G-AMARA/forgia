@@ -26,7 +26,7 @@
           class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
         >
           <option value="Adventuring Gear">{{ localeService.t('equipment_type_adventuring_gear') }}</option>
-          <option value="Armor">{{ localeService.t('equipment_type_armor') }}</option>
+          <option value="Armor">{{ localeService.t('equipment_type_shield') }}</option>
           <option value="Mounts and Vehicles">{{ localeService.t('equipment_type_mounts_and_vehicles') }}</option>
           <option value="Tools">{{ localeService.t('equipment_type_tools') }}</option>
           <option value="Pack">{{ localeService.t('equipment_type_pack') }}</option>
@@ -43,30 +43,6 @@
             <option value="">{{ localeService.t('equipment_tool_category_unset_option') }}</option>
             <option value="artisan_tools">{{ localeService.t('tool_category_artisan_tools') }}</option>
             <option value="musical_instrument">{{ localeService.t('tool_category_musical_instrument') }}</option>
-          </select>
-        </div>
-      }
-
-      @if (type === 'Armor') {
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('equipment_armor_class_label') }}</label>
-          <input
-            type="number" min="0" [(ngModel)]="armorClass" name="armorClass"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          />
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('equipment_armor_category_label') }}</label>
-          <select
-            [(ngModel)]="armorCategory" name="armorCategory"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          >
-            <option value="">{{ localeService.t('equipment_armor_category_unset_option') }}</option>
-            <option value="light">{{ localeService.t('armor_category_light') }}</option>
-            <option value="medium">{{ localeService.t('armor_category_medium') }}</option>
-            <option value="heavy">{{ localeService.t('armor_category_heavy') }}</option>
-            <option value="shield">{{ localeService.t('armor_category_shield') }}</option>
           </select>
         </div>
       }

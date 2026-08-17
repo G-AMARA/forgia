@@ -107,8 +107,8 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-4">
-      <div class="w-25 h-25 rounded border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-3xl shrink-0">
+    <div class="flex items-start gap-4">
+      <div class="w-32 h-44 rounded-lg border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-4xl shrink-0">
         @if (imageUrl) {
           <img [src]="imageUrl" alt="" class="w-full h-full object-cover" />
         } @else {
@@ -116,7 +116,7 @@
         }
       </div>
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold">{{ localeService.t('image_label') }}</label>
+        <label class="text-xs font-semibold">{{ localeService.t('weapon_image_label') }}</label>
         <label class="text-xs px-3 py-1.5 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors self-start" [class.opacity-50]="imageUploading()">
           {{ imageUploading() ? localeService.t('loading') : localeService.t('upload_image_button') }}
           <input type="file" accept="image/*" class="hidden" [disabled]="imageUploading()" (change)="onImageSelected($event)" />
@@ -164,7 +164,7 @@
         <table class="w-full text-sm text-left border-collapse">
           <thead>
             <tr class="border-b border-gold text-xs uppercase tracking-wide">
-              <th class="py-2 pr-2">{{ localeService.t('image_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_image_label') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_col_weapon') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_category_label') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_col_attack') }}</th>
@@ -184,7 +184,7 @@
               >
                 <td class="py-2 pr-2">
                   @if (w.raw.image_url) {
-                    <img [src]="w.raw.image_url" alt="" class="w-10 h-10 rounded object-cover" />
+                    <img [src]="w.raw.image_url" alt="" class="w-10 h-14 rounded object-cover" />
                   }
                 </td>
                 <td class="py-2 pr-2">
