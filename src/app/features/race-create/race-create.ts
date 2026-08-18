@@ -4,11 +4,13 @@ import { ContentStore, normalizeAbilityBonuses } from '../../core/content-store'
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
+import { TraitBlock } from '../../core/bestiary-store';
+import { TraitListEditor } from '../manage/bestiary-manage/trait-list-editor';
 
 @Component({
   selector: 'app-race-create',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TraitListEditor],
   templateUrl: './race-create.html',
 })
 export class RaceCreate {
@@ -27,6 +29,7 @@ export class RaceCreate {
   abilityKeys: (keyof typeof this.abilityBonuses)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
   freeBonusPoints = 0;
   freeBonusMaxPerAbility = 0;
+  traits: TraitBlock[] = [];
 
   editingId: string | null = null;
 
@@ -45,6 +48,7 @@ export class RaceCreate {
     this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
     this.freeBonusPoints = 0;
     this.freeBonusMaxPerAbility = 0;
+    this.traits = [];
   }
 
   startEdit(race: any) {
@@ -56,6 +60,7 @@ export class RaceCreate {
     this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...normalizeAbilityBonuses(race.raw.ability_bonuses) };
     this.freeBonusPoints = race.raw.free_bonus_points ?? 0;
     this.freeBonusMaxPerAbility = race.raw.free_bonus_max_per_ability ?? 0;
+    this.traits = structuredClone(race.raw.traits ?? []);
   }
 
   cancelEdit() {
@@ -73,6 +78,7 @@ export class RaceCreate {
       ability_bonuses: this.abilityBonuses,
       free_bonus_points: this.freeBonusPoints,
       free_bonus_max_per_ability: this.freeBonusMaxPerAbility,
+      traits: this.traits,
     };
 
     const { error } = this.editingId

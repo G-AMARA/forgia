@@ -56,6 +56,15 @@
     </div>
 
     <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('race_traits_label') }}</label>
+      <app-trait-list-editor
+        [items]="traits"
+        (itemsChange)="traits = $event"
+        [addLabel]="localeService.t('add_trait_row_button')"
+      ></app-trait-list-editor>
+    </div>
+
+    <div class="flex flex-col gap-2">
       <label class="text-sm font-semibold">{{ localeService.t('free_bonus_label') }}</label>
       <div class="grid grid-cols-2 gap-4">
         <div class="flex flex-col gap-1">

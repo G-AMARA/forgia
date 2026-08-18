@@ -1,4 +1,5 @@
 @if (character(); as c) {
+  <div class="rounded-lg p-4" style="background-color: #272e3e;">
     <section class="space-y-4">
       <!-- Intestazione: avatar + identità -->
       <div class="relative bg-stone-textured panel-carved border-2 border-gold rounded-lg p-5 text-fantasy-moonstone overflow-hidden">
@@ -167,31 +168,97 @@
       @if (activeSubTab() === 'general') {
         <app-card>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Statistiche: metà scheda, tre riquadri sopra, tre sotto. auto-rows-fr + h-full
-                 li fa allungare fino a riempire tutta l'altezza disponibile (che è quella della
-                 colonna di destra): così il fondo non si stacca mai da quello della Storia. -->
-            <div class="grid grid-cols-3 gap-4 auto-rows-fr">
-              @for (key of abilityKeys; track key) {
-                <div class="flex flex-col items-center gap-2 h-full">
-                  <span class="text-xs uppercase font-semibold text-fantasy-gold/80">{{ localeService.t('ability_' + key) }}</span>
-                  <div class="frame-medieval relative flex-1 w-full flex flex-col items-center justify-center gap-2 rounded-sm p-3 overflow-hidden bg-fantasy-black/50">
-                    <div
-                      class="absolute inset-0 bg-cover bg-center"
-                      [style.background-image]="'url(' + getStatLabelImagePath(key) + ')'"
-                    ></div>
-                    <div class="absolute inset-0 bg-fantasy-black/80"></div>
-                    <span class="relative text-4xl sm:text-5xl font-black text-gold-bright [text-shadow:0_3px_8px_rgba(0,0,0,0.85)] py-1">
-                      {{ abilityScores[key] }}
-                    </span>
-                    <span
-                      class="relative flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white"
-                      [class]="modifierBadgeClass(abilityScores[key])"
-                    >
-                      {{ formatModifier(abilityModifier(abilityScores[key])) }}
-                    </span>
+            <!-- Statistiche + Privilegi e Tratti: metà scheda, impilati in colonna. I riquadri
+                 caratteristica sono volutamente compatti (niente più h-full/auto-rows-fr) per
+                 lasciare spazio sotto alla card Privilegi e Tratti. -->
+            <div class="flex flex-col gap-4">
+              <div class="grid grid-cols-3 gap-3">
+                @for (key of abilityKeys; track key) {
+                  <div class="flex flex-col items-center gap-1.5">
+                    <span class="text-xs uppercase font-semibold text-fantasy-gold/80">{{ localeService.t('ability_' + key) }}</span>
+                    <div class="frame-medieval relative w-full flex flex-col items-center justify-center gap-1.5 rounded-sm p-2 overflow-hidden bg-fantasy-black/50">
+                      <div
+                        class="absolute inset-0 bg-cover bg-center"
+                        [style.background-image]="'url(' + getStatLabelImagePath(key) + ')'"
+                      ></div>
+                      <div class="absolute inset-0 bg-fantasy-black/80"></div>
+                      <span class="relative text-3xl sm:text-4xl font-black text-gold-bright [text-shadow:0_3px_8px_rgba(0,0,0,0.85)] py-1">
+                        {{ abilityScores[key] }}
+                      </span>
+                      <span
+                        class="relative flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+                        [class]="modifierBadgeClass(abilityScores[key])"
+                      >
+                        {{ formatModifier(abilityModifier(abilityScores[key])) }}
+                      </span>
+                    </div>
                   </div>
+                }
+              </div>
+
+              <!-- Privilegi e Tratti: stile identico al pannello Informazioni Personaggio, con
+                   due tab interne (Razziali / Background). flex-1 + overflow-y invece di
+                   crescere senza limite: se ce ne sono tanti scorre internamente. -->
+              <div class="flex-1 min-h-0 flex flex-col gap-2">
+                <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('privileges_traits_title') }}</h3>
+
+                <div class="flex gap-1 border-b border-gold/30">
+                  <button
+                    type="button"
+                    class="px-3 py-1.5 font-display text-xs uppercase tracking-wide border-b-2 transition-colors"
+                    [class.border-fantasy-gold]="privilegesTab() === 'racial'"
+                    [class.text-fantasy-gold]="privilegesTab() === 'racial'"
+                    [class.border-transparent]="privilegesTab() !== 'racial'"
+                    [class.text-slate-arcane]="privilegesTab() !== 'racial'"
+                    (click)="privilegesTab.set('racial')"
+                  >
+                    {{ localeService.t('privileges_tab_racial') }}
+                  </button>
+                  @if (c.background_name) {
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 font-display text-xs uppercase tracking-wide border-b-2 transition-colors"
+                      [class.border-fantasy-gold]="privilegesTab() === 'background'"
+                      [class.text-fantasy-gold]="privilegesTab() === 'background'"
+                      [class.border-transparent]="privilegesTab() !== 'background'"
+                      [class.text-slate-arcane]="privilegesTab() !== 'background'"
+                      (click)="privilegesTab.set('background')"
+                    >
+                      {{ getTranslatedBackgroundName(c.background_name) }}
+                    </button>
+                  }
                 </div>
-              }
+
+                <div class="parchment-panel rounded-sm p-3 flex-1 min-h-32 overflow-y-auto space-y-3">
+                  @if (privilegesTab() === 'racial') {
+                    @if (raceTraits().length === 0 && subraceTraits().length === 0) {
+                      <p class="text-xs text-slate-arcane italic">{{ localeService.t('no_traits_yet') }}</p>
+                    }
+                    @for (trait of raceTraits(); track $index) {
+                      <div>
+                        <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+                        <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+                      </div>
+                    }
+                    @for (trait of subraceTraits(); track $index) {
+                      <div>
+                        <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+                        <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+                      </div>
+                    }
+                  } @else {
+                    @if (backgroundTraits().length === 0) {
+                      <p class="text-xs text-slate-arcane italic">{{ localeService.t('no_traits_yet') }}</p>
+                    }
+                    @for (trait of backgroundTraits(); track $index) {
+                      <div>
+                        <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+                        <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
             </div>
 
             <!-- Informazioni personaggio: come scritte su pergamena, si modificano dalla modale. -->
@@ -258,17 +325,19 @@
                 </div>
               </div>
 
-              <!-- Storia: papiro srotolato, con i nodi dorati alle estremità dei due rulli. -->
-              <div class="flex-1 min-h-0 flex flex-col gap-2">
+              <!-- Storia: vera pergamena PNG (rullo in cima, carta strappata in fondo). Il testo
+                   scorre internamente (overflow-y-auto) invece di far crescere il riquadro:
+                   resta sempre dentro il foglio disegnato. -->
+              <div class="flex flex-col gap-2">
                 <label class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('backstory_label') }}</label>
-                <div class="papyrus-scroll flex-1 min-h-32 rounded-sm px-5 py-4 mt-2 mb-1.5 mx-1">
-                  <span class="papyrus-knob absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-gold-bright"></span>
-                  <span class="papyrus-knob absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-gold-bright"></span>
-                  <span class="papyrus-knob absolute -bottom-1.5 -left-1.5 w-3 h-3 rounded-full bg-gold-bright"></span>
-                  <span class="papyrus-knob absolute -bottom-1.5 -right-1.5 w-3 h-3 rounded-full bg-gold-bright"></span>
+                <div
+                  class="relative w-full aspect-683/604 mt-2 mb-1.5 mx-1 overflow-hidden bg-no-repeat bg-top bg-size-[100%_auto]"
+                  style="background-image: url('/themes/PERGAMENA.png');"
+                >
                   <textarea
                     [(ngModel)]="backstory" [disabled]="readOnly()"
-                    class="relative w-full h-full bg-transparent border-0 resize-none focus:outline-none font-body text-gold-bright placeholder:text-gold-bright/40 disabled:opacity-80"
+                    class="absolute top-[18%] bottom-[calc(20%-10px)] left-[calc(16%+5px)] right-[16%] overflow-y-auto bg-transparent border-0 resize-none focus:outline-none font-body text-sm italic font-bold text-stone-900 placeholder:text-stone-900/40 disabled:opacity-90"
+                    style="text-shadow: 0 0 2px #ffffff;"
                   ></textarea>
                 </div>
               </div>
@@ -490,7 +559,7 @@
                al riquadro invece che sopra. -->
           <div>
             <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('vital_stats_title') }}</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
               <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
                 <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
                 <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
@@ -538,6 +607,15 @@
                   {{ formatModifier(abilityModifier(abilityScores['dex'])) }}
                 </p>
               </div>
+              <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('speed_label') }}
+                </span>
+                <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
+                  {{ raceSpeed() }}m
+                </p>
+              </div>
             </div>
           </div>
 
@@ -573,13 +651,16 @@
               @for (column of skillColumns; track $index) {
                 <div class="divide-y divide-gold/20">
                   @for (skill of column; track skill.key) {
-                    <label class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-fantasy-black/30 transition-colors">
+                    <label
+                      class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-fantasy-black/30 transition-colors"
+                      [title]="isSkillLocked(skill.key) ? localeService.t('skill_locked_by_background_hint') : ''"
+                    >
                       <span class="relative flex items-center shrink-0">
                         <input
                           type="checkbox"
                           class="peer appearance-none w-6 h-6 rounded-sm border-2 border-gold bg-fantasy-blue cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           [checked]="isSkillChecked(skill.key)"
-                          [disabled]="readOnly()"
+                          [disabled]="readOnly() || isSkillLocked(skill.key)"
                           (change)="toggleSkill(skill.key)"
                         />
                         <svg
@@ -593,6 +674,9 @@
                         <span class="block text-xs opacity-60">({{ localeService.t('ability_' + skill.ability) }}: {{ abilityScores[skill.ability] }})</span>
                         <span class="block text-xs uppercase tracking-wider font-bold text-gold-glow [text-shadow:0_1px_3px_rgba(0,0,0,0.85)]">
                           {{ localeService.t('skill_' + skill.key) }}
+                          @if (isSkillLocked(skill.key)) {
+                            <span class="text-fantasy-gold/60 normal-case">({{ localeService.t('background_label') }})</span>
+                          }
                         </span>
                       </span>
                       <span class="shrink-0 px-3 py-1 rounded-full bg-fantasy-black/60 border border-gold/50 text-sm font-bold text-fantasy-gold">
@@ -1345,6 +1429,7 @@
         </app-card>
       }
     </section>
+  </div>
   } @else {
     <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
   }

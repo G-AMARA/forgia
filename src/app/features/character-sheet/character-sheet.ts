@@ -15,6 +15,7 @@ import { calculateArmorClass } from '../../core/armor';
 import { translateSpellSchool } from '../../core/spell-schools';
 import { getSpellLevelTheme, type SpellLevelTheme } from '../../core/spell-level-theme';
 import { getXpProgress } from '../../core/xp-progression';
+import { TraitBlock } from '../../core/bestiary-store';
 import { Card } from '../../shared/card/card';
 import { SpellLevelSeal } from '../../shared/spell-level-seal/spell-level-seal';
 import { SpellSchoolIcon } from '../../shared/spell-school-icon/spell-school-icon';
@@ -88,6 +89,9 @@ export class CharacterSheet implements OnInit {
   }
 
   activeSubTab = signal<SubTab>('general');
+
+  // Tab interna della card "Privilegi e Tratti": razziali (razza + sottorazza) vs background.
+  privilegesTab = signal<'racial' | 'background'>('racial');
 
   currentHp = 0;
   maxHp = 0;
@@ -338,6 +342,7 @@ export class CharacterSheet implements OnInit {
   }
 
   toggleSkill(key: string) {
+    if (this.isSkillLocked(key)) return;
     const current = new Set(this.skillProficiencies);
     if (current.has(key)) {
       current.delete(key);
@@ -348,7 +353,30 @@ export class CharacterSheet implements OnInit {
   }
 
   isSkillChecked(key: string): boolean {
-    return this.skillProficiencies.has(key);
+    return this.isSkillLocked(key) || this.skillProficiencies.has(key);
+  }
+
+  // Le competenze arrivano come stringhe piatte (homebrew), oggetti SRD con index tipo
+  // "skill-insight", o oggetti homebrew più vecchi con solo il nome inglese (stessa logica
+  // di background-create.ts).
+  private toSkillKey(p: any): string {
+    if (typeof p === 'string') return p;
+    if (p.index) return p.index.replace(/^skill-/, '');
+    return (p.name ?? '').toLowerCase().replace(/\s+/g, '_');
+  }
+
+  // Competenze concesse dal background scelto: automatiche e bloccate (vedi toggleSkill/
+  // isSkillChecked sopra). Calcolate al volo dal background corrente invece che salvate in
+  // skill_proficiencies, così cambiando o rimuovendo il background si sbloccano/spariscono
+  // da sole, senza lasciare competenze "orfane" salvate.
+  backgroundSkillKeys(): Set<string> {
+    const background = this.backgroundsContent().find((b: any) => b.id === this.identityBackgroundId);
+    const proficiencies = background?.raw?.skill_proficiencies ?? [];
+    return new Set(proficiencies.map((p: any) => this.toSkillKey(p)));
+  }
+
+  isSkillLocked(key: string): boolean {
+    return this.backgroundSkillKeys().has(key);
   }
 
   // Modificatore totale di una competenza: modificatore dell'abilità collegata, più il
@@ -470,6 +498,29 @@ export class CharacterSheet implements OnInit {
       return this.allSubraces().find((s: any) => s.id === this.identitySubraceId)?.raw?.darkvision ?? false;
     }
     return this.races().find((r: any) => r.id === this.identityRaceId)?.raw?.darkvision ?? false;
+  }
+
+  // Velocità: tratto della razza (le sottorazze non la sovrascrivono, a differenza di
+  // bonus caratteristica e scurovisione).
+  raceSpeed(): number {
+    return this.races().find((r: any) => r.id === this.identityRaceId)?.raw?.speed ?? 0;
+  }
+
+  // Privilegi e Tratti (tab Generale): a differenza di ability_bonuses/darkvision, i tratti
+  // di sottorazza si SOMMANO a quelli della razza invece di sostituirli (sono voci distinte
+  // con nome proprio, non un singolo valore) — per questo restano due liste separate invece
+  // di un'unica getRaceOrSubraceX().
+  raceTraits(): TraitBlock[] {
+    return this.races().find((r: any) => r.id === this.identityRaceId)?.raw?.traits ?? [];
+  }
+
+  subraceTraits(): TraitBlock[] {
+    if (!this.identitySubraceId) return [];
+    return this.allSubraces().find((s: any) => s.id === this.identitySubraceId)?.raw?.traits ?? [];
+  }
+
+  backgroundTraits(): TraitBlock[] {
+    return this.backgroundsContent().find((b: any) => b.id === this.identityBackgroundId)?.raw?.traits ?? [];
   }
 
   // Monte punti "a scelta libera": della sottorazza se selezionata, altrimenti della razza
