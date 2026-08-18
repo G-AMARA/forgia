@@ -329,10 +329,10 @@
                    scorre internamente (overflow-y-auto) invece di far crescere il riquadro:
                    resta sempre dentro il foglio disegnato. -->
               <div class="flex flex-col gap-2">
-                <label class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('backstory_label') }}</label>
+                <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('backstory_label') }}</h3>
                 <div
                   class="relative w-full aspect-683/604 mt-2 mb-1.5 mx-1 overflow-hidden bg-no-repeat bg-top bg-size-[100%_auto]"
-                  style="background-image: url('/themes/PERGAMENA.png');"
+                  style="background-image: url('themes/PERGAMENA.png');"
                 >
                   <textarea
                     [(ngModel)]="backstory" [disabled]="readOnly()"
