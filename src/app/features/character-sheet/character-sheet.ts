@@ -322,10 +322,21 @@ export class CharacterSheet implements OnInit {
 
   // CA sempre calcolata da armatura scelta (+ scudo se spuntato) e Destrezza corrente: non è più
   // un valore modificabile a mano, così resta automaticamente coerente se la Destrezza cambia.
+  // Senza armatura indossata, il Barbaro usa Difesa Senza Armatura (10 + Des + Cos invece di
+  // 10 + Des): non si cumula con altri calcoli alternativi (es. Difesa Senza Armatura del
+  // Monaco, non ancora implementata), quindi resta un semplice if/else, non un cumulo di bonus.
+  // Lo scudo è comunque permesso e si somma separato, come per chiunque altro.
   currentArmorClass(): number {
     const dexMod = this.abilityModifier(this.abilityScores['dex']);
     const armor = this.allEquipment().find((e: any) => e.id === this.selectedArmorId);
-    let ac = armor ? calculateArmorClass(armor.raw.armor_class, armor.raw.armor_category, dexMod) : 10 + dexMod;
+    let ac: number;
+    if (armor) {
+      ac = calculateArmorClass(armor.raw.armor_class, armor.raw.armor_category, dexMod);
+    } else if (this.canonicalClassName() === 'Barbarian') {
+      ac = 10 + dexMod + this.abilityModifier(this.abilityScores['cos']);
+    } else {
+      ac = 10 + dexMod;
+    }
     if (this.shieldEquipped) ac += 2;
     return ac;
   }
