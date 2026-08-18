@@ -53,6 +53,41 @@ body {
   font-family: var(--font-body);
 }
 
+/* Su Windows (Chrome/Edge) il popup nativo dei <select> ignora le classi Tailwind del
+   pannello e si disegna con il tema chiaro di sistema (sfondo grigio, testo bianco:
+   illeggibile). color-scheme dice al browser di usare la sua UI nativa dark per i controlli
+   di form; lo stile esplicito su option è il fallback per i browser che lo ignorano. */
+select {
+  color-scheme: dark;
+}
+select option {
+  background-color: var(--color-fantasy-blue-deep);
+  color: var(--color-fantasy-moonstone);
+}
+
+/* Scrollbar tema fantasy invece di quella nativa di sistema (su Windows particolarmente
+   stonata: track bianco, thumb e frecce grigie). Applicata globalmente così ogni pannello
+   scrollabile del portale (tab di Gestione, storia del personaggio, liste, ecc.) è coerente
+   senza dover ritoccare ogni singolo elemento. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-fantasy-gold) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-fantasy-gold);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-bright);
+}
+
 /* Superficie scura per pannelli in rilievo */
 .bg-stone-textured {
   background-color: var(--color-stone);
