@@ -27,6 +27,9 @@ export class ClassCreate {
   hitDie = 8;
   description = '';
   savingThrows = new Set<string>();
+  // Difesa Senza Armatura: '' = nessuna, altrimenti chiave caratteristica (es. 'cos' per il
+  // Barbaro) che si somma a Destrezza per la CA quando non si indossa armatura.
+  unarmoredDefenseAbility = '';
   startingEquipment = signal<EquipmentChoiceGroup[]>([]);
 
   editingId: string | null = null;
@@ -57,6 +60,7 @@ export class ClassCreate {
     this.hitDie = 8;
     this.description = '';
     this.savingThrows = new Set();
+    this.unarmoredDefenseAbility = '';
     this.startingEquipment.set([]);
   }
 
@@ -69,6 +73,7 @@ export class ClassCreate {
       typeof p === 'string' ? p : p.index ?? p.name
     );
     this.savingThrows = new Set(proficiencies);
+    this.unarmoredDefenseAbility = cls.raw.unarmored_defense_ability ?? '';
     this.startingEquipment.set(structuredClone(cls.raw.starting_equipment ?? []));
   }
 
@@ -84,6 +89,7 @@ export class ClassCreate {
       hit_die: this.hitDie,
       description: this.description || null,
       saving_throw_proficiencies: Array.from(this.savingThrows),
+      unarmored_defense_ability: this.unarmoredDefenseAbility || null,
       starting_equipment: this.startingEquipment(),
     };
 

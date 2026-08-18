@@ -320,20 +320,32 @@ export class CharacterSheet implements OnInit {
     return (armorWeight + equippedWeight).toFixed(1);
   }
 
+  // Difesa Senza Armatura (Barbaro: Cos, Monaco: Sag, ecc.): quale caratteristica extra si
+  // somma a Destrezza quando la classe non indossa armatura, configurato per classe in
+  // Gestione > Classi (classes.unarmored_defense_ability) invece che dedotto dal nome della
+  // classe — il nome è testo libero modificabile in Gestione, quindi non è un identificatore
+  // stabile su cui riconoscere "è il Barbaro" (bug osservato: rinominato "Barbaro", il
+  // confronto con la stringa inglese "Barbarian" smetteva di corrispondere).
+  private unarmoredDefenseAbility(): string | null {
+    const c = this.character();
+    if (!c || !c.class_id) return null;
+    return this.classesContent().find((cls: any) => cls.id === c.class_id)?.raw
+      ?.unarmored_defense_ability ?? null;
+  }
+
   // CA sempre calcolata da armatura scelta (+ scudo se spuntato) e Destrezza corrente: non è più
   // un valore modificabile a mano, così resta automaticamente coerente se la Destrezza cambia.
-  // Senza armatura indossata, il Barbaro usa Difesa Senza Armatura (10 + Des + Cos invece di
-  // 10 + Des): non si cumula con altri calcoli alternativi (es. Difesa Senza Armatura del
-  // Monaco, non ancora implementata), quindi resta un semplice if/else, non un cumulo di bonus.
+  // Non si cumula con altri calcoli alternativi: è un semplice if/else, non un cumulo di bonus.
   // Lo scudo è comunque permesso e si somma separato, come per chiunque altro.
   currentArmorClass(): number {
     const dexMod = this.abilityModifier(this.abilityScores['dex']);
     const armor = this.allEquipment().find((e: any) => e.id === this.selectedArmorId);
+    const unarmoredAbility = this.unarmoredDefenseAbility();
     let ac: number;
     if (armor) {
       ac = calculateArmorClass(armor.raw.armor_class, armor.raw.armor_category, dexMod);
-    } else if (this.canonicalClassName() === 'Barbarian') {
-      ac = 10 + dexMod + this.abilityModifier(this.abilityScores['cos']);
+    } else if (unarmoredAbility) {
+      ac = 10 + dexMod + this.abilityModifier(this.abilityScores[unarmoredAbility]);
     } else {
       ac = 10 + dexMod;
     }
