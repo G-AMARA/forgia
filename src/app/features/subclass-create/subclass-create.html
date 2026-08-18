@@ -41,6 +41,15 @@
       ></textarea>
     </div>
 
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('subclass_traits_label') }}</label>
+      <app-trait-list-editor
+        [items]="traits"
+        (itemsChange)="traits = $event"
+        [addLabel]="localeService.t('add_trait_row_button')"
+      ></app-trait-list-editor>
+    </div>
+
     <div class="flex gap-2">
       <button
         type="submit" [disabled]="loading() || !classId"

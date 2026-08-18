@@ -260,7 +260,7 @@ export class CharacterStore {
   private static readonly FULL_CHARACTER_SELECT = `
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
     current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, subrace_id, background_id,
-    skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
+    skill_proficiencies, skill_mastery, damage_resistances, damage_immunities, condition_immunities,
     sex,
     races ( name ),
     subraces ( name ),
@@ -335,6 +335,7 @@ export class CharacterStore {
       ability_scores: row.ability_scores ?? {},
       applied_bonus: row.applied_bonus ?? {},
       skill_proficiencies: row.skill_proficiencies ?? [],
+      skill_mastery: row.skill_mastery ?? [],
       damage_resistances: row.damage_resistances ?? [],
       damage_immunities: row.damage_immunities ?? [],
       condition_immunities: row.condition_immunities ?? [],
@@ -452,6 +453,7 @@ export class CharacterStore {
       shieldEquipped: boolean;
       abilityScores: Record<string, number>;
       skillProficiencies: string[];
+      skillMastery: string[];
       damageResistances: string[];
       damageImmunities: string[];
       conditionImmunities: string[];
@@ -467,6 +469,7 @@ export class CharacterStore {
         shield_equipped: updates.shieldEquipped,
         ability_scores: updates.abilityScores,
         skill_proficiencies: updates.skillProficiencies,
+        skill_mastery: updates.skillMastery,
         damage_resistances: updates.damageResistances,
         damage_immunities: updates.damageImmunities,
         condition_immunities: updates.conditionImmunities,
@@ -752,6 +755,7 @@ export interface CharacterFull {
   ability_scores: Record<string, number>;
   applied_bonus: Record<string, number>;
   skill_proficiencies: string[];
+  skill_mastery: string[];
   damage_resistances: string[];
   damage_immunities: string[];
   condition_immunities: string[];

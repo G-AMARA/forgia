@@ -88,6 +88,11 @@ export class RaceCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
+      // Senza questo, una vecchia traduzione salvata (content_translations) continuerebbe
+      // a "vincere" sul nome appena modificato qui, mostrando per sempre quello vecchio.
+      if (this.editingId) {
+        await this.contentStore.clearTranslation('races', this.editingId);
+      }
       this.resetForm();
       await this.refreshRaces();
       this.modal.success(this.localeService.t('saved_message'));

@@ -67,8 +67,14 @@ export class CharacterSheet implements OnInit {
   protected readOnly = computed(() => this.character()?.owner_id !== this.auth.user()?.id);
 
   ngOnInit() {
+    // Ricarica sempre all'apertura della scheda (non solo al cambio di campagna, l'unico
+    // altro momento in cui CharacterStore la aggiorna da solo): senza, un rinominare razza/
+    // sottoclasse/background/ecc. da Gestione mentre la campagna resta la stessa non si
+    // vedrebbe finché non si ricarica l'intera pagina.
     if (this.characterId) {
       this.characterStore.loadCharacterById(this.characterId);
+    } else {
+      this.characterStore.loadMyCharacter();
     }
   }
   protected skills = SKILLS;
@@ -91,7 +97,7 @@ export class CharacterSheet implements OnInit {
   activeSubTab = signal<SubTab>('general');
 
   // Tab interna della card "Privilegi e Tratti": razziali (razza + sottorazza) vs background.
-  privilegesTab = signal<'racial' | 'background'>('racial');
+  privilegesTab = signal<'racial' | 'subclass' | 'background'>('racial');
 
   currentHp = 0;
   maxHp = 0;
@@ -104,6 +110,8 @@ export class CharacterSheet implements OnInit {
   shieldEquipped = false;
   abilityScores: Record<string, number> = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
   skillProficiencies = new Set<string>();
+  // Maestria (Expertise 5e): max 2 competenze tra quelle proficient, vedi toggleSkillMastery.
+  skillMastery = new Set<string>();
   resistanceProficiencies = new Set<string>();
   // Immunità al danno e alle condizioni: non più modificabili da qui (sostituite dalle
   // checkbox Resistenze), ma tenute in memoria per non perdere un valore già salvato in
@@ -259,6 +267,7 @@ export class CharacterSheet implements OnInit {
         this.resetArmorFields(c);
         this.appliedBonus = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
         this.skillProficiencies = new Set(c.skill_proficiencies);
+        this.skillMastery = new Set(c.skill_mastery);
         this.resistanceProficiencies = new Set(c.damage_resistances);
         this.damageImmunitiesText = c.damage_immunities.join(', ');
         this.conditionImmunitiesText = c.condition_immunities.join(', ');
@@ -346,6 +355,12 @@ export class CharacterSheet implements OnInit {
     const current = new Set(this.skillProficiencies);
     if (current.has(key)) {
       current.delete(key);
+      // Senza competenza non ha senso restare Maestria: la toglie insieme.
+      if (this.skillMastery.has(key)) {
+        const mastery = new Set(this.skillMastery);
+        mastery.delete(key);
+        this.skillMastery = mastery;
+      }
     } else {
       current.add(key);
     }
@@ -354,6 +369,35 @@ export class CharacterSheet implements OnInit {
 
   isSkillChecked(key: string): boolean {
     return this.isSkillLocked(key) || this.skillProficiencies.has(key);
+  }
+
+  // Maestria (Expertise 5e): raddoppia il bonus competenza, al massimo su 2 competenze tra
+  // quelle in cui si è già competenti (qualunque sia la fonte: libera, background, classe).
+  // Non esclusiva del Ladro nelle regole 5e (Bardo e alcune sottoclassi la hanno), quindi
+  // disponibile per qualunque personaggio invece che ristretta a una classe specifica.
+  static readonly MAX_SKILL_MASTERY = 2;
+
+  toggleSkillMastery(key: string) {
+    if (!this.isSkillChecked(key)) return;
+    const current = new Set(this.skillMastery);
+    if (current.has(key)) {
+      current.delete(key);
+    } else {
+      if (current.size >= CharacterSheet.MAX_SKILL_MASTERY) return;
+      current.add(key);
+    }
+    this.skillMastery = current;
+  }
+
+  // Richiede comunque la competenza: se il personaggio perde la fonte della competenza
+  // (es. viene rimosso il background che la garantiva) la Maestria salvata sparisce con lei
+  // invece di restare "orfana" su una competenza non più spuntata.
+  isSkillMastered(key: string): boolean {
+    return this.isSkillChecked(key) && this.skillMastery.has(key);
+  }
+
+  skillMasteryLimitReached(): boolean {
+    return this.skillMastery.size >= CharacterSheet.MAX_SKILL_MASTERY;
   }
 
   // Le competenze arrivano come stringhe piatte (homebrew), oggetti SRD con index tipo
@@ -380,10 +424,13 @@ export class CharacterSheet implements OnInit {
   }
 
   // Modificatore totale di una competenza: modificatore dell'abilità collegata, più il
-  // bonus competenza se la casella è spuntata (altrimenti solo il modificatore base).
+  // bonus competenza se la casella è spuntata (raddoppiato in caso di Maestria), altrimenti
+  // solo il modificatore base.
   skillModifier(ability: string, skillKey: string, level: number): number {
     const abilityMod = this.abilityModifier(this.abilityScores[ability]);
-    return this.isSkillChecked(skillKey) ? abilityMod + this.proficiencyBonus(level) : abilityMod;
+    if (!this.isSkillChecked(skillKey)) return abilityMod;
+    const multiplier = this.isSkillMastered(skillKey) ? 2 : 1;
+    return abilityMod + this.proficiencyBonus(level) * multiplier;
   }
 
   toggleResistance(key: string) {
@@ -457,9 +504,16 @@ export class CharacterSheet implements OnInit {
   }
 
   // Le proficienze arrivano come abbreviazione inglese (es. "STR", "dex", a seconda
-  // che la classe sia dall'SRD o homebrew): le traduce nel nome esteso in italiano.
+  // che la classe sia dall'SRD o homebrew): le traduce nel nome esteso in italiano. "con"
+  // (Constitution, SRD) va normalizzato a "cos" (Costituzione): è l'unica delle sei sigle
+  // a non coincidere tra inglese e italiano, le altre cinque sono uguali per coincidenza.
   savingThrowNames(proficiencies: string[]): string {
-    return proficiencies.map((p) => this.localeService.t('ability_' + p.toLowerCase())).join(', ');
+    return proficiencies
+      .map((p) => {
+        const key = p.toLowerCase();
+        return this.localeService.t('ability_' + (key === 'con' ? 'cos' : key));
+      })
+      .join(', ');
   }
 
   // Bonus razziale: fisso, definito dalla razza scelta (gestito in Gestione > Razze).
@@ -521,6 +575,11 @@ export class CharacterSheet implements OnInit {
 
   backgroundTraits(): TraitBlock[] {
     return this.backgroundsContent().find((b: any) => b.id === this.identityBackgroundId)?.raw?.traits ?? [];
+  }
+
+  subclassTraits(): TraitBlock[] {
+    if (!this.identitySubclassId) return [];
+    return this.allSubclasses().find((s: any) => s.id === this.identitySubclassId)?.raw?.traits ?? [];
   }
 
   // Monte punti "a scelta libera": della sottorazza se selezionata, altrimenti della razza
@@ -624,6 +683,7 @@ export class CharacterSheet implements OnInit {
       shieldEquipped: this.shieldEquipped,
       abilityScores: this.abilityScores,
       skillProficiencies: Array.from(this.skillProficiencies),
+      skillMastery: Array.from(this.skillMastery),
       damageResistances: Array.from(this.resistanceProficiencies),
       damageImmunities: this.splitList(this.damageImmunitiesText),
       conditionImmunities: this.splitList(this.conditionImmunitiesText),
