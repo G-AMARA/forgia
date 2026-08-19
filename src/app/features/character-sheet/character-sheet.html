@@ -938,19 +938,21 @@
               } @else {
                 <ul class="divide-y divide-gold/20">
                   @for (item of c.inventory; track item.rowId) {
-                    <li class="flex items-center gap-3 text-sm py-2">
-                      <div class="shrink-0 w-10 h-10 rounded border border-gold/40 bg-fantasy-black/40 overflow-hidden flex items-center justify-center">
-                        @if (item.imageUrl) {
-                          <img [src]="item.imageUrl" alt="" class="w-full h-full object-cover" />
-                        } @else {
-                          <span class="text-sm opacity-30">🎒</span>
-                        }
+                    <li class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-sm py-2">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="shrink-0 w-10 h-10 rounded border border-gold/40 bg-fantasy-black/40 overflow-hidden flex items-center justify-center">
+                          @if (item.imageUrl) {
+                            <img [src]="item.imageUrl" alt="" class="w-full h-full object-cover" />
+                          } @else {
+                            <span class="text-sm opacity-30">🎒</span>
+                          }
+                        </div>
+                        <span class="flex-1 min-w-0 truncate">
+                          {{ item.name }} × {{ item.quantity }}
+                          <span class="text-xs opacity-60">({{ item.weight }} kg)</span>
+                        </span>
                       </div>
-                      <span class="flex-1 min-w-0 truncate">
-                        {{ item.name }} × {{ item.quantity }}
-                        <span class="text-xs opacity-60">({{ item.weight }} kg)</span>
-                      </span>
-                      <div class="flex items-center gap-2 shrink-0">
+                      <div class="flex items-center gap-2 shrink-0 pl-13 sm:pl-0">
                         <label class="flex items-center gap-1.5 text-xs cursor-pointer">
                           <span class="relative flex items-center shrink-0">
                             <input
@@ -1227,7 +1229,7 @@
                         }
 
                         @if (spell.description) {
-                          <p class="relative text-xs leading-relaxed text-slate-400/90 line-clamp-4">{{ spell.description }}</p>
+                          <p class="relative text-xs leading-relaxed text-slate-400/90 max-h-20 overflow-y-auto pr-1">{{ spell.description }}</p>
                         }
 
                         <div class="relative flex items-center justify-between gap-2 border-t border-white/5 pt-2">
@@ -1293,6 +1295,7 @@
                     <th class="py-2 px-2">{{ localeService.t('weapon_col_damage') }}</th>
                     <th class="py-2 px-2">{{ localeService.t('weapon_col_range') }}</th>
                     <th class="py-2 px-2">{{ localeService.t('weapon_col_weight') }}</th>
+                    <th class="py-2 px-2">{{ localeService.t('weapon_col_cost') }}</th>
                     @if (!readOnly()) { <th class="py-2 px-2"></th> }
                   </tr>
                 </thead>
@@ -1319,6 +1322,13 @@
                         }
                       </td>
                       <td class="py-2 px-2">{{ w.weight }} kg</td>
+                      <td class="py-2 px-2">
+                        @if (w.costValue != null) {
+                          {{ w.costValue }} {{ localeService.t('coin_unit_' + w.costUnit) }}
+                        } @else {
+                          <span class="text-slate-arcane">—</span>
+                        }
+                      </td>
                       @if (!readOnly()) {
                         <td class="py-2 px-2">
                           <button
@@ -1407,6 +1417,18 @@
                           <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('quantity_label') }}</span>
                           <p class="font-body text-sm">{{ sw.quantity }}</p>
                         </div>
+                        @if (sw.costValue != null) {
+                          <div>
+                            <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('weapon_col_cost') }}</span>
+                            <p class="font-body text-sm">{{ sw.costValue }} {{ localeService.t('coin_unit_' + sw.costUnit) }}</p>
+                          </div>
+                        }
+                        @if (sw.properties) {
+                          <div>
+                            <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('weapon_properties_label') }}</span>
+                            <p class="font-body text-sm">{{ sw.properties }}</p>
+                          </div>
+                        }
                       </div>
                     }
                   </div>
@@ -1466,6 +1488,18 @@
                     <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('quantity_label') }}</span>
                     <p class="font-body text-sm text-gold-bright">{{ sw.quantity }}</p>
                   </div>
+                  @if (sw.costValue != null) {
+                    <div>
+                      <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('weapon_col_cost') }}</span>
+                      <p class="font-body text-sm text-gold-bright">{{ sw.costValue }} {{ localeService.t('coin_unit_' + sw.costUnit) }}</p>
+                    </div>
+                  }
+                  @if (sw.properties) {
+                    <div class="col-span-2">
+                      <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('weapon_properties_label') }}</span>
+                      <p class="font-body text-sm text-gold-bright">{{ sw.properties }}</p>
+                    </div>
+                  }
                 </div>
               </div>
             }

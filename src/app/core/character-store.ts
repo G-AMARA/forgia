@@ -268,7 +268,7 @@ export class CharacterStore {
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
     character_spells ( spell_id, prepared, spells ( name, level, school ) ),
     character_inventory ( id, equipment_id, quantity, equipped, equipment ( name, image_url, weight ) ),
-    character_weapons ( id, weapon_id, quantity, weapons ( name, image_url, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability ) )
+    character_weapons ( id, weapon_id, quantity, weapons ( name, image_url, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability, properties, cost_value, cost_unit ) )
   `;
 
   // Recupera le traduzioni di tutti i contenuti referenziati da questa riga personaggio
@@ -387,6 +387,9 @@ export class CharacterStore {
         normalRange: w.weapons?.normal_range ?? null,
         longRange: w.weapons?.long_range ?? null,
         weight: w.weapons?.weight ?? null,
+        properties: w.weapons?.properties ?? null,
+        costValue: w.weapons?.cost_value ?? null,
+        costUnit: w.weapons?.cost_unit ?? null,
       })),
     };
   }
@@ -788,5 +791,8 @@ export interface CharacterFull {
     normalRange: number | null;
     longRange: number | null;
     weight: number | null;
+    properties: string | null;
+    costValue: number | null;
+    costUnit: string | null;
   }[];
 }

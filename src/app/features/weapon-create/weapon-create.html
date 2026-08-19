@@ -99,6 +99,26 @@
       </div>
 
       <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_cost_label') }}</label>
+        <div class="flex gap-2">
+          <input
+            type="number" min="0" step="0.01" [(ngModel)]="costValue" name="costValue"
+            class="flex-1 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          />
+          <select
+            [(ngModel)]="costUnit" name="costUnit"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          >
+            <option value="cp">{{ localeService.t('coin_unit_cp') }}</option>
+            <option value="sp">{{ localeService.t('coin_unit_sp') }}</option>
+            <option value="ep">{{ localeService.t('coin_unit_ep') }}</option>
+            <option value="gp">{{ localeService.t('coin_unit_gp') }}</option>
+            <option value="pp">{{ localeService.t('coin_unit_pp') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold">{{ localeService.t('weapon_properties_label') }}</label>
         <input
           type="text" [(ngModel)]="properties" name="properties" [placeholder]="localeService.t('comma_separated_hint')"
@@ -171,6 +191,7 @@
               <th class="py-2 pr-2">{{ localeService.t('weapon_col_damage') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_col_range') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_col_weight') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_col_cost') }}</th>
               <th class="py-2"></th>
             </tr>
           </thead>
@@ -213,6 +234,13 @@
                   }
                 </td>
                 <td class="py-2 pr-2">{{ w.raw.weight }} kg</td>
+                <td class="py-2 pr-2">
+                  @if (w.raw.cost_value != null) {
+                    {{ w.raw.cost_value }} {{ localeService.t('coin_unit_' + w.raw.cost_unit) }}
+                  } @else {
+                    <span class="text-slate-arcane">—</span>
+                  }
+                </td>
                 <td class="py-2">
                   <div class="flex gap-2">
                     <button (click)="startEdit(w)" class="text-xs text-fantasy-gold underline">
