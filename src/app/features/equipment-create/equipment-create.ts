@@ -166,6 +166,36 @@ export class EquipmentCreate {
     this.resetForm();
   }
 
+  // Ridimensiona lato client se l'immagine supera 100x100 (etichetta del campo upload).
+  // L'anteprima e la lista mostrano sempre un riquadro quadrato con object-cover: qui si
+  // riproduce lo stesso ritaglio "cover" centrato, altrimenti un semplice fit-in-bounds
+  // produce un rettangolo non quadrato che poi l'object-cover deve ri-tagliare/allungare
+  // partendo da un'immagine già rimpicciolita, risultando sgranato.
+  private async resizeImageIfNeeded(file: File, size = 100): Promise<Blob> {
+    const bitmap = await createImageBitmap(file);
+    if (bitmap.width <= size && bitmap.height <= size) {
+      bitmap.close();
+      return file;
+    }
+
+    const scale = Math.max(size / bitmap.width, size / bitmap.height);
+    const scaledWidth = bitmap.width * scale;
+    const scaledHeight = bitmap.height * scale;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    canvas
+      .getContext('2d')!
+      .drawImage(bitmap, (size - scaledWidth) / 2, (size - scaledHeight) / 2, scaledWidth, scaledHeight);
+    bitmap.close();
+
+    const mimeType = file.type || 'image/png';
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('canvas toBlob failed'))), mimeType, 0.92);
+    });
+  }
+
   async onImageSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -173,11 +203,12 @@ export class EquipmentCreate {
 
     this.imageUploading.set(true);
 
+    const resized = await this.resizeImageIfNeeded(file);
     const ext = file.name.split('.').pop();
     const path = `${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await this.supabase.client.storage
       .from('content-images')
-      .upload(path, file, { upsert: true });
+      .upload(path, resized, { upsert: true });
 
     if (uploadError) {
       this.modal.error(uploadError.message);

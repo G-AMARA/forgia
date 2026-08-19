@@ -63,9 +63,12 @@ export class CharacterSheet implements OnInit {
     return getXpProgress(c.level, c.experience_points);
   });
 
-  // Vero se l'utente loggato non è il proprietario: usato per bloccare ogni modifica
-  // quando la scheda si apre dal roster della campagna (vista di un altro personaggio).
-  protected readOnly = computed(() => this.character()?.owner_id !== this.auth.user()?.id);
+  // Vero se l'utente loggato non è il proprietario né un admin: usato per bloccare ogni
+  // modifica quando la scheda si apre dal roster della campagna (vista di un altro
+  // personaggio). Gli admin possono editare le schede di chiunque (vedi profiles.is_admin).
+  protected readOnly = computed(() =>
+    this.character()?.owner_id !== this.auth.user()?.id && !this.auth.isAdmin()
+  );
 
   ngOnInit() {
     // Ricarica sempre all'apertura della scheda (non solo al cambio di campagna, l'unico
