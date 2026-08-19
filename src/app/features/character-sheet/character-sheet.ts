@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect, Input, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, effect, Input, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CharacterStore } from '../../core/character-store';
 import { ContentStore, normalizeAbilityBonuses } from '../../core/content-store';
@@ -22,13 +22,25 @@ import { SpellLevelSeal } from '../../shared/spell-level-seal/spell-level-seal';
 import { SpellSchoolIcon } from '../../shared/spell-school-icon/spell-school-icon';
 import { DamageTypeIcon } from '../../shared/damage-type-icon/damage-type-icon';
 
-type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
+type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons' | 'diary';
+
+// Stesso pattern lazy di bestiary.ts: import dinamico (genera il chunk separato
+// "swiper-element-bundle" invece di gonfiare il bundle iniziale) + flag anti-doppia-
+// registrazione (customElements.define lancia se richiamato due volte sullo stesso tag).
+let swiperRegistered: Promise<void> | null = null;
+function ensureSwiperRegistered(): Promise<void> {
+  if (!swiperRegistered) {
+    swiperRegistered = import('swiper/element/bundle').then(({ register }) => register());
+  }
+  return swiperRegistered;
+}
 
 @Component({
   selector: 'app-character-sheet',
   standalone: true,
   imports: [FormsModule, Card, SpellLevelSeal, SpellSchoolIcon, DamageTypeIcon],
   templateUrl: './character-sheet.html',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA], // richiesto da <swiper-container>/<swiper-slide> nel tab Taccuino
 })
 export class CharacterSheet implements OnInit {
   protected characterStore = inject(CharacterStore);
@@ -71,6 +83,7 @@ export class CharacterSheet implements OnInit {
   );
 
   ngOnInit() {
+    ensureSwiperRegistered();
     // Ricarica sempre all'apertura della scheda (non solo al cambio di campagna, l'unico
     // altro momento in cui CharacterStore la aggiorna da solo): senza, un rinominare razza/
     // sottoclasse/background/ecc. da Gestione mentre la campagna resta la stessa non si
@@ -302,6 +315,12 @@ export class CharacterSheet implements OnInit {
 
   setSubTab(tab: SubTab) {
     this.activeSubTab.set(tab);
+    // Caricato a parte (non in FULL_CHARACTER_SELECT, vedi CharacterStore.loadDiaryEntries):
+    // niente da fare finché il tab non si apre davvero.
+    const c = this.character();
+    if (tab === 'diary' && c) {
+      this.characterStore.loadDiaryEntries(c.id);
+    }
   }
 
   abilityModifier(score: number): number {
@@ -810,6 +829,91 @@ export class CharacterSheet implements OnInit {
     if (!c || this.readOnly()) return;
     await this.characterStore.updateNotes(c.id, this.backstory);
     this.showSaved();
+  }
+
+  // Taccuino: ogni riga è una pagina a sé con la propria data (entry_date), modificabile
+  // in fase di scrittura invece che dedotta automaticamente da created_at — così si può
+  // annotare oggi un evento datato qualche sessione fa. characterStore.diaryEntries arriva
+  // già ordinato per entry_date desc dalla query (vedi loadDiaryEntries).
+  private todayDateString(): string {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  newDiaryEntryText = '';
+  newDiaryEntryDate = this.todayDateString();
+  newDiaryEntryTitle = '';
+  // Non null mentre si modifica una pagina già scritta (vedi startEditDiaryEntry): in
+  // quel caso submitDiaryEntry() aggiorna quella riga invece di crearne una nuova.
+  editingDiaryEntryId: string | null = null;
+
+  protected diaryPages = computed(() => {
+    const locale = this.localeService.locale() === 'it' ? 'it-IT' : 'en-US';
+    return this.characterStore.diaryEntries().map((entry) => {
+      // Parsing manuale (non new Date(entry.entry_date) diretto) per evitare che la data
+      // "YYYY-MM-DD" venga letta come UTC e scali di un giorno nei fusi orari negativi.
+      const [y, m, d] = entry.entry_date.split('-').map(Number);
+      const dateLabel = new Date(y, m - 1, d).toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      return { id: entry.id, content: entry.content, title: entry.title, dateLabel, rawDate: entry.entry_date };
+    });
+  });
+
+  async submitDiaryEntry() {
+    const c = this.character();
+    const text = this.newDiaryEntryText.trim();
+    if (!c || this.readOnly() || !text || !this.newDiaryEntryDate) return;
+
+    const title = this.newDiaryEntryTitle.trim() || null;
+    const { error } = this.editingDiaryEntryId
+      ? await this.characterStore.updateDiaryEntry(c.id, this.editingDiaryEntryId, text, this.newDiaryEntryDate, title)
+      : await this.characterStore.addDiaryEntry(c.id, text, this.newDiaryEntryDate, title);
+
+    if (error) {
+      this.modal.error(error.message);
+      return;
+    }
+    this.newDiaryEntryText = '';
+    this.newDiaryEntryDate = this.todayDateString();
+    this.newDiaryEntryTitle = '';
+    this.editingDiaryEntryId = null;
+  }
+
+  startEditDiaryEntry(page: { id: string; content: string; title: string | null; rawDate: string }) {
+    if (this.readOnly()) return;
+    this.editingDiaryEntryId = page.id;
+    this.newDiaryEntryDate = page.rawDate;
+    this.newDiaryEntryTitle = page.title ?? '';
+    this.newDiaryEntryText = page.content;
+  }
+
+  cancelEditDiaryEntry() {
+    this.editingDiaryEntryId = null;
+    this.newDiaryEntryDate = this.todayDateString();
+    this.newDiaryEntryTitle = '';
+    this.newDiaryEntryText = '';
+  }
+
+  async deleteDiaryEntry(entryId: string) {
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+
+    const confirmed = await this.modal.confirm(this.localeService.t('confirm_delete_diary_entry'));
+    if (!confirmed) return;
+
+    const { error } = await this.characterStore.deleteDiaryEntry(c.id, entryId);
+    if (error) {
+      this.modal.error(error.message);
+      return;
+    }
+    // Se si stava modificando proprio la pagina appena eliminata, il form torna pulito.
+    if (this.editingDiaryEntryId === entryId) this.cancelEditDiaryEntry();
   }
 
   async saveCurrency() {

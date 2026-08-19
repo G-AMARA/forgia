@@ -4,6 +4,14 @@ import { Auth } from './auth';
 import { ActiveCampaign } from './active-campaign';
 import { LocaleService } from './locale';
 
+export interface DiaryEntry {
+  id: string;
+  content: string;
+  title: string | null;
+  entry_date: string;
+  created_at: string;
+}
+
 export interface CharacterSummary {
   id: string;
   name: string;
@@ -747,6 +755,70 @@ export class CharacterStore {
       .eq('spell_id', spellId);
     if (!error) {
       await this.refreshCharacter(characterId);
+    }
+    return { error };
+  }
+
+  // Taccuino (tab Armeria+1 nella scheda): annotazioni libere del giocatore, non fanno
+  // parte di FULL_CHARACTER_SELECT (lista potenzialmente lunga, non serve ricaricarla ad
+  // ogni salvataggio di stats/inventario) — caricate a parte quando si apre il tab.
+  // Ordinate per entry_date (data della pagina, modificabile dall'utente), non per
+  // created_at: un giocatore può scrivere oggi una pagina datata qualche sessione fa.
+  readonly diaryEntries = signal<DiaryEntry[]>([]);
+
+  async loadDiaryEntries(characterId: string) {
+    const { data, error } = await this.supabase.client
+      .from('character_diary_entries')
+      .select('id, content, title, entry_date, created_at')
+      .eq('character_id', characterId)
+      .order('entry_date', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      this.diaryEntries.set([]);
+      return;
+    }
+
+    this.diaryEntries.set(data);
+  }
+
+  async addDiaryEntry(characterId: string, content: string, entryDate: string, title: string | null) {
+    const { error } = await this.supabase.client
+      .from('character_diary_entries')
+      .insert({ character_id: characterId, content, entry_date: entryDate, title });
+
+    if (!error) {
+      await this.loadDiaryEntries(characterId);
+    }
+    return { error };
+  }
+
+  async updateDiaryEntry(
+    characterId: string,
+    entryId: string,
+    content: string,
+    entryDate: string,
+    title: string | null
+  ) {
+    const { error } = await this.supabase.client
+      .from('character_diary_entries')
+      .update({ content, entry_date: entryDate, title })
+      .eq('id', entryId);
+
+    if (!error) {
+      await this.loadDiaryEntries(characterId);
+    }
+    return { error };
+  }
+
+  async deleteDiaryEntry(characterId: string, entryId: string) {
+    const { error } = await this.supabase.client
+      .from('character_diary_entries')
+      .delete()
+      .eq('id', entryId);
+
+    if (!error) {
+      await this.loadDiaryEntries(characterId);
     }
     return { error };
   }

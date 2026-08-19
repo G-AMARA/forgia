@@ -114,6 +114,14 @@
           >
             {{ localeService.t('subtab_weapons') }}
           </button>
+          <button
+            class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+            [class.border-fantasy-gold]="activeSubTab() === 'diary'"
+            [class.border-transparent]="activeSubTab() !== 'diary'"
+            (click)="setSubTab('diary')"
+          >
+            {{ localeService.t('subtab_diary') }}
+          </button>
         </div>
 
         <!-- Salva Storia: qui invece che sotto il papiro, per non rubargli altezza. -->
@@ -359,8 +367,8 @@
                 >
                   <textarea
                     [(ngModel)]="backstory" [disabled]="readOnly()"
-                    class="absolute top-[18%] bottom-[calc(20%-10px)] left-[calc(16%+5px)] right-[16%] overflow-y-auto bg-transparent border-0 resize-none focus:outline-none font-body text-sm italic font-bold text-stone-900 placeholder:text-stone-900/40 disabled:opacity-90"
-                    style="text-shadow: 0 0 2px #ffffff;"
+                    class="absolute top-[18%] bottom-[calc(20%-10px)] left-[calc(16%+5px)] right-[16%] overflow-y-auto bg-transparent border-0 resize-none focus:outline-none font-body text-base font-bold text-stone-950 placeholder:text-stone-900/40 disabled:opacity-90"
+                    style="text-shadow: 0 0 3px #ffffff, 0 0 6px #ffffff;"
                   ></textarea>
                 </div>
               </div>
@@ -1595,6 +1603,133 @@
               </div>
             }
           }
+        </app-card>
+      }
+
+      <!-- TACCUINO: a sinistra si scrive/modifica (data + titolo opzionale + testo), a
+           destra un carosello Swiper (stesso pattern lazy di bestiary.ts/html) delle pagine
+           già scritte, una alla volta con frecce per sfogliarle. Il bottone matita su ogni
+           pagina precompila il form a sinistra per modificarla (submitDiaryEntry() in
+           character-sheet.ts aggiorna invece di creare quando editingDiaryEntryId è
+           valorizzato). Ogni pagina riusa la pergamena invecchiata con bordo runico
+           themes/TACCUINO2.png (671x942,
+           verticale) con un pannello semi-opaco dietro al testo, per restare leggibile a
+           prescindere dalle venature del foglio. Da lg in su le due colonne condividono
+           un'altezza fissa (lg:h-120 = 30rem): la colonna sinistra ne è la misura, il
+           carosello a destra si scala in altezza (non più in larghezza) per starci dentro
+           intero senza scroll interno.
+           IMPORTANTE su swiper-container: niente "un lato fisso + aspect-ratio per l'altro"
+           (es. altezza fissa + larghezza auto derivata dall'aspect-ratio). Lo shadow DOM di
+           swiper-element legge le dimensioni dell'host per calcolare .swiper (height:100%),
+           e con un lato "auto" la misurazione può avvenire prima che il layout CSS abbia
+           risolto quel lato, collassando tutto a 0 (bug osservato: si vedeva solo la
+           freccia sinistra). Da lg in su si usano quindi due valori espliciti pre-calcolati
+           sul rapporto reale dell'immagine (671x942) invece di aspect-671/942 + un lato auto. -->
+      @if (activeSubTab() === 'diary') {
+        <app-card contentClass="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          @if (!readOnly()) {
+            <div class="flex flex-col gap-3 lg:h-120">
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('diary_date_label') }}</label>
+                <input
+                  type="date" [(ngModel)]="newDiaryEntryDate"
+                  class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('diary_title_label') }}</label>
+                <input
+                  type="text" [(ngModel)]="newDiaryEntryTitle"
+                  class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                />
+              </div>
+              <div class="flex flex-col gap-1 flex-1">
+                <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('subtab_diary') }}</label>
+                <textarea
+                  [(ngModel)]="newDiaryEntryText"
+                  [placeholder]="localeService.t('diary_placeholder')"
+                  class="w-full flex-1 min-h-40 px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
+                ></textarea>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  (click)="submitDiaryEntry()"
+                  [disabled]="!newDiaryEntryText.trim() || !newDiaryEntryDate"
+                  class="self-start px-4 py-2 bg-fantasy-gold text-fantasy-black font-display text-sm tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
+                >
+                  {{ editingDiaryEntryId ? localeService.t('save_changes_button') : localeService.t('diary_add_button') }}
+                </button>
+                @if (editingDiaryEntryId) {
+                  <button
+                    (click)="cancelEditDiaryEntry()"
+                    class="self-start px-4 py-2 border-2 border-gold rounded font-display text-sm hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    {{ localeService.t('cancel_button') }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <div [class.lg:col-span-2]="readOnly()" class="flex flex-col gap-3">
+            @if (diaryPages().length === 0) {
+              <p class="text-slate-arcane italic text-sm text-center py-6">{{ localeService.t('diary_empty_label') }}</p>
+            } @else {
+              <swiper-container
+                init="true"
+                navigation="true"
+                style="--swiper-navigation-color: #c7a45e"
+                class="block w-full aspect-671/942 lg:aspect-auto lg:w-[21.4rem] lg:h-120 mx-auto"
+              >
+                @for (page of diaryPages(); track page.id) {
+                  <swiper-slide class="relative">
+                    @if (!readOnly()) {
+                      <button
+                        (click)="startEditDiaryEntry(page)"
+                        [attr.aria-label]="localeService.t('edit_button')"
+                        class="absolute top-2 left-2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-fantasy-black/70 text-gold-glow hover:bg-fantasy-black transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
+                      <button
+                        (click)="deleteDiaryEntry(page.id)"
+                        [attr.aria-label]="localeService.t('remove_button')"
+                        class="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-fantasy-black/70 text-gold-glow hover:bg-fantasy-black transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                        </svg>
+                      </button>
+                    }
+                    <div
+                      class="absolute inset-0 bg-no-repeat bg-top bg-size-[100%_100%]"
+                      style="background-image: url('themes/TACCUINO2.png');"
+                    >
+                      <div class="absolute top-[11%] bottom-[9%] left-[15%] right-[15%] flex flex-col gap-2">
+                        @if (page.title) {
+                          <p class="shrink-0 font-display text-sm font-bold text-black">
+                            {{ page.title }}
+                          </p>
+                        }
+                        <p class="shrink-0 font-display text-xs font-bold uppercase tracking-wide text-black/80">
+                          {{ page.dateLabel }}
+                        </p>
+                        <div class="flex-1 overflow-y-auto">
+                          <p class="font-body text-sm italic font-bold leading-relaxed text-black whitespace-pre-wrap">
+                            {{ page.content }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </swiper-slide>
+                }
+              </swiper-container>
+            }
+          </div>
         </app-card>
       }
     </section>
