@@ -56,6 +56,24 @@
     </div>
 
     <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('race_skills_label') }}</label>
+      <div class="flex flex-wrap gap-2">
+        @for (key of skillKeys; track key) {
+          <label
+            class="flex items-center gap-1 text-xs px-2 py-1 border rounded cursor-pointer"
+            [class.border-fantasy-gold]="isSkillSelected(key)"
+            [class.bg-gold]="isSkillSelected(key)"
+            [class.text-fantasy-black]="isSkillSelected(key)"
+            [class.border-gold]="!isSkillSelected(key)"
+          >
+            <input type="checkbox" class="hidden" [checked]="isSkillSelected(key)" (change)="toggleSkill(key)" />
+            {{ localeService.t('skill_' + key) }}
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
       <label class="text-sm font-semibold">{{ localeService.t('race_traits_label') }}</label>
       <app-trait-list-editor
         [items]="traits"

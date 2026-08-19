@@ -30,6 +30,9 @@ export class ClassCreate {
   // Difesa Senza Armatura: '' = nessuna, altrimenti chiave caratteristica (es. 'cos' per il
   // Barbaro) che si somma a Destrezza per la CA quando non si indossa armatura.
   unarmoredDefenseAbility = '';
+  // Movimento Senza Armatura (Monaco): bonus di velocità per livello quando non si indossa
+  // armatura né scudo, vedi core/unarmored-movement.ts.
+  unarmoredMovement = false;
   startingEquipment = signal<EquipmentChoiceGroup[]>([]);
 
   editingId: string | null = null;
@@ -61,6 +64,7 @@ export class ClassCreate {
     this.description = '';
     this.savingThrows = new Set();
     this.unarmoredDefenseAbility = '';
+    this.unarmoredMovement = false;
     this.startingEquipment.set([]);
   }
 
@@ -74,6 +78,7 @@ export class ClassCreate {
     );
     this.savingThrows = new Set(proficiencies);
     this.unarmoredDefenseAbility = cls.raw.unarmored_defense_ability ?? '';
+    this.unarmoredMovement = cls.raw.unarmored_movement ?? false;
     this.startingEquipment.set(structuredClone(cls.raw.starting_equipment ?? []));
   }
 
@@ -90,6 +95,7 @@ export class ClassCreate {
       description: this.description || null,
       saving_throw_proficiencies: Array.from(this.savingThrows),
       unarmored_defense_ability: this.unarmoredDefenseAbility || null,
+      unarmored_movement: this.unarmoredMovement,
       starting_equipment: this.startingEquipment(),
     };
 

@@ -6,6 +6,7 @@ import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { TraitBlock } from '../../core/bestiary-store';
 import { TraitListEditor } from '../manage/bestiary-manage/trait-list-editor';
+import { SKILLS } from '../../core/skills';
 
 @Component({
   selector: 'app-race-create',
@@ -21,6 +22,8 @@ export class RaceCreate {
 
   protected races = this.contentStore.getContent('races');
 
+  skillKeys = SKILLS.map((s) => s.key);
+
   name = '';
   speed = 9;
   description = '';
@@ -30,10 +33,27 @@ export class RaceCreate {
   freeBonusPoints = 0;
   freeBonusMaxPerAbility = 0;
   traits: TraitBlock[] = [];
+  // Competenze automatiche della razza (es. Percezione per l'Harengon): in scheda personaggio
+  // risultano spuntate e bloccate finché si ha questa razza.
+  selectedSkills = new Set<string>();
 
   editingId: string | null = null;
 
   loading = signal(false);
+
+  toggleSkill(key: string) {
+    const current = new Set(this.selectedSkills);
+    if (current.has(key)) {
+      current.delete(key);
+    } else {
+      current.add(key);
+    }
+    this.selectedSkills = current;
+  }
+
+  isSkillSelected(key: string): boolean {
+    return this.selectedSkills.has(key);
+  }
 
   private async refreshRaces() {
     await this.contentStore.refresh('races');
@@ -49,6 +69,7 @@ export class RaceCreate {
     this.freeBonusPoints = 0;
     this.freeBonusMaxPerAbility = 0;
     this.traits = [];
+    this.selectedSkills = new Set();
   }
 
   startEdit(race: any) {
@@ -61,6 +82,7 @@ export class RaceCreate {
     this.freeBonusPoints = race.raw.free_bonus_points ?? 0;
     this.freeBonusMaxPerAbility = race.raw.free_bonus_max_per_ability ?? 0;
     this.traits = structuredClone(race.raw.traits ?? []);
+    this.selectedSkills = new Set(race.raw.skill_proficiencies ?? []);
   }
 
   cancelEdit() {
@@ -79,6 +101,7 @@ export class RaceCreate {
       free_bonus_points: this.freeBonusPoints,
       free_bonus_max_per_ability: this.freeBonusMaxPerAbility,
       traits: this.traits,
+      skill_proficiencies: Array.from(this.selectedSkills),
     };
 
     const { error } = this.editingId

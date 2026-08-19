@@ -636,7 +636,7 @@
                   {{ localeService.t('speed_label') }}
                 </span>
                 <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
-                  {{ raceSpeed() }}m
+                  {{ totalSpeed() }}m
                 </p>
               </div>
             </div>
@@ -676,7 +676,7 @@
                   @for (skill of column; track skill.key) {
                     <label
                       class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-fantasy-black/30 transition-colors"
-                      [title]="isSkillLocked(skill.key) ? localeService.t('skill_locked_by_background_hint') : ''"
+                      [title]="isSkillLocked(skill.key) ? localeService.t('skill_locked_hint') : ''"
                     >
                       <span class="relative flex items-center shrink-0">
                         <input
@@ -698,7 +698,7 @@
                         <span class="block text-xs uppercase tracking-wider font-bold text-gold-glow [text-shadow:0_1px_3px_rgba(0,0,0,0.85)]">
                           {{ localeService.t('skill_' + skill.key) }}
                           @if (isSkillLocked(skill.key)) {
-                            <span class="text-fantasy-gold/60 normal-case">({{ localeService.t('background_label') }})</span>
+                            <span class="text-fantasy-gold/60 normal-case">({{ skillLockSourceLabel(skill.key) }})</span>
                           }
                         </span>
                       </span>

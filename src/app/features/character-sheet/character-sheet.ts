@@ -12,6 +12,7 @@ import { getStatLabelImagePath } from '../../core/ability-images';
 import { getCoinImagePath } from '../../core/coin-images';
 import { getSpellcastingInfo } from '../../core/spellcasting';
 import { calculateArmorClass } from '../../core/armor';
+import { unarmoredMovementBonus } from '../../core/unarmored-movement';
 import { translateSpellSchool } from '../../core/spell-schools';
 import { getSpellLevelTheme, type SpellLevelTheme } from '../../core/spell-level-theme';
 import { getXpProgress } from '../../core/xp-progression';
@@ -432,10 +433,23 @@ export class CharacterSheet implements OnInit {
     return (p.name ?? '').toLowerCase().replace(/\s+/g, '_');
   }
 
-  // Competenze concesse dal background scelto: automatiche e bloccate (vedi toggleSkill/
-  // isSkillChecked sopra). Calcolate al volo dal background corrente invece che salvate in
-  // skill_proficiencies, così cambiando o rimuovendo il background si sbloccano/spariscono
-  // da sole, senza lasciare competenze "orfane" salvate.
+  // Competenze concesse da razza, sottorazza o background: automatiche e bloccate (vedi
+  // toggleSkill/isSkillChecked sopra). Calcolate al volo dalla razza/sottorazza/background
+  // correnti invece che salvate in skill_proficiencies, così cambiandoli si sbloccano/
+  // spariscono da sole, senza lasciare competenze "orfane" salvate.
+  raceSkillKeys(): Set<string> {
+    const race = this.races().find((r: any) => r.id === this.identityRaceId);
+    const proficiencies = race?.raw?.skill_proficiencies ?? [];
+    return new Set(proficiencies.map((p: any) => this.toSkillKey(p)));
+  }
+
+  subraceSkillKeys(): Set<string> {
+    if (!this.identitySubraceId) return new Set();
+    const subrace = this.allSubraces().find((s: any) => s.id === this.identitySubraceId);
+    const proficiencies = subrace?.raw?.skill_proficiencies ?? [];
+    return new Set(proficiencies.map((p: any) => this.toSkillKey(p)));
+  }
+
   backgroundSkillKeys(): Set<string> {
     const background = this.backgroundsContent().find((b: any) => b.id === this.identityBackgroundId);
     const proficiencies = background?.raw?.skill_proficiencies ?? [];
@@ -443,7 +457,16 @@ export class CharacterSheet implements OnInit {
   }
 
   isSkillLocked(key: string): boolean {
-    return this.backgroundSkillKeys().has(key);
+    return this.raceSkillKeys().has(key) || this.subraceSkillKeys().has(key) || this.backgroundSkillKeys().has(key);
+  }
+
+  // Per la scritta "(Razza)"/"(Sottorazza)"/"(Background)" accanto al nome della competenza
+  // bloccata nel template: stessa priorità di isSkillLocked sopra.
+  skillLockSourceLabel(key: string): string {
+    if (this.raceSkillKeys().has(key)) return this.localeService.t('race_label');
+    if (this.subraceSkillKeys().has(key)) return this.localeService.t('subrace_label');
+    if (this.backgroundSkillKeys().has(key)) return this.localeService.t('background_label');
+    return '';
   }
 
   // Modificatore totale di una competenza: modificatore dell'abilità collegata, più il
@@ -581,6 +604,20 @@ export class CharacterSheet implements OnInit {
   // bonus caratteristica e scurovisione).
   raceSpeed(): number {
     return this.races().find((r: any) => r.id === this.identityRaceId)?.raw?.speed ?? 0;
+  }
+
+  // Movimento Senza Armatura (Monaco): bonus per livello configurato per classe in Gestione >
+  // Classi (classes.unarmored_movement, stesso motivo di unarmoredDefenseAbility più sotto:
+  // il nome della classe non è un identificatore stabile), attivo solo senza armatura e
+  // senza scudo, sommato alla velocità base della razza.
+  totalSpeed(): number {
+    const c = this.character();
+    if (!c) return this.raceSpeed();
+    const hasUnarmoredMovement =
+      this.classesContent().find((cls: any) => cls.id === c.class_id)?.raw?.unarmored_movement ?? false;
+    const armor = this.allEquipment().find((e: any) => e.id === this.selectedArmorId);
+    if (!hasUnarmoredMovement || armor || this.shieldEquipped) return this.raceSpeed();
+    return this.raceSpeed() + unarmoredMovementBonus(c.level);
   }
 
   // Privilegi e Tratti (tab Generale): a differenza di ability_bonuses/darkvision, i tratti
