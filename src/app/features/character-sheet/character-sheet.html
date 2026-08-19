@@ -900,6 +900,52 @@
                 </svg>
                 <span class="text-sm font-semibold text-fantasy-gold">{{ totalCarriedWeightKg() }} kg</span>
               </div>
+
+              <!-- Cavalcature e Veicoli: stesso pattern della sezione armatura sopra
+                   (select in modale + card con immagine dal catalogo equipment). -->
+              <div class="flex items-center justify-between mt-2">
+                <label class="text-sm font-semibold">{{ localeService.t('mount_select_label') }}</label>
+                @if (!readOnly()) {
+                  <button
+                    (click)="openMountModal()"
+                    class="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0 text-gold-dark" fill="currentColor" aria-hidden="true">
+                      <g transform="rotate(45 12 12)">
+                        <rect x="10.5" y="2" width="3" height="3" rx="0.5" />
+                        <rect x="10.5" y="5.5" width="3" height="11" />
+                        <polygon points="10.5,16.5 13.5,16.5 12,20.5" />
+                      </g>
+                    </svg>
+                    {{ localeService.t('edit_button') }}
+                  </button>
+                }
+              </div>
+
+              <div class="frame-medieval relative rounded-sm px-3 py-3 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('mount_select_label') }}
+                </span>
+                <p class="relative text-center text-lg font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
+                  {{ selectedMount()?.name ?? localeService.t('mount_none_label') }}
+                </p>
+              </div>
+
+              <div class="frame-medieval relative w-full aspect-3/4 max-w-65 mx-auto rounded-sm overflow-hidden flex items-center justify-center bg-fantasy-black/40">
+                @if (selectedMount()?.raw?.image_url; as mountImg) {
+                  <img [src]="mountImg" alt="" class="w-full h-full object-contain" />
+                } @else {
+                  <span class="text-5xl opacity-30">🐴</span>
+                }
+              </div>
+
+              @if (selectedMount()?.raw?.carrying_capacity; as capacity) {
+                <div class="flex items-center justify-center gap-2 px-3 py-2 rounded border border-gold/40 bg-fantasy-black/40 max-w-65 mx-auto w-full text-xs">
+                  <span class="text-fantasy-gold/70 uppercase tracking-wide font-bold shrink-0">{{ localeService.t('mount_carrying_capacity_label') }}:</span>
+                  <span class="text-fantasy-gold font-semibold">{{ capacity }}</span>
+                </div>
+              }
             </div>
 
             <!-- DESTRA: tabella oggetti, ognuno con la sua immagine (se presente) di fianco al nome. -->
@@ -950,6 +996,9 @@
                         <span class="flex-1 min-w-0 truncate">
                           {{ item.name }} × {{ item.quantity }}
                           <span class="text-xs opacity-60">({{ item.weight }} kg)</span>
+                          @if (item.costValue != null) {
+                            <span class="text-xs opacity-60">· {{ item.costValue }} {{ localeService.t('coin_unit_' + item.costUnit) }}</span>
+                          }
                         </span>
                       </div>
                       <div class="flex items-center gap-2 shrink-0 pl-13 sm:pl-0">
@@ -1032,6 +1081,48 @@
                   </button>
                   <button
                     type="button" (click)="saveCombat()"
+                    class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+                  >
+                    {{ localeService.t('save_button') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Modale di modifica cavalcatura/veicolo -->
+        @if (mountModalOpen()) {
+          <div
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+            (click)="cancelMountEdit()"
+          >
+            <div
+              class="relative w-full max-w-md bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+              (click)="$event.stopPropagation()"
+            >
+              <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('mount_select_label') }}</h2>
+
+              <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-semibold">{{ localeService.t('mount_select_label') }}</label>
+                  <select [(ngModel)]="selectedMountId" class="px-2 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone">
+                    <option value="">{{ localeService.t('mount_none_label') }}</option>
+                    @for (mount of availableMounts(); track mount.id) {
+                      <option [value]="mount.id">{{ mount.name }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button" (click)="cancelMountEdit()"
+                    class="px-4 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    {{ localeService.t('cancel_button') }}
+                  </button>
+                  <button
+                    type="button" (click)="saveMount()"
                     class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
                   >
                     {{ localeService.t('save_button') }}

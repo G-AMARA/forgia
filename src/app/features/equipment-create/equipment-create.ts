@@ -26,11 +26,20 @@ export class EquipmentCreate {
   // tradotti nella lingua corrente via content_translations.
   protected equipment = this.contentStore.getContent('equipment');
   // Le armature indossabili hanno un catalogo dedicato (Gestione > Armature, vedi
-  // armor-create.ts): niente doppione qui, né in lista né come tipo selezionabile. Gli
-  // scudi restano invece qui: sono anch'essi type = 'Armor' (dato SRD) ma concettualmente
-  // sono equipaggiamento generico, non "armatura indossata" in senso stretto.
+  // armor-create.ts) e le cavalcature/veicoli vere e proprie pure (Gestione > Cavalcature
+  // e Veicoli, vedi mount-create.ts, is_mount_or_vehicle = true): niente doppione qui, né
+  // in lista né come tipo selezionabile. Gli scudi restano invece qui: sono anch'essi
+  // type = 'Armor' (dato SRD) ma concettualmente sono equipaggiamento generico, non
+  // "armatura indossata" in senso stretto. Stesso discorso per gli accessori da
+  // cavalcatura (bardature, selle, bisacce, morso e briglia, stallaggio): condividono il
+  // type SRD 'Mounts and Vehicles' ma is_mount_or_vehicle resta false, quindi restano
+  // equipaggiamento generico gestito qui.
   private nonArmorEquipment = computed(() =>
-    this.equipment().filter((e: any) => e.raw.type !== 'Armor' || e.raw.armor_category === 'shield')
+    this.equipment().filter(
+      (e: any) =>
+        (e.raw.type !== 'Armor' || e.raw.armor_category === 'shield') &&
+        !(e.raw.type === 'Mounts and Vehicles' && e.raw.is_mount_or_vehicle === true)
+    )
   );
 
   private static readonly TYPE_KEYS: Record<string, string> = {
@@ -56,6 +65,8 @@ export class EquipmentCreate {
   name = '';
   description = '';
   weight: number | null = null;
+  costValue: number | null = null;
+  costUnit: 'cp' | 'sp' | 'ep' | 'gp' | 'pp' = 'gp';
   imageUrl: string | null = null;
   type: 'Adventuring Gear' | 'Armor' | 'Mounts and Vehicles' | 'Tools' | 'Pack' = 'Adventuring Gear';
   toolCategory: '' | 'artisan_tools' | 'musical_instrument' = '';
@@ -138,6 +149,8 @@ export class EquipmentCreate {
     this.name = '';
     this.description = '';
     this.weight = null;
+    this.costValue = null;
+    this.costUnit = 'gp';
     this.imageUrl = null;
     this.type = 'Adventuring Gear';
     this.toolCategory = '';
@@ -156,6 +169,8 @@ export class EquipmentCreate {
     this.name = isEnglish ? item.raw.name : item.name;
     this.description = isEnglish ? (item.raw.description ?? '') : (item.description ?? '');
     this.weight = item.raw.weight ?? null;
+    this.costValue = item.raw.cost_value ?? null;
+    this.costUnit = item.raw.cost_unit ?? 'gp';
     this.imageUrl = item.raw.image_url ?? null;
     this.type = item.raw.type ?? 'Adventuring Gear';
     this.toolCategory = item.raw.tool_category ?? '';
@@ -250,6 +265,8 @@ export class EquipmentCreate {
     // sulla riga base a prescindere dalla lingua corrente.
     const basePayload = {
       weight: this.weight,
+      cost_value: this.costValue,
+      cost_unit: this.costUnit,
       type: this.type,
       tool_category: this.type === 'Tools' ? this.toolCategory || null : null,
       // "Scudo" nel select equivale a type Armor: qui l'unica armatura gestibile è lo

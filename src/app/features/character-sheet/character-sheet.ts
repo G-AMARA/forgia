@@ -112,6 +112,7 @@ export class CharacterSheet implements OnInit {
   platinum = 0;
   selectedArmorId = '';
   shieldEquipped = false;
+  selectedMountId = '';
   abilityScores: Record<string, number> = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
   skillProficiencies = new Set<string>();
   // Maestria (Expertise 5e): max 2 competenze tra quelle proficient, vedi toggleSkillMastery.
@@ -256,6 +257,24 @@ export class CharacterSheet implements OnInit {
     this.armorModalOpen.set(false);
   }
 
+  // Stessa idea di armorModalOpen/resetArmorFields, per la modale di modifica della
+  // cavalcatura/veicolo posseduto (tab Equipaggiamento).
+  mountModalOpen = signal(false);
+
+  private resetMountFields(c: ReturnType<typeof this.character>) {
+    if (!c) return;
+    this.selectedMountId = c.mount_equipment_id ?? '';
+  }
+
+  openMountModal() {
+    this.mountModalOpen.set(true);
+  }
+
+  cancelMountEdit() {
+    this.resetMountFields(this.character());
+    this.mountModalOpen.set(false);
+  }
+
   constructor() {
     effect(() => {
       const c = this.character();
@@ -269,6 +288,7 @@ export class CharacterSheet implements OnInit {
         this.gold = c.gold ?? 0;
         this.platinum = c.platinum ?? 0;
         this.resetArmorFields(c);
+        this.resetMountFields(c);
         this.appliedBonus = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
         this.skillProficiencies = new Set(c.skill_proficiencies);
         this.skillMastery = new Set(c.skill_mastery);
@@ -310,8 +330,22 @@ export class CharacterSheet implements OnInit {
     return this.availableArmors().find((a: any) => a.id === this.selectedArmorId);
   }
 
+  // Cavalcature e veicoli dal catalogo: is_mount_or_vehicle esclude gli accessori che
+  // condividono lo stesso type SRD 'Mounts and Vehicles' (bardature, selle, bisacce da
+  // sella, morso e briglia, stallaggio), quelli restano equipaggiamento generico.
+  availableMounts(): any[] {
+    return this.allEquipment().filter(
+      (e: any) => e.raw.type === 'Mounts and Vehicles' && e.raw.is_mount_or_vehicle === true
+    );
+  }
+
+  selectedMount(): any {
+    return this.availableMounts().find((m: any) => m.id === this.selectedMountId);
+  }
+
   // Peso complessivo: armatura indossata + solo gli oggetti d'inventario spuntati come
-  // equipaggiati (quantità incluse), non l'intero inventario. weight è già in kg così
+  // equipaggiati (quantità incluse), non l'intero inventario, + tutte le armi portate
+  // (niente flag "equipaggiata" per le armi, si contano tutte). weight è già in kg così
   // com'è in DB (i form di Gestione lo chiedono esplicitamente in kg, "Peso (kg)"):
   // nessuna conversione qui.
   totalCarriedWeightKg(): string {
@@ -321,7 +355,8 @@ export class CharacterSheet implements OnInit {
     const equippedWeight = c.inventory
       .filter((item) => item.equipped)
       .reduce((sum, item) => sum + item.weight * item.quantity, 0);
-    return (armorWeight + equippedWeight).toFixed(1);
+    const weaponsWeight = c.weapons.reduce((sum, w) => sum + (w.weight ?? 0) * w.quantity, 0);
+    return (armorWeight + equippedWeight + weaponsWeight).toFixed(1);
   }
 
   // Difesa Senza Armatura (Barbaro: Cos, Monaco: Sag, ecc.): quale caratteristica extra si
@@ -753,6 +788,20 @@ export class CharacterSheet implements OnInit {
     });
 
     this.armorModalOpen.set(false);
+    this.showSaved();
+  }
+
+  async saveMount() {
+    const c = this.character();
+    if (!c || this.readOnly()) return;
+
+    const { error } = await this.characterStore.updateMount(c.id, this.selectedMountId || null);
+    if (error) {
+      this.modal.error(error.message);
+      return;
+    }
+
+    this.mountModalOpen.set(false);
     this.showSaved();
   }
 

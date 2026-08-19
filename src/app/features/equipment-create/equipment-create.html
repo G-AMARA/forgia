@@ -20,6 +20,26 @@
       </div>
 
       <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_cost_label') }}</label>
+        <div class="flex gap-2">
+          <input
+            type="number" min="0" step="0.01" [(ngModel)]="costValue" name="costValue"
+            class="flex-1 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          />
+          <select
+            [(ngModel)]="costUnit" name="costUnit"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          >
+            <option value="cp">{{ localeService.t('coin_unit_cp') }}</option>
+            <option value="sp">{{ localeService.t('coin_unit_sp') }}</option>
+            <option value="ep">{{ localeService.t('coin_unit_ep') }}</option>
+            <option value="gp">{{ localeService.t('coin_unit_gp') }}</option>
+            <option value="pp">{{ localeService.t('coin_unit_pp') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
         <label class="text-sm font-semibold">{{ localeService.t('equipment_type_label') }}</label>
         <select
           [(ngModel)]="type" name="type"
@@ -151,6 +171,7 @@
               <th class="py-2 pr-2">{{ localeService.t('image_label') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('equipment_name_label') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('weapon_weight_kg_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_col_cost') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('equipment_description_label') }}</th>
               <th class="py-2 pr-2">{{ localeService.t('equipment_contents_label') }}</th>
               <th class="py-2"></th>
@@ -175,6 +196,13 @@
                   <span class="text-[10px] uppercase text-slate-arcane ml-1">· {{ typeLabel(e.raw.type) }}</span>
                 </td>
                 <td class="py-2 pr-2">{{ e.raw.weight }} kg</td>
+                <td class="py-2 pr-2">
+                  @if (e.raw.cost_value != null) {
+                    {{ e.raw.cost_value }} {{ localeService.t('coin_unit_' + e.raw.cost_unit) }}
+                  } @else {
+                    <span class="text-slate-arcane">—</span>
+                  }
+                </td>
                 <td class="py-2 pr-2">{{ e.description }}</td>
                 <td class="py-2 pr-2 text-xs">
                   @if (contentsSummary(e.id); as contains) {

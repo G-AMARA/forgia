@@ -259,7 +259,7 @@ export class CharacterStore {
 
   private static readonly FULL_CHARACTER_SELECT = `
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
-    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, subrace_id, background_id,
+    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, mount_equipment_id, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, subrace_id, background_id,
     skill_proficiencies, skill_mastery, damage_resistances, damage_immunities, condition_immunities,
     sex,
     races ( name ),
@@ -267,7 +267,7 @@ export class CharacterStore {
     backgrounds ( name ),
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
     character_spells ( spell_id, prepared, spells ( name, level, school ) ),
-    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name, image_url, weight ) ),
+    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name, image_url, weight, cost_value, cost_unit ) ),
     character_weapons ( id, weapon_id, quantity, weapons ( name, image_url, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability, properties, cost_value, cost_unit ) )
   `;
 
@@ -327,6 +327,7 @@ export class CharacterStore {
       armor_class: row.armor_class,
       equipped_armor_id: row.equipped_armor_id ?? null,
       shield_equipped: row.shield_equipped ?? false,
+      mount_equipment_id: row.mount_equipment_id ?? null,
       copper: row.copper ?? 0,
       silver: row.silver ?? 0,
       electrum: row.electrum ?? 0,
@@ -372,6 +373,8 @@ export class CharacterStore {
         weight: i.equipment?.weight ?? 0,
         quantity: i.quantity,
         equipped: i.equipped,
+        costValue: i.equipment?.cost_value ?? null,
+        costUnit: i.equipment?.cost_unit ?? null,
       })),
       weapons: (row.character_weapons ?? []).map((w: any) => ({
         rowId: w.id,
@@ -550,6 +553,19 @@ export class CharacterStore {
     const { error } = await this.supabase.client
       .from('characters')
       .update({ notes })
+      .eq('id', characterId);
+
+    if (!error) {
+      await this.refreshCharacter(characterId);
+    }
+
+    return { error };
+  }
+
+  async updateMount(characterId: string, mountEquipmentId: string | null) {
+    const { error } = await this.supabase.client
+      .from('characters')
+      .update({ mount_equipment_id: mountEquipmentId })
       .eq('id', characterId);
 
     if (!error) {
@@ -750,6 +766,7 @@ export interface CharacterFull {
   armor_class: number | null;
   equipped_armor_id: string | null;
   shield_equipped: boolean;
+  mount_equipment_id: string | null;
   copper: number;
   silver: number;
   electrum: number;
@@ -776,7 +793,7 @@ export interface CharacterFull {
   hit_die: number | null;
   saving_throw_proficiencies: string[];
   spells: { rowId: string; spellId: string; name: string; level: number; school: string; prepared: boolean }[];
-  inventory: { rowId: string; equipmentId: string; name: string; imageUrl: string | null; weight: number; quantity: number; equipped: boolean }[];
+  inventory: { rowId: string; equipmentId: string; name: string; imageUrl: string | null; weight: number; quantity: number; equipped: boolean; costValue: number | null; costUnit: string | null }[];
   weapons: {
     rowId: string;
     weaponId: string;
