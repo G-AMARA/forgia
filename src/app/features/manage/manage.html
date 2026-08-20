@@ -68,6 +68,22 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+      [class.border-fantasy-gold]="activeSection() === 'armors'"
+      [class.border-transparent]="activeSection() !== 'armors'"
+      (click)="setSection('armors')"
+    >
+      {{ localeService.t('tab_armor_manage') }}
+    </button>
+    <button
+      class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+      [class.border-fantasy-gold]="activeSection() === 'mounts'"
+      [class.border-transparent]="activeSection() !== 'mounts'"
+      (click)="setSection('mounts')"
+    >
+      {{ localeService.t('tab_mount_manage') }}
+    </button>
+    <button
+      class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
       [class.border-fantasy-gold]="activeSection() === 'bestiary'"
       [class.border-transparent]="activeSection() !== 'bestiary'"
       (click)="setSection('bestiary')"
@@ -85,6 +101,8 @@
     @case ('weapons') { <app-weapon-create></app-weapon-create> }
     @case ('spells') { <app-spell-create></app-spell-create> }
     @case ('equipment') { <app-equipment-create></app-equipment-create> }
+    @case ('armors') { <app-armor-create></app-armor-create> }
+    @case ('mounts') { <app-mount-create></app-mount-create> }
     @case ('bestiary') { <app-bestiary-manage></app-bestiary-manage> }
   }
 </section>

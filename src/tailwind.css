@@ -4,6 +4,9 @@
   /* Palette "Modern D&D Fantasy Portal" (da template.md) */
   --color-fantasy-black: #1c1c21;
   --color-fantasy-blue: #354a6a;
+  /* Blu più scuro di fantasy-blue, stesso valore già usato come stop centrale dei gradienti
+     (.bg-header-portal, .parchment-panel): qui è l'inchiostro delle pagine del "libro" arma. */
+  --color-fantasy-blue-deep: #243245;
   --color-fantasy-gold: #c7a45e;
   --color-fantasy-moonstone: #b8c0c8;
   --color-fantasy-green: #283732;
@@ -13,6 +16,12 @@
      pannello scuro, testo secondario), tema scuro invece di pergamena chiara. */
   --color-gold: #c7a45e;
   --color-gold-bright: #d8bd85;
+  /* Oro più scuro/bronzeo: per icone su bottoni già dorati, dove serve un tono più
+     profondo del fondo per leggersi come incise/incastonate invece che sovrapposte. */
+  --color-gold-dark: #8a6a35;
+  /* Oro quasi bianco: lo stesso nucleo della punta luminosa della barra XP
+     (.glow-gold-intense). Usato per testo che deve staccarsi da uno sfondo già dorato. */
+  --color-gold-glow: #f5e3bb;
   --color-stone: #1c1c21;
   --color-stone-dark: #131316;
   --color-slate-arcane: #838d97;
@@ -31,10 +40,52 @@ html {
   font-size: 112.5%; /* ~18px invece di 16px di default, scala tutto proporzionalmente */
 }
 
+/* Il reset di Tailwind imposta cursor:default (freccia) sui <button>, a differenza dei
+   link o degli elementi con cursor-pointer esplicito (manina): risultato incoerente al
+   passaggio del mouse a seconda dell'elemento. Qui uniformiamo tutti i bottoni cliccabili. */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 body {
   background-color: var(--color-fantasy-black);
   color: var(--color-fantasy-moonstone);
   font-family: var(--font-body);
+}
+
+/* Su Windows (Chrome/Edge) il popup nativo dei <select> ignora le classi Tailwind del
+   pannello e si disegna con il tema chiaro di sistema (sfondo grigio, testo bianco:
+   illeggibile). color-scheme dice al browser di usare la sua UI nativa dark per i controlli
+   di form; lo stile esplicito su option è il fallback per i browser che lo ignorano. */
+select {
+  color-scheme: dark;
+}
+select option {
+  background-color: var(--color-fantasy-blue-deep);
+  color: var(--color-fantasy-moonstone);
+}
+
+/* Scrollbar tema fantasy invece di quella nativa di sistema (su Windows particolarmente
+   stonata: track bianco, thumb e frecce grigie). Applicata globalmente così ogni pannello
+   scrollabile del portale (tab di Gestione, storia del personaggio, liste, ecc.) è coerente
+   senza dover ritoccare ogni singolo elemento. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-fantasy-gold) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-fantasy-gold);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-bright);
 }
 
 /* Superficie scura per pannelli in rilievo */
@@ -64,12 +115,146 @@ body {
   clip-path: polygon(0.0% 16.0px, 2.5% 19.83px, 5.0% 23.07px, 7.5% 25.24px, 10.0% 26.0px, 12.5% 25.24px, 15.0% 23.07px, 17.5% 19.83px, 20.0% 16.0px, 22.5% 12.17px, 25.0% 8.93px, 27.5% 6.76px, 30.0% 6.0px, 32.5% 6.76px, 35.0% 8.93px, 37.5% 12.17px, 40.0% 16.0px, 42.5% 19.83px, 45.0% 23.07px, 47.5% 25.24px, 50.0% 26.0px, 52.5% 25.24px, 55.0% 23.07px, 57.5% 19.83px, 60.0% 16.0px, 62.5% 12.17px, 65.0% 8.93px, 67.5% 6.76px, 70.0% 6.0px, 72.5% 6.76px, 75.0% 8.93px, 77.5% 12.17px, 80.0% 16.0px, 82.5% 19.83px, 85.0% 23.07px, 87.5% 25.24px, 90.0% 26.0px, 92.5% 25.24px, 95.0% 23.07px, 97.5% 19.83px, 100.0% 16.0px, 100% 100%, 0% 100%);
 }
 
+/* Effetto "scolpito nella pietra": pannello incassato (ombra interna). Usato per riquadri
+   di sola lettura che devono leggersi come pietra intagliata, non come campi input. */
+.panel-inset {
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.55),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Cornice "medievale": doppio bordo dorato + ombra incassata. Sostituisce le illustrazioni
+   di sfondo nei riquadri caratteristica del tab Generale (solo testo, niente immagini). */
+.frame-medieval {
+  border: 3px double var(--color-gold-bright);
+  box-shadow:
+    0 0 0 1px rgba(199, 164, 94, 0.3),
+    inset 0 2px 8px rgba(0, 0, 0, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Pergamena: i dati anagrafici del personaggio come se fossero scritti a inchiostro su un
+   foglio antico invece che in campi input (si modificano altrove, dalla modale). Stessa
+   sfumatura nero-pietra -> blu scuro già usata per il banner/sfondo app (.bg-header-portal):
+   niente marrone inventato, resta nella palette esistente. */
+.parchment-panel {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(199, 164, 94, 0.16), transparent 55%),
+    radial-gradient(circle at 85% 75%, rgba(199, 164, 94, 0.12), transparent 50%),
+    linear-gradient(160deg, #1c1c21 0%, #243245 55%, #354a6a 100%);
+  border: 1px solid rgba(199, 164, 94, 0.35);
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Papiro srotolato: come .parchment-panel, con due rulli (sopra/sotto) più stretti al
+   centro e nodi dorati più marcati alle estremità, come un vero rotolo aperto. I nodi
+   d'estremità sono 4 span nel markup (.papyrus-knob), non pseudo-elementi: servono 4 punti
+   indipendenti (2 per rullo) mentre before/after bastano solo per l'asta centrale sottile. */
+.papyrus-scroll {
+  position: relative;
+  background:
+    radial-gradient(circle at 25% 10%, rgba(199, 164, 94, 0.12), transparent 50%),
+    linear-gradient(180deg, #1c1c21 0%, #243245 100%);
+  border-left: 1px solid rgba(199, 164, 94, 0.3);
+  border-right: 1px solid rgba(199, 164, 94, 0.3);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+}
+.papyrus-scroll::before,
+.papyrus-scroll::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-gold-bright), var(--color-gold));
+  opacity: 0.85;
+}
+.papyrus-scroll::before {
+  top: -3px;
+}
+.papyrus-scroll::after {
+  bottom: -3px;
+}
+.papyrus-knob {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
 /* Bagliori (template.md sezione 3) */
 .glow-gold {
   box-shadow: 0 0 15px rgba(199, 164, 94, 0.7);
   filter: drop-shadow(0 0 5px rgba(199, 164, 94, 0.9));
 }
+/* Variante più intensa di .glow-gold: nucleo quasi bianco-oro + doppio alone più ampio.
+   Usata per punti focali piccoli (es. la punta della barra XP) che devono "bruciare"
+   più del bordo dorato standard dei pannelli. */
+.glow-gold-intense {
+  box-shadow:
+    0 0 6px 2px rgba(245, 227, 187, 0.95),
+    0 0 18px 6px rgba(216, 189, 133, 0.85),
+    0 0 34px 12px rgba(199, 164, 94, 0.55);
+  filter: drop-shadow(0 0 10px rgba(216, 189, 133, 0.95));
+}
 .glow-blue {
   box-shadow: 0 0 15px rgba(53, 74, 106, 0.7);
   filter: drop-shadow(0 0 5px rgba(53, 74, 106, 0.9));
+}
+
+/* "Libro" dei dettagli arma (tab Armi): un'illustrazione di sfondo (cornice dorata +
+   pagine) con due riquadri di testo posizionati sopra, in percentuale, per restare dentro
+   la cornice qualunque sia la larghezza. aspect-ratio deve combaciare ESATTAMENTE con le
+   proporzioni reali di public/themes/LIBRO.png (1149x706px): se non coincide, object-fit:
+   contain lascia bande vuote ai lati dell'immagine dentro il box, e gli inset percentuali
+   di .book-content finiscono per allinearsi al box invece che alla cornice disegnata,
+   sembrando "fuori posto". Percentuale = responsive per costruzione: essendo relativa alle
+   dimensioni correnti del contenitore (che scala con aspect-ratio + width:100%), l'intera
+   composizione resta proporzionata a qualsiasi larghezza, mobile incluso, senza bisogno di
+   breakpoint dedicati. */
+.book-container {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  aspect-ratio: 1149 / 706;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.book-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+.book-content {
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  left: 10%;
+  right: 10%;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 8%;
+  transform: translate(-20px, -10px);
+}
+.page {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  color: var(--color-fantasy-blue-deep);
+  font-family: var(--font-display), Georgia, serif;
+  box-sizing: border-box;
+}
+.page::-webkit-scrollbar {
+  width: 5px;
+}
+.page::-webkit-scrollbar-thumb {
+  background: var(--color-fantasy-gold);
+  border-radius: 3px;
 }

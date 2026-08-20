@@ -4,12 +4,22 @@ import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
+import { SpellSchoolIcon } from '../../shared/spell-school-icon/spell-school-icon';
+import { translateSpellSchool } from '../../core/spell-schools';
+
+// Stesse 8 scuole gestite da SpellSchoolIcon (core/spell-schools.ts per le traduzioni):
+// determina l'icona mostrata sulle card incantesimo in scheda personaggio.
+export const SPELL_SCHOOLS = [
+  'abjuration', 'conjuration', 'divination', 'enchantment',
+  'evocation', 'illusion', 'necromancy', 'transmutation',
+] as const;
 
 interface HomebrewSpell {
   id: string;
   name: string; // tradotto nella lingua corrente: solo per la visualizzazione in lista
   rawName: string; // canonico, quello realmente salvato in spells.name
   level: number;
+  school: string | null;
   casting_time: string | null;
   range: string | null;
   duration: string | null;
@@ -23,7 +33,7 @@ interface HomebrewSpell {
 @Component({
   selector: 'app-spell-create',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, SpellSchoolIcon],
   templateUrl: './spell-create.html',
 })
 export class SpellCreate {
@@ -31,6 +41,12 @@ export class SpellCreate {
   private contentStore = inject(ContentStore);
   protected localeService = inject(LocaleService);
   private modal = inject(Modal);
+
+  protected schools = SPELL_SCHOOLS;
+
+  schoolLabel(school: string | null): string {
+    return school ? translateSpellSchool(school, this.localeService.locale()) : '—';
+  }
 
   protected classesCatalog = this.contentStore.getContent('classes');
   private spellsCatalog = this.contentStore.getContent('spells');
@@ -45,6 +61,7 @@ export class SpellCreate {
       name: s.name,
       rawName: s.raw.name,
       level: s.raw.level ?? 0,
+      school: s.raw.school ?? null,
       casting_time: s.raw.casting_time ?? null,
       range: s.raw.range ?? null,
       duration: s.raw.duration ?? null,
@@ -60,6 +77,7 @@ export class SpellCreate {
 
   level = 0;
   name = '';
+  school = '';
   castingTime = '';
   range = '';
   duration = '';
@@ -146,6 +164,7 @@ export class SpellCreate {
     this.editingSourcebookCode = null;
     this.name = '';
     this.level = 0;
+    this.school = '';
     this.castingTime = '';
     this.range = '';
     this.duration = '';
@@ -163,6 +182,7 @@ export class SpellCreate {
     const isEnglish = this.localeService.locale() === 'en';
     this.name = isEnglish ? spell.rawName : spell.name;
     this.level = spell.level;
+    this.school = spell.school ?? '';
     this.castingTime = spell.casting_time ?? '';
     this.range = spell.range ?? '';
     this.duration = spell.duration ?? '';
@@ -194,6 +214,7 @@ export class SpellCreate {
     // sulla riga base a prescindere dalla lingua corrente.
     const basePayload = {
       level: this.level,
+      school: this.school || null,
       sourcebook_code: this.editingId ? (this.editingSourcebookCode ?? 'homebrew') : 'homebrew',
       classes: chosenClasses,
       casting_time: this.castingTime || null,

@@ -153,16 +153,6 @@
           </select>
         </div>
 
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('darkvision_label') }}</label>
-          <select
-            name="darkvision" [(ngModel)]="darkvision"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          >
-            <option [ngValue]="false">{{ localeService.t('darkvision_no') }}</option>
-            <option [ngValue]="true">{{ localeService.t('darkvision_yes') }}</option>
-          </select>
-        </div>
       </div>
 
       <!-- Punteggi caratteristica -->
@@ -227,33 +217,6 @@
             }
           </div>
         }
-
-        <!-- Bonus Background disattivato su richiesta: con un background selezionato si applica
-             comunque solo il bonus razziale (vedi getAppliedBonus in character-create.ts).
-             Blocco originale lasciato commentato per poterlo riattivare in futuro.
-        @if (backgroundId) {
-          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
-            <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
-              <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('background_bonus_label') }}</label>
-              <span class="text-xs font-semibold" [class]="backgroundBonusRemaining() > 0 ? 'text-fantasy-gold' : 'text-fantasy-red'">
-                {{ localeService.t('points_remaining_label') }}: {{ backgroundBonusRemaining() }}/{{ backgroundBonusMax }}
-              </span>
-            </div>
-            @for (key of abilityKeys; track key) {
-              <div class="flex flex-col gap-1">
-                <input
-                  type="number" min="0" [attr.max]="maxBackgroundBonus(key)"
-                  [ngModel]="backgroundBonuses[key]"
-                  (ngModelChange)="setBackgroundBonus(key, $event)"
-                  [disabled]="backgroundBonuses[key] === 0 && backgroundBonusRemaining() === 0"
-                  [name]="'background_bonus_' + key"
-                  class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm disabled:opacity-50"
-                />
-              </div>
-            }
-          </div>
-        }
-        -->
 
         <!-- Punteggi Base + Totali -->
         <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">

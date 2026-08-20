@@ -27,6 +27,12 @@ export class ClassCreate {
   hitDie = 8;
   description = '';
   savingThrows = new Set<string>();
+  // Difesa Senza Armatura: '' = nessuna, altrimenti chiave caratteristica (es. 'cos' per il
+  // Barbaro) che si somma a Destrezza per la CA quando non si indossa armatura.
+  unarmoredDefenseAbility = '';
+  // Movimento Senza Armatura (Monaco): bonus di velocità per livello quando non si indossa
+  // armatura né scudo, vedi core/unarmored-movement.ts.
+  unarmoredMovement = false;
   startingEquipment = signal<EquipmentChoiceGroup[]>([]);
 
   editingId: string | null = null;
@@ -57,6 +63,8 @@ export class ClassCreate {
     this.hitDie = 8;
     this.description = '';
     this.savingThrows = new Set();
+    this.unarmoredDefenseAbility = '';
+    this.unarmoredMovement = false;
     this.startingEquipment.set([]);
   }
 
@@ -69,6 +77,8 @@ export class ClassCreate {
       typeof p === 'string' ? p : p.index ?? p.name
     );
     this.savingThrows = new Set(proficiencies);
+    this.unarmoredDefenseAbility = cls.raw.unarmored_defense_ability ?? '';
+    this.unarmoredMovement = cls.raw.unarmored_movement ?? false;
     this.startingEquipment.set(structuredClone(cls.raw.starting_equipment ?? []));
   }
 
@@ -84,6 +94,8 @@ export class ClassCreate {
       hit_die: this.hitDie,
       description: this.description || null,
       saving_throw_proficiencies: Array.from(this.savingThrows),
+      unarmored_defense_ability: this.unarmoredDefenseAbility || null,
+      unarmored_movement: this.unarmoredMovement,
       starting_equipment: this.startingEquipment(),
     };
 
@@ -94,6 +106,11 @@ export class ClassCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
+      // Senza questo, una vecchia traduzione salvata (content_translations) continuerebbe
+      // a "vincere" sul nome appena modificato qui, mostrando per sempre quello vecchio.
+      if (this.editingId) {
+        await this.contentStore.clearTranslation('classes', this.editingId);
+      }
       this.resetForm();
       await this.refreshClasses();
       this.modal.success(this.localeService.t('saved_message'));

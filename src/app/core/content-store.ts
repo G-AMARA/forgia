@@ -91,6 +91,24 @@ export class ContentStore {
     await this.fetchAndMerge(table, locale, contentSignal);
   }
 
+  /**
+   * Cancella un'eventuale riga di traduzione salvata per questo contenuto, nella lingua
+   * corrente. Da chiamare quando l'utente modifica direttamente nome/descrizione di un
+   * contenuto via Gestione (razze, sottorazze, classi, sottoclassi, background): senza,
+   * una vecchia content_translations continuerebbe a "vincere" sul valore appena salvato,
+   * mostrandolo per sempre invariato (il campo name della form modifica solo la riga base).
+   */
+  async clearTranslation(table: ContentTable, contentId: string): Promise<void> {
+    const locale = this.localeService.locale();
+    if (locale === 'en') return;
+    await this.supabase.client
+      .from('content_translations')
+      .delete()
+      .eq('content_table', table)
+      .eq('content_id', contentId)
+      .eq('locale', locale);
+  }
+
   private async fetchAndMerge(
     table: ContentTable,
     locale: string,

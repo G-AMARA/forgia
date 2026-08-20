@@ -41,6 +41,15 @@
       ></textarea>
     </div>
 
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('subclass_traits_label') }}</label>
+      <app-trait-list-editor
+        [items]="traits"
+        (itemsChange)="traits = $event"
+        [addLabel]="localeService.t('add_trait_row_button')"
+      ></app-trait-list-editor>
+    </div>
+
     <div class="flex gap-2">
       <button
         type="submit" [disabled]="loading() || !classId"
@@ -67,8 +76,11 @@
     } @else {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         @for (sub of subclasses(); track sub.id) {
-          <div class="flex bg-fantasy-black/60 border border-gold rounded-lg overflow-hidden">
-            <div class="w-1.5 bg-fantasy-gold shrink-0"></div>
+          <div
+            class="flex border rounded-lg overflow-hidden transition-colors"
+            [class]="sub.id === editingId ? 'bg-fantasy-gold/15 border-fantasy-gold' : 'bg-fantasy-black/60 border-gold'"
+          >
+            <div class="w-1.5 shrink-0" [class]="sub.id === editingId ? 'bg-fantasy-gold' : 'bg-fantasy-gold/30'"></div>
             <div class="p-3 flex-1">
               <div class="flex items-start justify-between gap-2">
                 <h4 class="font-display text-base text-fantasy-moonstone">{{ sub.name }}</h4>

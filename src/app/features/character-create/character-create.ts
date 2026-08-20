@@ -80,19 +80,12 @@ export class CharacterCreate {
   experiencePoints = 0;
   backstory = '';
   sex: 'M' | 'F' = 'M';
-  darkvision = false;
 
   abilityScores = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
-  backgroundBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   // Punti "a scelta libera" concessi da razza/sottorazza (es. Umano Variante, Draconide
   // Cromatico): allocati liberamente dal giocatore entro freeBonusPerAbilityMax().
   freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   abilityKeys: (keyof typeof this.abilityScores)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
-
-  // Punti massimi assegnabili come Bonus Background e valore massimo per singola caratteristica:
-  // combinazioni valide risultanti: tre caselle a +1, oppure una a +2 e una a +1.
-  readonly backgroundBonusMax = 3;
-  readonly backgroundBonusPerAbilityMax = 2;
 
   constructor() {
     this.loadPackContents();
@@ -498,37 +491,10 @@ export class CharacterCreate {
     this.freeBonuses[key] = next;
   }
 
-  backgroundBonusTotal(): number {
-    return this.abilityKeys.reduce((sum, k) => sum + this.backgroundBonuses[k], 0);
-  }
-
-  backgroundBonusRemaining(): number {
-    return this.backgroundBonusMax - this.backgroundBonusTotal();
-  }
-
-  // Tetto dinamico per l'input: non oltre il max per caratteristica, né oltre i punti rimasti.
-  maxBackgroundBonus(key: keyof typeof this.abilityScores): number {
-    return Math.min(this.backgroundBonusPerAbilityMax, this.backgroundBonuses[key] + this.backgroundBonusRemaining());
-  }
-
-  // Applica il nuovo valore rispettando i vincoli: max 2 per caratteristica, max 3 punti totali.
-  setBackgroundBonus(key: keyof typeof this.abilityScores, value: number) {
-    let next = Math.max(0, Math.min(this.backgroundBonusPerAbilityMax, Math.floor(value) || 0));
-    const othersSum = this.abilityKeys
-      .filter((k) => k !== key)
-      .reduce((sum, k) => sum + this.backgroundBonuses[k], 0);
-    if (othersSum + next > this.backgroundBonusMax) {
-      next = Math.max(0, this.backgroundBonusMax - othersSum);
-    }
-    this.backgroundBonuses[key] = next;
-  }
-
-  // Bonus di background disattivato su richiesta: resta solo il bonus razziale, sia con
-  // che senza background selezionato. Logica originale (bonus manuale alternativo a quello
-  // razziale quando si sceglie un background) commentata, non rimossa, per poterla riattivare.
+  // Bonus caratteristica: sempre e solo da razza/sottorazza (più l'eventuale quota "a scelta
+  // libera"). Il background non concede bonus caratteristica.
   getAppliedBonus(key: keyof typeof this.abilityScores): number {
     return this.getRaceOrSubraceBonus(key) + this.freeBonuses[key];
-    // return this.backgroundId ? this.backgroundBonuses[key] : this.getRaceBonus(key);
   }
 
   getTotalScore(key: keyof typeof this.abilityScores): number {
@@ -581,26 +547,25 @@ export class CharacterCreate {
 
   // Se tra l'equipaggiamento iniziale c'è un'armatura (o uno scudo), la indossa subito invece
   // di lasciarla "nessuna armatura" finché il giocatore non la equipaggia a mano dalla scheda:
-  // altrimenti la CA calcolata resterebbe sbagliata (10 + Des) nonostante l'armatura sia già
-  // in inventario.
+  // altrimenti la CA calcolata resterebbe sbagliata (10 + Des). L'armatura non finisce anche
+  // in inventario (vedi resolveStartingEquipment): equipped_armor_id/shield_equipped bastano,
+  // è già mostrata nella colonna sinistra del tab Equipaggiamento.
   private detectStartingArmor(
     items: { table: 'weapons' | 'equipment'; id: string; quantity: number }[]
-  ): { equippedArmorId: string | null; shieldEquipped: boolean; equippedEquipmentIds: string[] } {
+  ): { equippedArmorId: string | null; shieldEquipped: boolean } {
     let equippedArmorId: string | null = null;
     let shieldEquipped = false;
-    const equippedEquipmentIds: string[] = [];
 
     for (const item of items) {
       if (item.table !== 'equipment') continue;
       const equip = this.allEquipment().find((e: any) => e.id === item.id);
       if (!equip || equip.raw.type !== 'Armor') continue;
 
-      equippedEquipmentIds.push(equip.id);
       if (equip.raw.armor_category === 'shield') shieldEquipped = true;
       else if (!equippedArmorId) equippedArmorId = equip.id;
     }
 
-    return { equippedArmorId, shieldEquipped, equippedEquipmentIds };
+    return { equippedArmorId, shieldEquipped };
   }
 
   async submit() {
@@ -616,8 +581,16 @@ export class CharacterCreate {
       this.abilityKeys.map((key) => [key, this.getAppliedBonus(key)])
     );
 
-    const startingItems = this.resolveStartingEquipment();
-    const { equippedArmorId, shieldEquipped, equippedEquipmentIds } = this.detectStartingArmor(startingItems);
+    const resolvedItems = this.resolveStartingEquipment();
+    const { equippedArmorId, shieldEquipped } = this.detectStartingArmor(resolvedItems);
+    // Le armature vengono tolte dagli oggetti da inserire in inventario: restano solo
+    // equipped_armor_id/shield_equipped, la colonna sinistra del tab Equipaggiamento le
+    // mostra già da lì, non serve più anche una riga duplicata nell'inventario.
+    const startingItems = resolvedItems.filter((item) => {
+      if (item.table !== 'equipment') return true;
+      const equip = this.allEquipment().find((e: any) => e.id === item.id);
+      return equip?.raw?.type !== 'Armor';
+    });
     const background = this.backgrounds().find((b: any) => b.id === this.backgroundId);
     const startingGold = background?.raw.starting_gold ?? 0;
 
@@ -635,12 +608,10 @@ export class CharacterCreate {
       appliedBonus,
       backstory: this.backstory,
       sex: this.sex,
-      darkvision: this.darkvision,
       spellIds: Array.from(this.selectedSpellIds()),
       startingItems,
       equippedArmorId,
       shieldEquipped,
-      equippedEquipmentIds,
       startingGold,
     });
 

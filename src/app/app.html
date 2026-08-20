@@ -35,16 +35,19 @@
        così il cavaliere resta sempre alla stessa scala qualunque sia la tab attiva, invece
        di stirarsi/rimpicciolirsi in base a quanto contenuto ha la pagina. Header/nav/main/
        footer arrivano dopo nel DOM e la coprono dove hanno uno sfondo opaco: resta visibile
-       solo nelle colonne laterali vuote. -->
+       solo nelle colonne laterali vuote. object-left-bottom/object-right-bottom (non solo
+       object-bottom): altrimenti object-contain centra l'immagine nel suo riquadro anche in
+       orizzontale, e su schermi larghi (riquadro più largo dell'immagine) si staccava dal
+       bordo reale del viewport invece di restarci incollata. -->
   <div class="fixed inset-0 flex justify-between pointer-events-none">
     <img
       src="themes/wallpapersx.png" alt=""
-      class="h-full object-contain object-bottom opacity-10"
+      class="h-full object-contain object-bottom-left opacity-10"
       style="width: max(0px, calc((100% - 40rem) / 2))"
     />
     <img
       src="themes/wallpaperdx.png" alt=""
-      class="h-full object-contain object-bottom opacity-10"
+      class="h-full object-contain object-bottom-right opacity-10"
       style="width: max(0px, calc((100% - 40rem) / 2))"
     />
   </div>

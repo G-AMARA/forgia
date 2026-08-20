@@ -1,4 +1,5 @@
 @if (character(); as c) {
+  <div class="rounded-lg p-4" style="background-color: #272e3e;">
     <section class="space-y-4">
       <!-- Intestazione: avatar + identità -->
       <div class="relative bg-stone-textured panel-carved border-2 border-gold rounded-lg p-5 text-fantasy-moonstone overflow-hidden">
@@ -34,528 +35,1111 @@
             @if (c.subclass_name) { ({{ getTranslatedSubclassName(c.subclass_name) }}) }
           </p>
           <p class="text-xs opacity-70">
-            {{ getTranslatedBackgroundName(c.background_name) }} · {{ localeService.t('alignment_' + c.alignment) }} · {{ c.experience_points }} XP
+            {{ getTranslatedBackgroundName(c.background_name) }} · {{ localeService.t('alignment_' + c.alignment) }}
           </p>
+
+          <!-- Barra esperienza: progresso entro il livello corrente, soglie SRD standard.
+               Stretta apposta (max-w-56): larga com'era prima finiva sopra il ritratto
+               della classe sulla destra del banner. -->
+          @if (xpProgress(); as xp) {
+            <div class="mt-3 max-w-56 mx-auto sm:mx-0">
+              <div class="relative h-2.5 rounded-full bg-fantasy-black/70 border border-gold/40 overflow-hidden">
+                <div
+                  class="h-full rounded-full bg-linear-to-r from-fantasy-gold/30 via-fantasy-gold to-gold-bright transition-[width] duration-500"
+                  [style.width.%]="xp.percent"
+                ></div>
+                @if (xp.percent > 0) {
+                  <div
+                    class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gold-bright glow-gold-intense"
+                    [style.left.%]="xp.percent"
+                    style="margin-left: -6px;"
+                  ></div>
+                }
+              </div>
+              <p class="mt-1.5 text-[0.65rem] text-fantasy-gold/80">
+                @if (xp.nextLevelXp !== null) {
+                  {{ c.experience_points }}/{{ xp.nextLevelXp }} XP
+                } @else {
+                  {{ c.experience_points }} XP
+                }
+              </p>
+            </div>
+          }
         </div>
         </div>
       </div>
 
       <!-- Sotto-schede -->
-      <div class="flex gap-1 border-b border-gold overflow-x-auto whitespace-nowrap">
-        <button
-          class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-          [class.border-fantasy-gold]="activeSubTab() === 'general'"
-          [class.border-transparent]="activeSubTab() !== 'general'"
-          (click)="setSubTab('general')"
-        >
-          {{ localeService.t('subtab_general') }}
-        </button>
-        <button
-          class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-          [class.border-fantasy-gold]="activeSubTab() === 'combat'"
-          [class.border-transparent]="activeSubTab() !== 'combat'"
-          (click)="setSubTab('combat')"
-        >
-          {{ localeService.t('subtab_combat') }}
-        </button>
-        <button
-          class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-          [class.border-fantasy-gold]="activeSubTab() === 'inventory'"
-          [class.border-transparent]="activeSubTab() !== 'inventory'"
-          (click)="setSubTab('inventory')"
-        >
-          {{ localeService.t('subtab_inventory') }}
-        </button>
-        @if (c.class_name) {
+      <div class="flex items-center justify-between gap-2 border-b border-gold">
+        <div class="flex gap-1 overflow-x-auto whitespace-nowrap">
           <button
             class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-            [class.border-fantasy-gold]="activeSubTab() === 'spells'"
-            [class.border-transparent]="activeSubTab() !== 'spells'"
-            (click)="setSubTab('spells')"
+            [class.border-fantasy-gold]="activeSubTab() === 'general'"
+            [class.border-transparent]="activeSubTab() !== 'general'"
+            (click)="setSubTab('general')"
           >
-            {{ localeService.t('subtab_spells') }}
+            {{ localeService.t('subtab_general') }}
+          </button>
+          <button
+            class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+            [class.border-fantasy-gold]="activeSubTab() === 'combat'"
+            [class.border-transparent]="activeSubTab() !== 'combat'"
+            (click)="setSubTab('combat')"
+          >
+            {{ localeService.t('subtab_combat') }}
+          </button>
+          <button
+            class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+            [class.border-fantasy-gold]="activeSubTab() === 'inventory'"
+            [class.border-transparent]="activeSubTab() !== 'inventory'"
+            (click)="setSubTab('inventory')"
+          >
+            {{ localeService.t('subtab_inventory') }}
+          </button>
+          @if (c.class_name) {
+            <button
+              class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+              [class.border-fantasy-gold]="activeSubTab() === 'spells'"
+              [class.border-transparent]="activeSubTab() !== 'spells'"
+              (click)="setSubTab('spells')"
+            >
+              {{ localeService.t('subtab_spells') }}
+            </button>
+          }
+          <button
+            class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+            [class.border-fantasy-gold]="activeSubTab() === 'weapons'"
+            [class.border-transparent]="activeSubTab() !== 'weapons'"
+            (click)="setSubTab('weapons')"
+          >
+            {{ localeService.t('subtab_weapons') }}
+          </button>
+          <button
+            class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+            [class.border-fantasy-gold]="activeSubTab() === 'diary'"
+            [class.border-transparent]="activeSubTab() !== 'diary'"
+            (click)="setSubTab('diary')"
+          >
+            {{ localeService.t('subtab_diary') }}
+          </button>
+        </div>
+
+        <!-- Salva Storia: qui invece che sotto il papiro, per non rubargli altezza. -->
+        @if (activeSubTab() === 'general' && !readOnly()) {
+          <button
+            (click)="saveBackstory()"
+            class="shrink-0 flex items-center gap-1.5 px-4 py-1.5 mb-1 bg-fantasy-gold text-fantasy-black font-display text-sm rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+          >
+            <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor" class="text-gold-dark" />
+              <rect x="6.5" y="4.5" width="8" height="5" fill="currentColor" class="text-fantasy-gold" />
+              <rect x="6" y="13" width="12" height="6.5" rx="0.5" fill="currentColor" class="text-fantasy-gold/50" />
+            </svg>
+            {{ localeService.t('save_button') }}
           </button>
         }
-        <button
-          class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
-          [class.border-fantasy-gold]="activeSubTab() === 'weapons'"
-          [class.border-transparent]="activeSubTab() !== 'weapons'"
-          (click)="setSubTab('weapons')"
-        >
-          {{ localeService.t('subtab_weapons') }}
-        </button>
+
+        <!-- Salva Abilità: stesso bottone/posizione della Storia, per lo stesso motivo. -->
+        @if (activeSubTab() === 'combat' && !readOnly()) {
+          <button
+            (click)="saveCombat()"
+            class="shrink-0 flex items-center gap-1.5 px-4 py-1.5 mb-1 bg-fantasy-gold text-fantasy-black font-display text-sm rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+          >
+            <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor" class="text-gold-dark" />
+              <rect x="6.5" y="4.5" width="8" height="5" fill="currentColor" class="text-fantasy-gold" />
+              <rect x="6" y="13" width="12" height="6.5" rx="0.5" fill="currentColor" class="text-fantasy-gold/50" />
+            </svg>
+            {{ localeService.t('save_button') }}
+          </button>
+        }
+
+        <!-- Salva Equipaggiamento: stesso bottone/posizione della Storia, per la Valuta
+             (unica azione "salva tutto" rimasta in questo tab: Armatura ha la sua modale,
+             gli oggetti si aggiungono/rimuovono all'istante senza bisogno di salvare). -->
+        @if (activeSubTab() === 'inventory' && !readOnly()) {
+          <button
+            (click)="saveCurrency()"
+            class="shrink-0 flex items-center gap-1.5 px-4 py-1.5 mb-1 bg-fantasy-gold text-fantasy-black font-display text-sm rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+          >
+            <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" fill="currentColor" class="text-gold-dark" />
+              <rect x="6.5" y="4.5" width="8" height="5" fill="currentColor" class="text-fantasy-gold" />
+              <rect x="6" y="13" width="12" height="6.5" rx="0.5" fill="currentColor" class="text-fantasy-gold/50" />
+            </svg>
+            {{ localeService.t('save_button') }}
+          </button>
+        }
       </div>
-  
+
       <!-- GENERALE -->
       @if (activeSubTab() === 'general') {
-        <app-card contentClass="space-y-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }}</label>
-            <input
-              type="text" [(ngModel)]="identityName" [disabled]="readOnly()"
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
-            />
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('race_label') }}</label>
-              <select [ngModel]="identityRaceId" (ngModelChange)="onIdentityRaceChange($event)" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
-                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-                @for (race of races(); track race.id) {
-                  <option [value]="race.id">{{ race.name }}</option>
+        <app-card>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Statistiche + Privilegi e Tratti: metà scheda, impilati in colonna. I riquadri
+                 caratteristica sono volutamente compatti (niente più h-full/auto-rows-fr) per
+                 lasciare spazio sotto alla card Privilegi e Tratti. -->
+            <div class="flex flex-col gap-4">
+              <div class="grid grid-cols-3 gap-3">
+                @for (key of abilityKeys; track key) {
+                  <div class="flex flex-col items-center gap-1.5">
+                    <span class="text-xs uppercase font-semibold text-fantasy-gold/80">{{ localeService.t('ability_' + key) }}</span>
+                    <div class="frame-medieval relative w-full flex flex-col items-center justify-center gap-1.5 rounded-sm p-2 overflow-hidden bg-fantasy-black/50">
+                      <div
+                        class="absolute inset-0 bg-cover bg-center"
+                        [style.background-image]="'url(' + getStatLabelImagePath(key) + ')'"
+                      ></div>
+                      <div class="absolute inset-0 bg-fantasy-black/80"></div>
+                      <span class="relative text-3xl sm:text-4xl font-black text-gold-bright [text-shadow:0_3px_8px_rgba(0,0,0,0.85)] py-1">
+                        {{ abilityScores[key] }}
+                      </span>
+                      <span
+                        class="relative flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white"
+                        [class]="modifierBadgeClass(abilityScores[key])"
+                      >
+                        {{ formatModifier(abilityModifier(abilityScores[key])) }}
+                      </span>
+                    </div>
+                  </div>
                 }
-              </select>
-              @if (getRaceDescription(); as desc) {
-                <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
-              }
-            </div>
+              </div>
 
-            @if (availableSubraces().length > 0) {
-              <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold">{{ localeService.t('subrace_label') }}</label>
-                <select [ngModel]="identitySubraceId" (ngModelChange)="onIdentitySubraceChange($event)" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
-                  <option value="">{{ localeService.t('subrace_none') }}</option>
-                  @for (sub of availableSubraces(); track sub.id) {
-                    <option [value]="sub.id">{{ sub.name }}</option>
+              <!-- Privilegi e Tratti: stile identico al pannello Informazioni Personaggio, con
+                   tre tab interne (Razziali / Sottoclassi / Background). flex-1 + overflow-y
+                   invece di crescere senza limite: se ce ne sono tanti scorre internamente. -->
+              <div class="flex-1 min-h-0 flex flex-col gap-2">
+                <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('privileges_traits_title') }}</h3>
+
+                <div class="flex gap-1 border-b border-gold/30">
+                  <button
+                    type="button"
+                    class="px-3 py-1.5 font-display text-xs uppercase tracking-wide border-b-2 transition-colors"
+                    [class.border-fantasy-gold]="privilegesTab() === 'racial'"
+                    [class.text-fantasy-gold]="privilegesTab() === 'racial'"
+                    [class.border-transparent]="privilegesTab() !== 'racial'"
+                    [class.text-slate-arcane]="privilegesTab() !== 'racial'"
+                    (click)="privilegesTab.set('racial')"
+                  >
+                    {{ getTranslatedRaceName(c.race_name) }}
+                  </button>
+                  @if (c.subclass_name) {
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 font-display text-xs uppercase tracking-wide border-b-2 transition-colors"
+                      [class.border-fantasy-gold]="privilegesTab() === 'subclass'"
+                      [class.text-fantasy-gold]="privilegesTab() === 'subclass'"
+                      [class.border-transparent]="privilegesTab() !== 'subclass'"
+                      [class.text-slate-arcane]="privilegesTab() !== 'subclass'"
+                      (click)="privilegesTab.set('subclass')"
+                    >
+                      {{ getTranslatedSubclassName(c.subclass_name) }}
+                    </button>
                   }
-                </select>
-                @if (getSubraceDescription(); as desc) {
-                  <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
-                }
-              </div>
-            }
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('class_label') }}</label>
-              <select [(ngModel)]="identityClassId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
-                <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-                @for (cls of classesContent(); track cls.id) {
-                  <option [value]="cls.id">{{ cls.name }}</option>
-                }
-              </select>
-              @if (getClassDescription(); as desc) {
-                <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
-              }
-            </div>
-
-            @if (availableSubclasses().length > 0) {
-              <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold">{{ localeService.t('subclass_label') }}</label>
-                <select [(ngModel)]="identitySubclassId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
-                  <option value="">{{ localeService.t('subclass_none') }}</option>
-                  @for (sub of availableSubclasses(); track sub.id) {
-                    <option [value]="sub.id">{{ sub.name }}</option>
+                  @if (c.background_name) {
+                    <button
+                      type="button"
+                      class="px-3 py-1.5 font-display text-xs uppercase tracking-wide border-b-2 transition-colors"
+                      [class.border-fantasy-gold]="privilegesTab() === 'background'"
+                      [class.text-fantasy-gold]="privilegesTab() === 'background'"
+                      [class.border-transparent]="privilegesTab() !== 'background'"
+                      [class.text-slate-arcane]="privilegesTab() !== 'background'"
+                      (click)="privilegesTab.set('background')"
+                    >
+                      {{ getTranslatedBackgroundName(c.background_name) }}
+                    </button>
                   }
-                </select>
-                @if (getSubclassDescription(); as desc) {
-                  <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
-                }
-              </div>
-            }
+                </div>
 
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
-              <select [(ngModel)]="identityBackgroundId" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
-                <option value="">{{ localeService.t('subclass_none') }}</option>
-                @for (bg of backgroundsContent(); track bg.id) {
-                  <option [value]="bg.id">{{ bg.name }}</option>
-                }
-              </select>
-              @if (getBackgroundDescription(); as desc) {
-                <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
-              }
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('level_label') }}</label>
-              <input
-                type="number" min="1" max="20" [(ngModel)]="identityLevel" [disabled]="readOnly()"
-                class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
-              />
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }}</label>
-              <select [(ngModel)]="identityAlignment" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
-                @for (al of alignments; track al) {
-                  <option [value]="al">{{ localeService.t('alignment_' + al) }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('xp_label') }}</label>
-              <input
-                type="number" min="0" [(ngModel)]="identityXp" [disabled]="readOnly()"
-                class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
-              />
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('sex_label') }}</label>
-              <select [(ngModel)]="identitySex" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
-                <option value="M">{{ localeService.t('sex_male') }}</option>
-                <option value="F">{{ localeService.t('sex_female') }}</option>
-              </select>
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('darkvision_label') }}</label>
-              <select [(ngModel)]="identityDarkvision" [disabled]="readOnly()" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70">
-                <option [ngValue]="false">{{ localeService.t('darkvision_no') }}</option>
-                <option [ngValue]="true">{{ localeService.t('darkvision_yes') }}</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Bonus Razziale: automatico dalla razza scelta. Nascosto se c'è un background: i due bonus sono alternativi. -->
-          @if (!identityBackgroundId) {
-            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
-              <div class="col-span-3 sm:col-span-6 mb-1">
-                <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('racial_bonus_label') }}</label>
-              </div>
-              @for (key of abilityKeys; track key) {
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
-                  <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
-                    @if (getRaceOrSubraceBonus(key) > 0) {
-                      +{{ getRaceOrSubraceBonus(key) }}
-                    } @else {
-                      —
+                <div class="parchment-panel rounded-sm p-3 flex-1 min-h-32 overflow-y-auto space-y-3">
+                  @if (privilegesTab() === 'racial') {
+                    @if (raceTraits().length === 0 && subraceTraits().length === 0) {
+                      <p class="text-xs text-slate-arcane italic">{{ localeService.t('no_traits_yet') }}</p>
                     }
+                    @for (trait of raceTraits(); track $index) {
+                      <div>
+                        <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+                        <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+                      </div>
+                    }
+                    @for (trait of subraceTraits(); track $index) {
+                      <div>
+                        <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+                        <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+                      </div>
+                    }
+                  } @else if (privilegesTab() === 'subclass') {
+                    @if (subclassTraits().length === 0) {
+                      <p class="text-xs text-slate-arcane italic">{{ localeService.t('no_traits_yet') }}</p>
+                    }
+                    @for (trait of subclassTraits(); track $index) {
+                      <div>
+                        <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+                        <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+                      </div>
+                    }
+                  } @else {
+                    @if (backgroundTraits().length === 0) {
+                      <p class="text-xs text-slate-arcane italic">{{ localeService.t('no_traits_yet') }}</p>
+                    }
+                    @for (trait of backgroundTraits(); track $index) {
+                      <div>
+                        <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+                        <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Informazioni personaggio: come scritte su pergamena, si modificano dalla modale. -->
+            <div class="flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('character_info_title') }}</h3>
+                @if (!readOnly()) {
+                  <button
+                    (click)="openIdentityModal()"
+                    class="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0 text-gold-dark" fill="currentColor" aria-hidden="true">
+                      <g transform="rotate(45 12 12)">
+                        <rect x="10.5" y="2" width="3" height="3" rx="0.5" />
+                        <rect x="10.5" y="5.5" width="3" height="11" />
+                        <polygon points="10.5,16.5 13.5,16.5 12,20.5" />
+                      </g>
+                    </svg>
+                    {{ localeService.t('edit_button') }}
+                  </button>
+                }
+              </div>
+
+              <div class="parchment-panel rounded-sm p-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('character_name_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright leading-tight">{{ c.name }}</p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('race_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright leading-tight">
+                      {{ getTranslatedRaceName(c.race_name) }}
+                      @if (c.subrace_name) { ({{ getTranslatedSubraceName(c.subrace_name) }}) }
+                    </p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('class_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright leading-tight">
+                      {{ getTranslatedClassName(c.class_name) }}
+                      @if (c.subclass_name) { ({{ getTranslatedSubclassName(c.subclass_name) }}) }
+                    </p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('background_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright leading-tight">{{ getTranslatedBackgroundName(c.background_name) || '—' }}</p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('level_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright leading-tight">{{ c.level }}</p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('alignment_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright leading-tight">{{ localeService.t('alignment_' + c.alignment) }}</p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('sex_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright leading-tight">{{ c.sex === 'F' ? localeService.t('sex_female') : localeService.t('sex_male') }}</p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('racial_bonus_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright leading-tight">{{ racialBonusSummary() }}</p>
                   </div>
                 </div>
-              }
-            </div>
-          }
-
-          <!-- Bonus a Scelta: monte punti dato da razza/sottorazza "a scelta libera" (es. Umano
-               Variante, Draconide Cromatico). Nascosto se c'è un background (stessa alternanza
-               del Bonus Razziale) o se razza/sottorazza scelte non ne concedono nessuno. -->
-          @if (!identityBackgroundId && freeBonusPoints() > 0) {
-            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
-              <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
-                <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('free_bonus_label') }}</label>
-                <span class="text-xs font-semibold" [class]="freeBonusRemaining() > 0 ? 'text-fantasy-gold' : 'text-fantasy-red'">
-                  {{ localeService.t('points_remaining_label') }}: {{ freeBonusRemaining() }}/{{ freeBonusPoints() }}
-                </span>
               </div>
-              @for (key of abilityKeys; track key) {
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
-                  <input
-                    type="number" min="0" [attr.max]="maxFreeBonus(key)"
-                    [disabled]="readOnly() || (freeBonuses[key] === 0 && freeBonusRemaining() === 0)"
-                    [ngModel]="freeBonuses[key]"
-                    (ngModelChange)="setFreeBonus(key, $event)"
-                    class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm disabled:opacity-50"
-                  />
-                </div>
-              }
-            </div>
-          }
 
-          <!-- Bonus Background: manuale, max 3 punti totali. Sostituisce il bonus razziale quando c'è un background. -->
-          @if (identityBackgroundId) {
-            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
-              <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
-                <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('background_bonus_label') }}</label>
-                <span class="text-xs font-semibold" [class]="backgroundBonusRemaining() > 0 ? 'text-fantasy-gold' : 'text-fantasy-red'">
-                  {{ localeService.t('points_remaining_label') }}: {{ backgroundBonusRemaining() }}/{{ backgroundBonusMax }}
-                </span>
+              <!-- Storia: vera pergamena PNG (rullo in cima, carta strappata in fondo). Il testo
+                   scorre internamente (overflow-y-auto) invece di far crescere il riquadro:
+                   resta sempre dentro il foglio disegnato. -->
+              <div class="flex flex-col gap-2">
+                <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('backstory_label') }}</h3>
+                <div
+                  class="relative w-full aspect-683/604 mt-2 mb-1.5 mx-1 overflow-hidden bg-no-repeat bg-top bg-size-[100%_auto]"
+                  style="background-image: url('themes/PERGAMENA.png');"
+                >
+                  <textarea
+                    [(ngModel)]="backstory" [disabled]="readOnly()"
+                    class="absolute top-[18%] bottom-[calc(20%-10px)] left-[calc(16%+5px)] right-[16%] overflow-y-auto bg-transparent border-0 resize-none focus:outline-none font-body text-base font-bold text-stone-950 placeholder:text-stone-900/40 disabled:opacity-90"
+                    style="text-shadow: 0 0 3px #ffffff, 0 0 6px #ffffff;"
+                  ></textarea>
+                </div>
               </div>
-              @for (key of abilityKeys; track key) {
-                <div class="flex flex-col gap-1">
-                  <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
-                  <input
-                    type="number" min="0" [attr.max]="maxBackgroundBonus(key)"
-                    [disabled]="readOnly() || (identityBackgroundBonuses[key] === 0 && backgroundBonusRemaining() === 0)"
-                    [ngModel]="identityBackgroundBonuses[key]"
-                    (ngModelChange)="setBackgroundBonus(key, $event)"
-                    class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm disabled:opacity-50"
-                  />
-                </div>
-              }
             </div>
-          }
-
-          @if (!readOnly()) {
-            <button
-              (click)="saveIdentity()"
-              class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
-            >
-              {{ localeService.t('save_button') }}
-            </button>
-          }
+          </div>
         </app-card>
 
-        <app-card contentClass="space-y-3">
-          <label class="text-sm font-semibold">{{ localeService.t('backstory_label') }}</label>
-          <textarea
-            [(ngModel)]="backstory" rows="8" [disabled]="readOnly()"
-            class="w-full px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none disabled:opacity-70"
-          ></textarea>
-          @if (!readOnly()) {
-            <button
-              (click)="saveBackstory()"
-              class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+        <!-- Modale di modifica identità: stessi campi di prima, ora raccolti qui. -->
+        @if (identityModalOpen()) {
+          <div
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+            (click)="cancelIdentityEdit()"
+          >
+            <div
+              class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+              (click)="$event.stopPropagation()"
             >
-              {{ localeService.t('save_button') }}
-            </button>
-          }
-        </app-card>
+              <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('edit_character_title') }}</h2>
+
+              <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }}</label>
+                  <input
+                    type="text" [(ngModel)]="identityName"
+                    class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                  />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold">{{ localeService.t('race_label') }}</label>
+                    <select [ngModel]="identityRaceId" (ngModelChange)="onIdentityRaceChange($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+                      <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                      @for (race of races(); track race.id) {
+                        <option [value]="race.id">{{ race.name }}</option>
+                      }
+                    </select>
+                    @if (getRaceDescription(); as desc) {
+                      <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+                    }
+                  </div>
+
+                  @if (availableSubraces().length > 0) {
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-semibold">{{ localeService.t('subrace_label') }}</label>
+                      <select [ngModel]="identitySubraceId" (ngModelChange)="onIdentitySubraceChange($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+                        <option value="">{{ localeService.t('subrace_none') }}</option>
+                        @for (sub of availableSubraces(); track sub.id) {
+                          <option [value]="sub.id">{{ sub.name }}</option>
+                        }
+                      </select>
+                      @if (getSubraceDescription(); as desc) {
+                        <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+                      }
+                    </div>
+                  }
+
+                  <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold">{{ localeService.t('class_label') }}</label>
+                    <select [(ngModel)]="identityClassId" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+                      <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                      @for (cls of classesContent(); track cls.id) {
+                        <option [value]="cls.id">{{ cls.name }}</option>
+                      }
+                    </select>
+                    @if (getClassDescription(); as desc) {
+                      <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+                    }
+                  </div>
+
+                  @if (availableSubclasses().length > 0) {
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-semibold">{{ localeService.t('subclass_label') }}</label>
+                      <select [(ngModel)]="identitySubclassId" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+                        <option value="">{{ localeService.t('subclass_none') }}</option>
+                        @for (sub of availableSubclasses(); track sub.id) {
+                          <option [value]="sub.id">{{ sub.name }}</option>
+                        }
+                      </select>
+                      @if (getSubclassDescription(); as desc) {
+                        <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+                      }
+                    </div>
+                  }
+
+                  <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
+                    <select [(ngModel)]="identityBackgroundId" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+                      <option value="">{{ localeService.t('subclass_none') }}</option>
+                      @for (bg of backgroundsContent(); track bg.id) {
+                        <option [value]="bg.id">{{ bg.name }}</option>
+                      }
+                    </select>
+                    @if (getBackgroundDescription(); as desc) {
+                      <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
+                    }
+                  </div>
+
+                  <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold">{{ localeService.t('level_label') }}</label>
+                    <input
+                      type="number" min="1" max="20" [(ngModel)]="identityLevel"
+                      class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                    />
+                  </div>
+
+                  <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }}</label>
+                    <select [(ngModel)]="identityAlignment" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+                      @for (al of alignments; track al) {
+                        <option [value]="al">{{ localeService.t('alignment_' + al) }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold">{{ localeService.t('xp_label') }}</label>
+                    <input
+                      type="number" min="0" [(ngModel)]="identityXp"
+                      class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                    />
+                  </div>
+
+                  <div class="flex flex-col gap-1">
+                    <label class="text-sm font-semibold">{{ localeService.t('sex_label') }}</label>
+                    <select [(ngModel)]="identitySex" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+                      <option value="M">{{ localeService.t('sex_male') }}</option>
+                      <option value="F">{{ localeService.t('sex_female') }}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Punteggi caratteristica: modificabili solo da qui, i riquadri nel tab
+                     Generale sono di sola lettura (vedi card sopra). -->
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                  <div class="col-span-3 sm:col-span-6 mb-1">
+                    <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('ability_scores_label') }}</label>
+                  </div>
+                  @for (key of abilityKeys; track key) {
+                    <div class="flex flex-col gap-1">
+                      <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
+                      <input
+                        type="number" [(ngModel)]="abilityScores[key]"
+                        class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm"
+                      />
+                    </div>
+                  }
+                </div>
+
+                <!-- Bonus Razziale: automatico dalla razza (o sottorazza, se scelta) selezionata. -->
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
+                  <div class="col-span-3 sm:col-span-6 mb-1">
+                    <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('racial_bonus_label') }}</label>
+                  </div>
+                  @for (key of abilityKeys; track key) {
+                    <div class="flex flex-col gap-1">
+                      <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
+                      <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
+                        @if (getRaceOrSubraceBonus(key) > 0) {
+                          +{{ getRaceOrSubraceBonus(key) }}
+                        } @else {
+                          —
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- Bonus a Scelta: monte punti dato da razza/sottorazza "a scelta libera" (es. Umano
+                     Variante, Draconide Cromatico). Nascosto se razza/sottorazza scelte non ne concedono. -->
+                @if (freeBonusPoints() > 0) {
+                  <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
+                    <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
+                      <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('free_bonus_label') }}</label>
+                      <span class="text-xs font-semibold" [class]="freeBonusRemaining() > 0 ? 'text-fantasy-gold' : 'text-fantasy-red'">
+                        {{ localeService.t('points_remaining_label') }}: {{ freeBonusRemaining() }}/{{ freeBonusPoints() }}
+                      </span>
+                    </div>
+                    @for (key of abilityKeys; track key) {
+                      <div class="flex flex-col gap-1">
+                        <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
+                        <input
+                          type="number" min="0" [attr.max]="maxFreeBonus(key)"
+                          [disabled]="freeBonuses[key] === 0 && freeBonusRemaining() === 0"
+                          [ngModel]="freeBonuses[key]"
+                          (ngModelChange)="setFreeBonus(key, $event)"
+                          class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm disabled:opacity-50"
+                        />
+                      </div>
+                    }
+                  </div>
+                }
+
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button" (click)="cancelIdentityEdit()"
+                    class="px-4 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    {{ localeService.t('cancel_button') }}
+                  </button>
+                  <button
+                    type="button" (click)="saveIdentity()"
+                    class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+                  >
+                    {{ localeService.t('save_button') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
       }
 
       <!-- COMBATTIMENTO -->
       @if (activeSubTab() === 'combat') {
         <app-card contentClass="space-y-5">
-          <!-- PF / CA / Bonus Competenza / Iniziativa -->
-          <div class="grid grid-cols-3 sm:grid-cols-5 gap-4 max-w-2xl">
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('current_hp_label') }}</label>
-              <input type="number" [(ngModel)]="currentHp" [disabled]="readOnly()" class="px-2 py-1 rounded border border-gold text-center disabled:opacity-70" />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('max_hp_label') }}</label>
-              <input type="number" [(ngModel)]="maxHp" [disabled]="readOnly()" class="px-2 py-1 rounded border border-gold text-center disabled:opacity-70" />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('armor_class_label') }}</label>
-              <p class="px-2 py-1 rounded border border-gold text-center bg-fantasy-black/60">{{ currentArmorClass() }}</p>
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('proficiency_bonus_label') }}</label>
-              <p class="px-2 py-1 rounded border border-gold text-center bg-fantasy-black/60">{{ formatModifier(proficiencyBonus(c.level)) }}</p>
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold whitespace-nowrap">{{ localeService.t('initiative_label') }}</label>
-              <p class="px-2 py-1 rounded border border-gold text-center bg-fantasy-black/60">{{ formatModifier(abilityModifier(abilityScores['dex'])) }}</p>
+          <!-- Statistiche Vitali: PF / CA / Bonus Competenza / Iniziativa, come le statistiche
+               del tab Generale ma rettangoli orizzontali oro pieno, con label e numero dentro
+               al riquadro invece che sopra. -->
+          <div>
+            <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('vital_stats_title') }}</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
+              <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('current_hp_label') }}
+                </span>
+                <input
+                  type="number" [(ngModel)]="currentHp" [disabled]="readOnly()"
+                  class="relative w-full bg-transparent border-0 text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90"
+                />
+              </div>
+              <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('max_hp_label') }}
+                </span>
+                <input
+                  type="number" [(ngModel)]="maxHp" [disabled]="readOnly()"
+                  class="relative w-full bg-transparent border-0 text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90"
+                />
+              </div>
+              <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('armor_class_label') }}
+                </span>
+                <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
+                  {{ currentArmorClass() }}
+                </p>
+              </div>
+              <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('proficiency_bonus_label') }}
+                </span>
+                <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
+                  {{ formatModifier(proficiencyBonus(c.level)) }}
+                </p>
+              </div>
+              <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('initiative_label') }}
+                </span>
+                <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
+                  {{ formatModifier(abilityModifier(abilityScores['dex'])) }}
+                </p>
+              </div>
+              <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('speed_label') }}
+                </span>
+                <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
+                  {{ totalSpeed() }}m
+                </p>
+              </div>
             </div>
           </div>
 
-          <!-- Selezione armatura: la CA sopra si ricalcola da sola in base a categoria + Destrezza -->
-          @if (!readOnly()) {
-            <div class="flex flex-col sm:flex-row sm:items-end gap-2 max-w-2xl">
-              <div class="flex flex-col gap-1 flex-1">
-                <label class="text-xs font-semibold">{{ localeService.t('armor_select_label') }}</label>
-                <select [(ngModel)]="selectedArmorId" class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone">
-                  <option value="">{{ localeService.t('armor_none_label') }}</option>
-                  @for (armor of availableArmors(); track armor.id) {
-                    <option [value]="armor.id">{{ armor.name }} (CA {{ armor.raw.armor_class }})</option>
-                  }
-                </select>
+          <!-- Tiri Salvezza e Scurovisione affiancati -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @if (c.saving_throw_proficiencies.length > 0) {
+              <div>
+                <label class="text-sm font-semibold block mb-1">{{ localeService.t('saving_throws_label') }}</label>
+                <p class="text-sm opacity-80">{{ savingThrowNames(c.saving_throw_proficiencies) }}</p>
               </div>
-              <label class="flex items-center gap-1 text-sm pb-1">
-                <input type="checkbox" [(ngModel)]="shieldEquipped" />
-                {{ localeService.t('armor_category_shield') }} (+2)
-              </label>
-            </div>
-          }
+            }
 
-          <!-- Punteggi caratteristica -->
-          <div>
-            <label class="text-sm font-semibold block mb-2">{{ localeService.t('ability_scores_label') }}</label>
-            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              @for (key of abilityKeys; track key) {
-                <div class="flex flex-col items-center gap-1">
-                  <span class="text-sm uppercase font-semibold">{{ localeService.t('ability_' + key) }}</span>
-                  <div class="relative w-full flex flex-col items-center gap-1 border border-gold rounded p-2 overflow-hidden">
-                    <div
-                      class="absolute inset-0 bg-cover bg-center"
-                      [style.background-image]="'url(' + getAbilityImagePath(key) + ')'"
-                    ></div>
-                    <input
-                      type="number" [(ngModel)]="abilityScores[key]" [disabled]="readOnly()"
-                      class="relative w-full py-1 rounded bg-transparent border-0 text-center text-5xl font-black text-white [-webkit-text-stroke:2px_white] [text-shadow:0_4px_10px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-70"
-                    />
-                    <span
-                      class="relative flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white"
-                      [class]="modifierBadgeClass(abilityScores[key])"
+            <!-- Scurovisione: tratto automatico di razza/sottorazza, di sola lettura (si imposta in Gestione). -->
+            <div>
+              <label class="text-sm font-semibold block mb-1">{{ localeService.t('darkvision_label') }}</label>
+              <span
+                class="inline-block px-2 py-1 rounded border border-gold text-xs font-semibold"
+                [class]="hasDarkvision() ? 'bg-forest text-white' : 'bg-fantasy-black/60 text-slate-arcane'"
+              >
+                {{ hasDarkvision() ? localeService.t('darkvision_yes') : localeService.t('darkvision_no') }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Competenze: tabella a 3 colonne senza bordi verticali/di cornice, solo separatori
+               orizzontali flebili TRA le righe di ciascuna colonna (divide-y per colonna, non
+               sull'intera griglia: altrimenti taglierebbe anche tra una colonna e l'altra).
+               border-t sopra: stessa riga divisoria usata tra le righe, per staccare dagli
+               elementi precedenti (Tiri Salvezza / Scurovisione). -->
+          <div class="border-t border-gold/20 pt-5">
+            <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('skills_label') }}</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 sm:gap-x-6">
+              @for (column of skillColumns; track $index) {
+                <div class="divide-y divide-gold/20">
+                  @for (skill of column; track skill.key) {
+                    <label
+                      class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-fantasy-black/30 transition-colors"
+                      [title]="isSkillLocked(skill.key) ? localeService.t('skill_locked_hint') : ''"
                     >
-                      {{ formatModifier(abilityModifier(abilityScores[key])) }}
-                    </span>
-                  </div>
+                      <span class="relative flex items-center shrink-0">
+                        <input
+                          type="checkbox"
+                          class="peer appearance-none w-6 h-6 rounded-sm border-2 border-gold bg-fantasy-blue cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          [checked]="isSkillChecked(skill.key)"
+                          [disabled]="readOnly() || isSkillLocked(skill.key)"
+                          (change)="toggleSkill(skill.key)"
+                        />
+                        <svg
+                          class="pointer-events-none absolute inset-0 m-auto w-4 h-4 hidden peer-checked:block text-fantasy-gold"
+                          viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        >
+                          <path d="M3 8.5l3 3 7-7" />
+                        </svg>
+                      </span>
+                      <span class="flex-1 min-w-0">
+                        <span class="block text-xs opacity-60">({{ localeService.t('ability_' + skill.ability) }}: {{ abilityScores[skill.ability] }})</span>
+                        <span class="block text-xs uppercase tracking-wider font-bold text-gold-glow [text-shadow:0_1px_3px_rgba(0,0,0,0.85)]">
+                          {{ localeService.t('skill_' + skill.key) }}
+                          @if (isSkillLocked(skill.key)) {
+                            <span class="text-fantasy-gold/60 normal-case">({{ skillLockSourceLabel(skill.key) }})</span>
+                          }
+                        </span>
+                      </span>
+                      <!-- Maestria (Expertise): raddoppia il bonus competenza, max 2 in tutta la
+                           scheda. Bottone invece che dentro la label per non far scattare anche
+                           il checkbox della competenza al click (stopPropagation di sicurezza). -->
+                      <button
+                        type="button"
+                        class="shrink-0 p-1 rounded transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
+                        [disabled]="readOnly() || (!isSkillMastered(skill.key) && (!isSkillChecked(skill.key) || skillMasteryLimitReached()))"
+                        [title]="localeService.t('skill_mastery_hint')"
+                        (click)="$event.stopPropagation(); $event.preventDefault(); toggleSkillMastery(skill.key)"
+                      >
+                        <svg
+                          viewBox="0 0 24 24" class="w-4 h-4"
+                          [attr.fill]="isSkillMastered(skill.key) ? 'currentColor' : 'none'"
+                          stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"
+                          [class.text-fantasy-gold]="isSkillMastered(skill.key)"
+                          [class.glow-gold]="isSkillMastered(skill.key)"
+                          [class.text-slate-arcane]="!isSkillMastered(skill.key)"
+                        >
+                          <polygon points="12 2.5 14.9 9 22 9.6 16.6 14.3 18.2 21.2 12 17.4 5.8 21.2 7.4 14.3 2 9.6 9.1 9" />
+                        </svg>
+                      </button>
+                      <span class="shrink-0 px-3 py-1 rounded-full bg-fantasy-black/60 border border-gold/50 text-sm font-bold text-fantasy-gold">
+                        {{ formatModifier(skillModifier(skill.ability, skill.key, c.level)) }}
+                      </span>
+                    </label>
+                  }
                 </div>
               }
             </div>
           </div>
-  
-          <!-- Tiri salvezza (di sola lettura, dalla classe) -->
-          @if (c.saving_throw_proficiencies.length > 0) {
-            <div>
-              <label class="text-sm font-semibold block mb-1">{{ localeService.t('saving_throws_label') }}</label>
-              <p class="text-sm opacity-80">{{ savingThrowNames(c.saving_throw_proficiencies) }}</p>
-            </div>
-          }
-  
-          <!-- Competenze -->
-          <div>
-            <label class="text-sm font-semibold block mb-2">{{ localeService.t('skills_label') }}</label>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1">
-              @for (skill of skills; track skill.key) {
-                <label class="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    [checked]="isSkillChecked(skill.key)"
-                    [disabled]="readOnly()"
-                    (change)="toggleSkill(skill.key)"
-                  />
-                  {{ localeService.t('skill_' + skill.key) }}
-                  <span class="text-xs opacity-60">({{ localeService.t('ability_' + skill.ability) }})</span>
-                </label>
+
+          <!-- Resistenze: stessa tabella a 3 colonne / divide-y delle Competenze, stessa
+               riga divisoria sopra per staccare dalle Competenze. -->
+          <div class="border-t border-gold/20 pt-5">
+            <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('resistances_label') }}</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 sm:gap-x-6">
+              @for (column of resistanceColumns; track $index) {
+                <div class="divide-y divide-gold/20">
+                  @for (dmg of column; track dmg.key) {
+                    <label class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-fantasy-black/30 transition-colors">
+                      <span class="relative flex items-center shrink-0">
+                        <input
+                          type="checkbox"
+                          class="peer appearance-none w-6 h-6 rounded-sm border-2 border-gold bg-fantasy-blue cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          [checked]="isResistanceChecked(dmg.key)"
+                          [disabled]="readOnly()"
+                          (change)="toggleResistance(dmg.key)"
+                        />
+                        <svg
+                          class="pointer-events-none absolute inset-0 m-auto w-4 h-4 hidden peer-checked:block text-fantasy-gold"
+                          viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                        >
+                          <path d="M3 8.5l3 3 7-7" />
+                        </svg>
+                      </span>
+                      <app-damage-type-icon
+                        [type]="dmg.key"
+                        [label]="localeService.t('damage_type_' + dmg.key)"
+                        [size]="18"
+                        class="shrink-0 text-fantasy-gold"
+                      />
+                      <span class="text-xs uppercase tracking-wider font-bold text-gold-glow [text-shadow:0_1px_3px_rgba(0,0,0,0.85)]">
+                        {{ localeService.t('damage_type_' + dmg.key) }}
+                      </span>
+                    </label>
+                  }
+                </div>
               }
             </div>
           </div>
-  
-          <!-- Resistenze / immunità -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold">{{ localeService.t('resistances_label') }}</label>
-              <input
-                type="text" [(ngModel)]="damageResistancesText" [placeholder]="localeService.t('comma_separated_hint')" [disabled]="readOnly()"
-                class="px-2 py-1 rounded border border-gold text-sm disabled:opacity-70"
-              />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold">{{ localeService.t('immunities_label') }}</label>
-              <input
-                type="text" [(ngModel)]="damageImmunitiesText" [placeholder]="localeService.t('comma_separated_hint')" [disabled]="readOnly()"
-                class="px-2 py-1 rounded border border-gold text-sm disabled:opacity-70"
-              />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-semibold">{{ localeService.t('condition_immunities_label') }}</label>
-              <input
-                type="text" [(ngModel)]="conditionImmunitiesText" [placeholder]="localeService.t('comma_separated_hint')" [disabled]="readOnly()"
-                class="px-2 py-1 rounded border border-gold text-sm disabled:opacity-70"
-              />
-            </div>
-          </div>
-
-          @if (!readOnly()) {
-            <button
-              (click)="saveCombat()"
-              class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
-            >
-              {{ localeService.t('save_button') }}
-            </button>
-          }
         </app-card>
       }
 
       <!-- INVENTARIO -->
       @if (activeSubTab() === 'inventory') {
         <app-card contentClass="space-y-4">
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold">{{ localeService.t('currency_title') }}</label>
-            <div class="flex flex-wrap items-end gap-2">
-              <div class="flex flex-col gap-1">
-                <label class="text-xs">{{ localeService.t('currency_copper_label') }}</label>
+          <!-- Valuta: come le Statistiche Vitali in Abilità, riquadri in cima alla scheda, qui
+               con il baule di ciascuna moneta come sfondo (velo scuro sopra per leggibilità). -->
+          <div>
+            <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('currency_title') }}</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+                <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('copper') + ')'"></div>
+                <div class="absolute inset-0 bg-fantasy-black/70"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('currency_copper_label') }}
+                </span>
                 <input
                   type="number" min="0" [(ngModel)]="copper" [disabled]="readOnly()"
-                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                  class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90"
                 />
               </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs">{{ localeService.t('currency_silver_label') }}</label>
+              <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+                <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('silver') + ')'"></div>
+                <div class="absolute inset-0 bg-fantasy-black/70"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('currency_silver_label') }}
+                </span>
                 <input
                   type="number" min="0" [(ngModel)]="silver" [disabled]="readOnly()"
-                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                  class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90"
                 />
               </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs">{{ localeService.t('currency_electrum_label') }}</label>
+              <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+                <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('electrum') + ')'"></div>
+                <div class="absolute inset-0 bg-fantasy-black/70"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('currency_electrum_label') }}
+                </span>
                 <input
                   type="number" min="0" [(ngModel)]="electrum" [disabled]="readOnly()"
-                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                  class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90"
                 />
               </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs">{{ localeService.t('currency_gold_label') }}</label>
+              <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+                <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('gold') + ')'"></div>
+                <div class="absolute inset-0 bg-fantasy-black/70"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('currency_gold_label') }}
+                </span>
                 <input
                   type="number" min="0" [(ngModel)]="gold" [disabled]="readOnly()"
-                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                  class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90"
                 />
               </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-xs">{{ localeService.t('currency_platinum_label') }}</label>
+              <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+                <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('platinum') + ')'"></div>
+                <div class="absolute inset-0 bg-fantasy-black/70"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('currency_platinum_label') }}
+                </span>
                 <input
                   type="number" min="0" [(ngModel)]="platinum" [disabled]="readOnly()"
-                  class="w-24 px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold disabled:opacity-70"
+                  class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90"
                 />
               </div>
-              @if (!readOnly()) {
-                <button
-                  (click)="saveCurrency()"
-                  class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
-                >
-                  {{ localeService.t('save_button') }}
-                </button>
-              }
             </div>
           </div>
 
-          @if (!readOnly()) {
-            <div class="space-y-2">
-              <input
-                type="search"
-                [(ngModel)]="equipmentSearchTerm"
-                [placeholder]="localeService.t('equipment_search_placeholder')"
-                class="w-full px-3 py-2 rounded border border-gold bg-fantasy-black/60 text-fantasy-moonstone text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright"
-              />
-              <div class="flex flex-col sm:flex-row gap-2">
-                <select [(ngModel)]="selectedEquipmentId" class="flex-1 px-3 py-2 rounded border border-gold">
-                  <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-                  @for (item of availableEquipment(); track item.id) {
-                    <option [value]="item.id">{{ item.name }}</option>
-                  }
-                </select>
-                <input type="number" min="1" [(ngModel)]="addQuantity" class="w-20 px-2 py-2 rounded border border-gold text-center" />
-                <button
-                  (click)="addItem()"
-                  class="px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
-                >
-                  {{ localeService.t('add_button') }}
-                </button>
+          <!-- Divisore, stesso stile del tab Abilità: sotto la valuta, sinistra armatura /
+               destra tabella oggetti. -->
+          <div class="border-t border-gold/20 pt-5 grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
+            <!-- SINISTRA: armatura indossata + rappresentazione grafica della scelta -->
+            <div class="flex flex-col gap-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-semibold">{{ localeService.t('armor_select_label') }}</label>
+                @if (!readOnly()) {
+                  <button
+                    (click)="openArmorModal()"
+                    class="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0 text-gold-dark" fill="currentColor" aria-hidden="true">
+                      <g transform="rotate(45 12 12)">
+                        <rect x="10.5" y="2" width="3" height="3" rx="0.5" />
+                        <rect x="10.5" y="5.5" width="3" height="11" />
+                        <polygon points="10.5,16.5 13.5,16.5 12,20.5" />
+                      </g>
+                    </svg>
+                    {{ localeService.t('edit_button') }}
+                  </button>
+                }
               </div>
-              @if (availableEquipment().length === 0) {
-                <p class="text-slate-arcane italic text-xs">{{ localeService.t('no_equipment_match_filter') }}</p>
+
+              <!-- Nome dell'armatura scelta: stesso riquadro oro pieno usato in Abilità. -->
+              <div class="frame-medieval relative rounded-sm px-3 py-3 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('armor_worn_label') }}
+                </span>
+                <p class="relative text-center text-lg font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
+                  {{ selectedArmor()?.name ?? localeService.t('armor_none_label') }}
+                </p>
+              </div>
+
+              <!-- Rappresentazione grafica: immagine caricata in Gestione > Armature
+                   per l'armatura scelta (raw.image_url). Placeholder se assente. -->
+              <div class="frame-medieval relative w-full aspect-3/4 max-w-65 mx-auto rounded-sm overflow-hidden flex items-center justify-center bg-fantasy-black/40">
+                @if (selectedArmor()?.raw?.image_url; as armorImg) {
+                  <img [src]="armorImg" alt="" class="w-full h-full object-contain" />
+                } @else {
+                  <span class="text-5xl opacity-30">🛡️</span>
+                }
+              </div>
+
+              <!-- Peso complessivo: armatura indossata + tutto l'inventario. -->
+              <span class="block text-center text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                {{ localeService.t('total_weight_label') }}
+              </span>
+              <div class="flex items-center justify-center gap-2 px-3 py-2 rounded border border-gold/40 bg-fantasy-black/40 max-w-65 mx-auto w-full">
+                <svg viewBox="0 0 24 24" class="w-4 h-4 shrink-0 text-fantasy-gold" fill="currentColor" aria-hidden="true">
+                  <rect x="1.5" y="9" width="3" height="6" rx="1" />
+                  <rect x="19.5" y="9" width="3" height="6" rx="1" />
+                  <rect x="4.7" y="7" width="2.2" height="10" rx="1" />
+                  <rect x="17.1" y="7" width="2.2" height="10" rx="1" />
+                  <rect x="6.5" y="11" width="11" height="2" rx="1" />
+                </svg>
+                <span class="text-sm font-semibold text-fantasy-gold">{{ totalCarriedWeightKg() }} kg</span>
+              </div>
+
+              <!-- Cavalcature e Veicoli: stesso pattern della sezione armatura sopra
+                   (select in modale + card con immagine dal catalogo equipment). -->
+              <div class="flex items-center justify-between mt-2">
+                <label class="text-sm font-semibold">{{ localeService.t('mount_select_label') }}</label>
+                @if (!readOnly()) {
+                  <button
+                    (click)="openMountModal()"
+                    class="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0 text-gold-dark" fill="currentColor" aria-hidden="true">
+                      <g transform="rotate(45 12 12)">
+                        <rect x="10.5" y="2" width="3" height="3" rx="0.5" />
+                        <rect x="10.5" y="5.5" width="3" height="11" />
+                        <polygon points="10.5,16.5 13.5,16.5 12,20.5" />
+                      </g>
+                    </svg>
+                    {{ localeService.t('edit_button') }}
+                  </button>
+                }
+              </div>
+
+              <div class="frame-medieval relative rounded-sm px-3 py-3 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+                <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+                <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">
+                  {{ localeService.t('mount_select_label') }}
+                </span>
+                <p class="relative text-center text-lg font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">
+                  {{ selectedMount()?.name ?? localeService.t('mount_none_label') }}
+                </p>
+              </div>
+
+              <div class="frame-medieval relative w-full aspect-3/4 max-w-65 mx-auto rounded-sm overflow-hidden flex items-center justify-center bg-fantasy-black/40">
+                @if (selectedMount()?.raw?.image_url; as mountImg) {
+                  <img [src]="mountImg" alt="" class="w-full h-full object-contain" />
+                } @else {
+                  <span class="text-5xl opacity-30">🐴</span>
+                }
+              </div>
+
+              @if (selectedMount()?.raw?.carrying_capacity; as capacity) {
+                <div class="flex items-center justify-center gap-2 px-3 py-2 rounded border border-gold/40 bg-fantasy-black/40 max-w-65 mx-auto w-full text-xs">
+                  <span class="text-fantasy-gold/70 uppercase tracking-wide font-bold shrink-0">{{ localeService.t('mount_carrying_capacity_label') }}:</span>
+                  <span class="text-fantasy-gold font-semibold">{{ capacity }}</span>
+                </div>
               }
             </div>
-          }
 
-          @if (c.inventory.length === 0) {
-            <p class="text-slate-arcane italic text-sm">{{ localeService.t('empty_inventory') }}</p>
-          } @else {
-            <ul class="space-y-1">
-              @for (item of c.inventory; track item.rowId) {
-                <li class="flex items-center justify-between gap-2 text-sm border-b border-gold/30 pb-1">
-                  <span>{{ item.name }} × {{ item.quantity }}</span>
-                  <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-1 text-xs">
-                      <input
-                        type="checkbox" [checked]="item.equipped" [disabled]="readOnly()"
-                        (change)="toggleEquip(item.rowId, item.equipped)"
-                      />
-                      {{ localeService.t('equipped_label') }}
-                    </label>
-                    @if (!readOnly()) {
-                      <input
-                        type="number" min="1" [max]="item.quantity"
-                        [ngModel]="removeQty(item.rowId)" (ngModelChange)="setRemoveQty(item.rowId, $event)"
-                        class="w-14 px-1 py-0.5 rounded border border-gold bg-fantasy-black/60 text-xs text-center"
-                      />
-                      <button (click)="openModal(item, removeQty(item.rowId))" class="text-xs text-red-300 underline">
-                        {{ localeService.t('remove_button') }}
-                      </button>
-                    }
+            <!-- DESTRA: tabella oggetti, ognuno con la sua immagine (se presente) di fianco al nome. -->
+            <div class="flex flex-col gap-3">
+              @if (!readOnly()) {
+                <div class="space-y-2">
+                  <input
+                    type="search"
+                    [(ngModel)]="equipmentSearchTerm"
+                    [placeholder]="localeService.t('equipment_search_placeholder')"
+                    class="w-full px-3 py-2 rounded border border-gold bg-fantasy-black/60 text-fantasy-moonstone text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright"
+                  />
+                  <div class="flex flex-col sm:flex-row gap-2">
+                    <select [(ngModel)]="selectedEquipmentId" class="flex-1 px-3 py-2 rounded border border-gold">
+                      <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+                      @for (item of availableEquipment(); track item.id) {
+                        <option [value]="item.id">{{ item.name }}</option>
+                      }
+                    </select>
+                    <input type="number" min="1" [(ngModel)]="addQuantity" class="w-20 px-2 py-2 rounded border border-gold text-center" />
+                    <button
+                      (click)="addItem()"
+                      class="px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+                    >
+                      {{ localeService.t('add_button') }}
+                    </button>
                   </div>
-                </li>
+                  @if (availableEquipment().length === 0) {
+                    <p class="text-slate-arcane italic text-xs">{{ localeService.t('no_equipment_match_filter') }}</p>
+                  }
+                </div>
               }
-            </ul>
-          }
+
+              @if (c.inventory.length === 0) {
+                <p class="text-slate-arcane italic text-sm">{{ localeService.t('empty_inventory') }}</p>
+              } @else {
+                <ul class="divide-y divide-gold/20">
+                  @for (item of c.inventory; track item.rowId) {
+                    <li class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-sm py-2">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="shrink-0 w-10 h-10 rounded border border-gold/40 bg-fantasy-black/40 overflow-hidden flex items-center justify-center">
+                          @if (item.imageUrl) {
+                            <img [src]="item.imageUrl" alt="" class="w-full h-full object-cover" />
+                          } @else {
+                            <span class="text-sm opacity-30">🎒</span>
+                          }
+                        </div>
+                        <span class="flex-1 min-w-0 truncate">
+                          {{ item.name }} × {{ item.quantity }}
+                          <span class="text-xs opacity-60">({{ item.weight }} kg)</span>
+                          @if (item.costValue != null) {
+                            <span class="text-xs opacity-60">· {{ item.costValue }} {{ localeService.t('coin_unit_' + item.costUnit) }}</span>
+                          }
+                        </span>
+                      </div>
+                      <div class="flex items-center gap-2 shrink-0 pl-13 sm:pl-0">
+                        <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                          <span class="relative flex items-center shrink-0">
+                            <input
+                              type="checkbox"
+                              class="peer appearance-none w-5 h-5 rounded-sm border-2 border-gold bg-fantasy-blue cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              [checked]="item.equipped" [disabled]="readOnly()"
+                              (change)="toggleEquip(item.rowId, item.equipped)"
+                            />
+                            <svg
+                              class="pointer-events-none absolute inset-0 m-auto w-3.5 h-3.5 hidden peer-checked:block text-fantasy-gold"
+                              viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                            >
+                              <path d="M3 8.5l3 3 7-7" />
+                            </svg>
+                          </span>
+                          {{ localeService.t('equipped_label') }}
+                        </label>
+                        @if (!readOnly()) {
+                          <input
+                            type="number" min="1" [max]="item.quantity"
+                            [ngModel]="removeQty(item.rowId)" (ngModelChange)="setRemoveQty(item.rowId, $event)"
+                            class="w-14 px-1 py-0.5 rounded border border-gold bg-fantasy-black/60 text-xs text-center"
+                          />
+                          <button
+                            (click)="openModal(item, removeQty(item.rowId))"
+                            [attr.aria-label]="localeService.t('remove_button')"
+                            class="p-1 rounded hover:bg-red-900/40 transition-colors"
+                          >
+                            <svg viewBox="0 0 24 24" class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                              <line x1="5" y1="5" x2="19" y2="19" />
+                              <line x1="19" y1="5" x2="5" y2="19" />
+                            </svg>
+                          </button>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
         </app-card>
+
+        <!-- Modale di modifica armatura indossata -->
+        @if (armorModalOpen()) {
+          <div
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+            (click)="cancelArmorEdit()"
+          >
+            <div
+              class="relative w-full max-w-md bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+              (click)="$event.stopPropagation()"
+            >
+              <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('armor_select_label') }}</h2>
+
+              <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-semibold">{{ localeService.t('armor_select_label') }}</label>
+                  <select [(ngModel)]="selectedArmorId" class="px-2 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone">
+                    <option value="">{{ localeService.t('armor_none_label') }}</option>
+                    @for (armor of availableArmors(); track armor.id) {
+                      <option [value]="armor.id">{{ armor.name }} (CA {{ armor.raw.armor_class }})</option>
+                    }
+                  </select>
+                </div>
+                <label class="flex items-center gap-1 text-sm">
+                  <input type="checkbox" [(ngModel)]="shieldEquipped" />
+                  {{ localeService.t('armor_category_shield') }} (+2)
+                </label>
+
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button" (click)="cancelArmorEdit()"
+                    class="px-4 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    {{ localeService.t('cancel_button') }}
+                  </button>
+                  <button
+                    type="button" (click)="saveCombat()"
+                    class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+                  >
+                    {{ localeService.t('save_button') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Modale di modifica cavalcatura/veicolo -->
+        @if (mountModalOpen()) {
+          <div
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+            (click)="cancelMountEdit()"
+          >
+            <div
+              class="relative w-full max-w-md bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+              (click)="$event.stopPropagation()"
+            >
+              <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('mount_select_label') }}</h2>
+
+              <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-semibold">{{ localeService.t('mount_select_label') }}</label>
+                  <select [(ngModel)]="selectedMountId" class="px-2 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone">
+                    <option value="">{{ localeService.t('mount_none_label') }}</option>
+                    @for (mount of availableMounts(); track mount.id) {
+                      <option [value]="mount.id">{{ mount.name }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button" (click)="cancelMountEdit()"
+                    class="px-4 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    {{ localeService.t('cancel_button') }}
+                  </button>
+                  <button
+                    type="button" (click)="saveMount()"
+                    class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+                  >
+                    {{ localeService.t('save_button') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
       }
 
       <!-- INCANTESIMI -->
@@ -744,7 +1328,7 @@
                         }
 
                         @if (spell.description) {
-                          <p class="relative text-xs leading-relaxed text-slate-400/90 line-clamp-4">{{ spell.description }}</p>
+                          <p class="relative text-xs leading-relaxed text-slate-400/90 max-h-20 overflow-y-auto pr-1">{{ spell.description }}</p>
                         }
 
                         <div class="relative flex items-center justify-between gap-2 border-t border-white/5 pt-2">
@@ -781,8 +1365,8 @@
                 class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 sm:col-span-2"
               >
                 <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-                @for (w of availableWeaponsCatalog(); track w.id) {
-                  <option [value]="w.id">{{ w.name }}</option>
+                @for (weapon of availableWeaponsCatalog(); track weapon.id) {
+                  <option [value]="weapon.id">{{ weapon.name }}</option>
                 }
               </select>
               <input
@@ -804,38 +1388,57 @@
             <div class="overflow-x-auto">
               <table class="w-full text-sm text-left border-collapse">
                 <thead>
-                  <tr class="border-b border-gold text-xs uppercase tracking-wide">
-                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_weapon') }}</th>
-                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_attack') }}</th>
-                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_damage') }}</th>
-                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_range') }}</th>
-                    <th class="py-2 pr-2">{{ localeService.t('weapon_col_weight') }}</th>
-                    @if (!readOnly()) { <th class="py-2"></th> }
+                  <tr class="bg-fantasy-gold text-fantasy-blue text-xs uppercase tracking-wide [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                    <th class="py-2 px-2">{{ localeService.t('weapon_col_weapon') }}</th>
+                    <th class="py-2 px-2">{{ localeService.t('weapon_col_attack') }}</th>
+                    <th class="py-2 px-2">{{ localeService.t('weapon_col_damage') }}</th>
+                    <th class="py-2 px-2">{{ localeService.t('weapon_col_range') }}</th>
+                    <th class="py-2 px-2">{{ localeService.t('weapon_col_weight') }}</th>
+                    <th class="py-2 px-2">{{ localeService.t('weapon_col_cost') }}</th>
+                    @if (!readOnly()) { <th class="py-2 px-2"></th> }
                   </tr>
                 </thead>
                 <tbody>
-                  @for (w of c.weapons; track w.rowId) {
-                    <tr class="border-b border-gold/30">
-                      <td class="py-2 pr-2">{{ w.name }} × {{ w.quantity }}</td>
-                      <td class="py-2 pr-2">{{ attackAbilityNames(w.attackAbilities) }}</td>
-                      <td class="py-2 pr-2">
-                        {{ w.damageDice }} {{ w.damageType }}
-                        @if (w.versatileDamage) {
-                          ({{ w.versatileDamage }} {{ localeService.t('weapon_versatile_label') }})
+                  @for (weapon of c.weapons; track weapon.rowId; let odd = $odd) {
+                    <tr
+                      (click)="toggleWeaponSelection(weapon.rowId)"
+                      class="cursor-pointer transition-colors hover:bg-fantasy-gold/20"
+                      [class]="selectedWeaponRowId() === weapon.rowId ? 'bg-fantasy-gold/30' : (odd ? 'bg-fantasy-black/20' : 'bg-fantasy-black/50')"
+                    >
+                      <td class="py-2 px-2">{{ weapon.name }} × {{ weapon.quantity }}</td>
+                      <td class="py-2 px-2">{{ attackAbilityNames(weapon.attackAbilities) }}</td>
+                      <td class="py-2 px-2">
+                        {{ weapon.damageDice }} {{ weapon.damageType }}
+                        @if (weapon.versatileDamage) {
+                          ({{ weapon.versatileDamage }} {{ localeService.t('weapon_versatile_label') }})
                         }
                       </td>
-                      <td class="py-2 pr-2">
-                        @if (w.rangeCategory === 'ranged') {
-                          {{ w.normalRange }}/{{ w.longRange }}
+                      <td class="py-2 px-2">
+                        @if (weapon.rangeCategory === 'ranged') {
+                          {{ weapon.normalRange }}/{{ weapon.longRange }}
                         } @else {
                           {{ localeService.t('weapon_range_melee') }}
                         }
                       </td>
-                      <td class="py-2 pr-2">{{ w.weight }} kg</td>
+                      <td class="py-2 px-2">{{ weapon.weight }} kg</td>
+                      <td class="py-2 px-2">
+                        @if (weapon.costValue != null) {
+                          {{ weapon.costValue }} {{ localeService.t('coin_unit_' + weapon.costUnit) }}
+                        } @else {
+                          <span class="text-slate-arcane">—</span>
+                        }
+                      </td>
                       @if (!readOnly()) {
-                        <td class="py-2">
-                          <button (click)="openModal(w)" class="text-xs text-red-300 underline cursor-pointer hover:text-red-500 transition-colors">
-                            {{ localeService.t('remove_button') }}
+                        <td class="py-2 px-2">
+                          <button
+                            (click)="$event.stopPropagation(); removeWeapon(weapon)"
+                            [attr.aria-label]="localeService.t('remove_button')"
+                            class="p-1 rounded hover:bg-red-900/40 transition-colors"
+                          >
+                            <svg viewBox="0 0 24 24" class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                              <line x1="5" y1="5" x2="19" y2="19" />
+                              <line x1="19" y1="5" x2="5" y2="19" />
+                            </svg>
                           </button>
                         </td>
                       }
@@ -844,10 +1447,293 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- "Libro" dei dettagli arma: sempre visibile, si popola al click su una riga.
+                 Illustrazione di sfondo (cornice + pagine) con due riquadri di testo sopra, in
+                 percentuale (vedi .book-container in tailwind.css). Testo centrato e su
+                 un'unica colonna: più tollerante a variazioni di proporzioni della cornice
+                 rispetto a una griglia a 2 colonne, meno rischio che esca dal bordo dorato.
+                 Solo da sm in su: sotto, il riquadro di testo diventa troppo stretto perché
+                 l'immagine è orizzontale a proporzioni fisse (vedi card semplice sotto,
+                 sm:hidden, per il mobile). -->
+            <div class="relative mt-4 hidden sm:block">
+              @if (selectedWeaponDetail(); as sw) {
+                <button
+                  (click)="toggleWeaponSelection(sw.rowId)"
+                  [attr.aria-label]="localeService.t('cancel_button')"
+                  class="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-fantasy-black/70 text-gold-glow hover:bg-fantasy-black transition-colors"
+                >
+                  <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                  </svg>
+                </button>
+              }
+              <div class="book-container">
+                <img class="book-bg" [src]="weaponBookImage" alt="" />
+                <div class="book-content">
+                  <div class="page flex items-center justify-center text-center">
+                    @if (selectedWeaponDetail(); as sw) {
+                      @if (sw.imageUrl) {
+                        <img [src]="sw.imageUrl" alt="" class="max-w-[80%] max-h-[80%] object-contain drop-shadow-lg" style="transform: translateX(55px);" />
+                      } @else {
+                        <span class="text-6xl opacity-30">⚔️</span>
+                      }
+                    }
+                  </div>
+                  <div class="page flex flex-col items-center text-center gap-3">
+                    @if (selectedWeaponDetail(); as sw) {
+                      <h3 class="font-display text-xl font-bold" style="transform: translateX(-10px);">{{ sw.name }}</h3>
+                      <div class="flex flex-col items-center gap-2" style="transform: translateX(-10px);">
+                        <div>
+                          <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('weapon_col_attack') }}</span>
+                          <p class="font-body text-sm">{{ attackAbilityNames(sw.attackAbilities) }}</p>
+                        </div>
+                        <div>
+                          <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('weapon_col_damage') }}</span>
+                          <p class="font-body text-sm">
+                            {{ sw.damageDice }} {{ sw.damageType }}
+                            @if (sw.versatileDamage) {
+                              ({{ sw.versatileDamage }} {{ localeService.t('weapon_versatile_label') }})
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('weapon_col_range') }}</span>
+                          <p class="font-body text-sm">
+                            @if (sw.rangeCategory === 'ranged') {
+                              {{ sw.normalRange }}/{{ sw.longRange }}
+                            } @else {
+                              {{ localeService.t('weapon_range_melee') }}
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('weapon_col_weight') }}</span>
+                          <p class="font-body text-sm">{{ sw.weight }} kg</p>
+                        </div>
+                        <div>
+                          <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('quantity_label') }}</span>
+                          <p class="font-body text-sm">{{ sw.quantity }}</p>
+                        </div>
+                        @if (sw.costValue != null) {
+                          <div>
+                            <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('weapon_col_cost') }}</span>
+                            <p class="font-body text-sm">{{ sw.costValue }} {{ localeService.t('coin_unit_' + sw.costUnit) }}</p>
+                          </div>
+                        }
+                        @if (sw.properties) {
+                          <div>
+                            <span class="block text-[0.6rem] uppercase tracking-wider font-bold opacity-70">{{ localeService.t('weapon_properties_label') }}</span>
+                            <p class="font-body text-sm">{{ sw.properties }}</p>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile: niente overlay sull'immagine (a schermi stretti il riquadro di testo
+                 diventa troppo piccolo per il font fisso), card normale in flusso invece. -->
+            @if (selectedWeaponDetail(); as sw) {
+              <div class="sm:hidden mt-4 parchment-panel rounded-lg p-4 space-y-3">
+                <div class="flex items-start justify-between gap-2">
+                  <h3 class="font-display text-lg text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ sw.name }}</h3>
+                  <button
+                    (click)="toggleWeaponSelection(sw.rowId)"
+                    [attr.aria-label]="localeService.t('cancel_button')"
+                    class="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-fantasy-black/70 text-gold-glow hover:bg-fantasy-black transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+                @if (sw.imageUrl) {
+                  <img [src]="sw.imageUrl" alt="" class="max-h-48 mx-auto object-contain drop-shadow-lg" />
+                }
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('weapon_col_attack') }}</span>
+                    <p class="font-body text-sm text-gold-bright">{{ attackAbilityNames(sw.attackAbilities) }}</p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('weapon_col_damage') }}</span>
+                    <p class="font-body text-sm text-gold-bright">
+                      {{ sw.damageDice }} {{ sw.damageType }}
+                      @if (sw.versatileDamage) {
+                        ({{ sw.versatileDamage }} {{ localeService.t('weapon_versatile_label') }})
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('weapon_col_range') }}</span>
+                    <p class="font-body text-sm text-gold-bright">
+                      @if (sw.rangeCategory === 'ranged') {
+                        {{ sw.normalRange }}/{{ sw.longRange }}
+                      } @else {
+                        {{ localeService.t('weapon_range_melee') }}
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('weapon_col_weight') }}</span>
+                    <p class="font-body text-sm text-gold-bright">{{ sw.weight }} kg</p>
+                  </div>
+                  <div>
+                    <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('quantity_label') }}</span>
+                    <p class="font-body text-sm text-gold-bright">{{ sw.quantity }}</p>
+                  </div>
+                  @if (sw.costValue != null) {
+                    <div>
+                      <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('weapon_col_cost') }}</span>
+                      <p class="font-body text-sm text-gold-bright">{{ sw.costValue }} {{ localeService.t('coin_unit_' + sw.costUnit) }}</p>
+                    </div>
+                  }
+                  @if (sw.properties) {
+                    <div class="col-span-2">
+                      <span class="block text-[0.6rem] uppercase tracking-wider font-bold text-fantasy-gold/60">{{ localeService.t('weapon_properties_label') }}</span>
+                      <p class="font-body text-sm text-gold-bright">{{ sw.properties }}</p>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           }
         </app-card>
       }
+
+      <!-- TACCUINO: a sinistra si scrive/modifica (data + titolo opzionale + testo), a
+           destra un carosello Swiper (stesso pattern lazy di bestiary.ts/html) delle pagine
+           già scritte, una alla volta con frecce per sfogliarle. Il bottone matita su ogni
+           pagina precompila il form a sinistra per modificarla (submitDiaryEntry() in
+           character-sheet.ts aggiorna invece di creare quando editingDiaryEntryId è
+           valorizzato). Ogni pagina riusa la pergamena invecchiata con bordo runico
+           themes/TACCUINO2.png (671x942,
+           verticale) con un pannello semi-opaco dietro al testo, per restare leggibile a
+           prescindere dalle venature del foglio. Da lg in su le due colonne condividono
+           un'altezza fissa (lg:h-120 = 30rem): la colonna sinistra ne è la misura, il
+           carosello a destra si scala in altezza (non più in larghezza) per starci dentro
+           intero senza scroll interno.
+           IMPORTANTE su swiper-container: niente "un lato fisso + aspect-ratio per l'altro"
+           (es. altezza fissa + larghezza auto derivata dall'aspect-ratio). Lo shadow DOM di
+           swiper-element legge le dimensioni dell'host per calcolare .swiper (height:100%),
+           e con un lato "auto" la misurazione può avvenire prima che il layout CSS abbia
+           risolto quel lato, collassando tutto a 0 (bug osservato: si vedeva solo la
+           freccia sinistra). Da lg in su si usano quindi due valori espliciti pre-calcolati
+           sul rapporto reale dell'immagine (671x942) invece di aspect-671/942 + un lato auto. -->
+      @if (activeSubTab() === 'diary') {
+        <app-card contentClass="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          @if (!readOnly()) {
+            <div class="flex flex-col gap-3 lg:h-120">
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('diary_date_label') }}</label>
+                <input
+                  type="date" [(ngModel)]="newDiaryEntryDate"
+                  class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('diary_title_label') }}</label>
+                <input
+                  type="text" [(ngModel)]="newDiaryEntryTitle"
+                  class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                />
+              </div>
+              <div class="flex flex-col gap-1 flex-1">
+                <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('subtab_diary') }}</label>
+                <textarea
+                  [(ngModel)]="newDiaryEntryText"
+                  [placeholder]="localeService.t('diary_placeholder')"
+                  class="w-full flex-1 min-h-40 px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
+                ></textarea>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  (click)="submitDiaryEntry()"
+                  [disabled]="!newDiaryEntryText.trim() || !newDiaryEntryDate"
+                  class="self-start px-4 py-2 bg-fantasy-gold text-fantasy-black font-display text-sm tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
+                >
+                  {{ editingDiaryEntryId ? localeService.t('save_changes_button') : localeService.t('diary_add_button') }}
+                </button>
+                @if (editingDiaryEntryId) {
+                  <button
+                    (click)="cancelEditDiaryEntry()"
+                    class="self-start px-4 py-2 border-2 border-gold rounded font-display text-sm hover:bg-gold hover:text-fantasy-black transition-colors"
+                  >
+                    {{ localeService.t('cancel_button') }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <div [class.lg:col-span-2]="readOnly()" class="flex flex-col gap-3">
+            @if (diaryPages().length === 0) {
+              <p class="text-slate-arcane italic text-sm text-center py-6">{{ localeService.t('diary_empty_label') }}</p>
+            } @else {
+              <swiper-container
+                init="true"
+                navigation="true"
+                style="--swiper-navigation-color: #c7a45e"
+                class="block w-full aspect-671/942 lg:aspect-auto lg:w-[21.4rem] lg:h-120 mx-auto"
+              >
+                @for (page of diaryPages(); track page.id) {
+                  <swiper-slide class="relative">
+                    @if (!readOnly()) {
+                      <button
+                        (click)="startEditDiaryEntry(page)"
+                        [attr.aria-label]="localeService.t('edit_button')"
+                        class="absolute top-2 left-2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-fantasy-black/70 text-gold-glow hover:bg-fantasy-black transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
+                      <button
+                        (click)="deleteDiaryEntry(page.id)"
+                        [attr.aria-label]="localeService.t('remove_button')"
+                        class="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-fantasy-black/70 text-gold-glow hover:bg-fantasy-black transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                        </svg>
+                      </button>
+                    }
+                    <div
+                      class="absolute inset-0 bg-no-repeat bg-top bg-size-[100%_100%]"
+                      style="background-image: url('themes/TACCUINO2.png');"
+                    >
+                      <div class="absolute top-[11%] bottom-[9%] left-[15%] right-[15%] flex flex-col gap-2">
+                        @if (page.title) {
+                          <p class="shrink-0 font-display text-sm font-bold text-black">
+                            {{ page.title }}
+                          </p>
+                        }
+                        <p class="shrink-0 font-display text-xs font-bold uppercase tracking-wide text-black/80">
+                          {{ page.dateLabel }}
+                        </p>
+                        <div class="flex-1 overflow-y-auto">
+                          <p class="font-body text-sm italic font-bold leading-relaxed text-black whitespace-pre-wrap">
+                            {{ page.content }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </swiper-slide>
+                }
+              </swiper-container>
+            }
+          </div>
+        </app-card>
+      }
     </section>
+  </div>
   } @else {
     <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
   }
