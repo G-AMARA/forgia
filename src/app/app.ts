@@ -1,11 +1,13 @@
 import { Component, inject, signal, effect } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
+import { Location } from '@angular/common';
 import { AuthForm } from './features/auth-form/auth-form';
 import { CampaignHub } from './features/campaign-hub/campaign-hub';
 import { CampaignEdit } from './features/campaign-edit/campaign-edit';
 import { CampaignCreate } from './features/campaign-create/campaign-create';
 import { CharacterCreate } from './features/character-create/character-create';
 import { RaceList } from './features/race-list/race-list';
+import { SubraceList } from './features/subrace-list/subrace-list';
 import { ClassList } from './features/class-list/class-list';
 import { SubclassList } from './features/subclass-list/subclass-list';
 import { BackgroundList } from './features/background-list/background-list';
@@ -18,7 +20,7 @@ import { Araldica } from './features/araldica/araldica';
 import { GenericModalComponent } from './shared/modal/generic-adviser-modal/generic-adviser-modal';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
-import { AppNav } from './core/app-nav';
+import { AppNav, Tab } from './core/app-nav';
 import { ActiveCampaign } from './core/active-campaign';
 import { NavigationTracker } from './core/navigation-tracker';
 import { Modal } from './core/modal';
@@ -34,6 +36,7 @@ import { DiceRoller } from './shared/dice-roller/dice-roller';
     CampaignCreate,
     CharacterCreate,
     RaceList,
+    SubraceList,
     ClassList,
     SubclassList,
     BackgroundList,
@@ -57,23 +60,40 @@ export class App {
   protected activeCampaign = inject(ActiveCampaign);
   protected readonly modal = inject(Modal);
   private router = inject(Router);
+  private location = inject(Location);
   // Mai referenziato altrove: injectarlo qui basta a istanziare il service (providedIn:
   // 'root') e avviare il suo effect() che segue auth.isLoggedIn() per far partire il tracker.
   private navigationTracker = inject(NavigationTracker);
   protected diceRollerOpen = signal(false);
+  protected mobileNavOpen = signal(false);
+
+  // Etichetta della tab attiva sul pulsante del menu mobile: fallback su "Menu" per le
+  // tab raggiungibili in altri modi (badge campagna, menu utente...) che non hanno una
+  // voce propria in questo menu.
+  private readonly mobileTabLabelKeys: Partial<Record<Tab, string>> = {
+    board: 'tab_board',
+    campaign: 'tab_campaign',
+    characters: 'tab_characters',
+    catalog: 'tab_catalog',
+    manage: 'tab_manage',
+  };
 
   constructor() {
     // URL richiesto dal browser al caricamento (prima che il redirect '' -> 'dashboard'
     // o la guardia di autenticazione possano intervenire). Serve a distinguere un
     // refresh/link diretto su una pagina specifica da un vero login.
-    const initialPath = window.location.pathname + window.location.search;
+    // Location.path() (a differenza di window.location.pathname) è già relativo al
+    // <base href>, quindi funziona anche quando l'app è pubblicata in una sottocartella
+    // (es. GitHub Pages su /forgia/).
+    const initialPath = this.location.path(true);
     let hasHandledInitialAuth = false;
 
-    // Master e Giocatori atterrano sempre sulla Dashboard dopo il login
-    // (sia login esplicito che ripristino di una sessione già attiva) —
-    // TRANNE al primo caricamento, se l'utente aveva aperto un link diretto
-    // a una scheda personaggio: in quel caso va rispettato quel link,
-    // altrimenti un semplice refresh sulla pagina la renderebbe inutilizzabile.
+    // Master e Giocatori atterrano sempre sulla Dashboard dopo un vero login (esplicito,
+    // o un nuovo login nella stessa sessione di navigazione dopo un logout) — TRANNE al
+    // primo caricamento della pagina (refresh o ripristino di una sessione già attiva),
+    // dove va rispettata la tab su cui l'utente si trovava, per non perdere lavoro in corso
+    // (es. una scheda personaggio a metà) solo per aver ricaricato la pagina. Se l'utente
+    // aveva aperto un link diretto a una scheda personaggio, quel link ha comunque priorità.
     effect(() => {
       if (!this.auth.isLoggedIn()) return;
 
@@ -85,6 +105,10 @@ export class App {
         // (Supabase rileva il token nell'URL) mentre si trova ancora su /reset-password:
         // senza questo caso speciale verrebbe dirottato sulla dashboard prima di poter
         // impostare la nuova password, rendendo il link di recupero inutilizzabile.
+      } else if (!hasHandledInitialAuth) {
+        // Primo caricamento (refresh/sessione ripristinata) senza link diretto: la tab
+        // attiva è già stata letta da sessionStorage in AppNav, non la sovrascriviamo.
+        this.router.navigate(['/dashboard']);
       } else {
         // appNav.activeTab() sopravvive al logout: senza questo reset,
         // al login successivo lo switch mostrerebbe ancora l'ultima
@@ -109,8 +133,19 @@ export class App {
     this.router.navigate(['/dashboard']);
   }
 
+  mobileTabLabel(): string {
+    const key = this.mobileTabLabelKeys[this.appNav.activeTab()];
+    return key ? this.localeService.t(key) : this.localeService.t('nav_menu_label');
+  }
 
-
+  selectMobileTab(tab: Tab) {
+    this.mobileNavOpen.set(false);
+    if (tab === 'board') {
+      this.goToBoard();
+    } else {
+      this.appNav.setTab(tab);
+    }
+  }
 
   openDiceRollerModal() {
     this.diceRollerOpen.set(true);

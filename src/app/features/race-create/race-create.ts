@@ -24,6 +24,8 @@ export class RaceCreate {
   description = '';
   abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   abilityKeys: (keyof typeof this.abilityBonuses)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
+  freeBonusPoints = 0;
+  freeBonusMaxPerAbility = 0;
 
   editingId: string | null = null;
 
@@ -39,6 +41,8 @@ export class RaceCreate {
     this.speed = 9;
     this.description = '';
     this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+    this.freeBonusPoints = 0;
+    this.freeBonusMaxPerAbility = 0;
   }
 
   startEdit(race: any) {
@@ -47,6 +51,8 @@ export class RaceCreate {
     this.speed = race.raw.speed ?? 9;
     this.description = race.raw.description ?? '';
     this.abilityBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...normalizeAbilityBonuses(race.raw.ability_bonuses) };
+    this.freeBonusPoints = race.raw.free_bonus_points ?? 0;
+    this.freeBonusMaxPerAbility = race.raw.free_bonus_max_per_ability ?? 0;
   }
 
   cancelEdit() {
@@ -61,6 +67,8 @@ export class RaceCreate {
       speed: this.speed,
       description: this.description || null,
       ability_bonuses: this.abilityBonuses,
+      free_bonus_points: this.freeBonusPoints,
+      free_bonus_max_per_ability: this.freeBonusMaxPerAbility,
     };
 
     const { error } = this.editingId
@@ -82,10 +90,13 @@ export class RaceCreate {
 
   bonusSummary(race: any): string {
     const bonuses = normalizeAbilityBonuses(race.raw.ability_bonuses);
-    return this.abilityKeys
+    const parts = this.abilityKeys
       .filter((k) => bonuses[k] > 0)
-      .map((k) => `+${bonuses[k]} ${this.localeService.t('ability_' + k)}`)
-      .join(', ') || '—';
+      .map((k) => `+${bonuses[k]} ${this.localeService.t('ability_' + k)}`);
+    if (race.raw.free_bonus_points > 0) {
+      parts.push(`+${race.raw.free_bonus_points} ${this.localeService.t('free_bonus_summary_label')} (max +${race.raw.free_bonus_max_per_ability})`);
+    }
+    return parts.join(', ') || '—';
   }
 
   async deleteRace(id: string, name: string) {

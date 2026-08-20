@@ -89,15 +89,25 @@
           <p class="font-display text-sm text-fantasy-moonstone">📖 {{ localeService.t('session_log_title') }}</p>
           <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
         </div>
-        <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
-          <p class="font-display text-sm text-fantasy-moonstone">🐲 {{ localeService.t('bestiary_title') }}</p>
-          <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
-        </div>
+        @if (isOwner() || auth.isAdmin()) {
+          <button
+            type="button"
+            (click)="toggleSection('bestiary')"
+            class="border border-gold/50 rounded-lg p-4 text-center cursor-pointer hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
+            [class.border-gold-bright]="expandedSection() === 'bestiary'"
+          >
+            <p class="font-display text-sm text-fantasy-moonstone">🐲 {{ localeService.t('bestiary_title') }}</p>
+          </button>
+        }
         <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
           <p class="font-display text-sm text-fantasy-moonstone">🗺️ {{ localeService.t('maps_title') }}</p>
           <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
         </div>
       </div>
+
+      @if (expandedSection() === 'bestiary') {
+        <app-bestiary [campaignId]="campaignStore.current()!.id"></app-bestiary>
+      }
     </section>
   }
   

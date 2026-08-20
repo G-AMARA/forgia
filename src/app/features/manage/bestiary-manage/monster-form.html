@@ -1,0 +1,271 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+  (click)="cancel()"
+>
+  <div
+    class="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+    (click)="$event.stopPropagation()"
+  >
+    <h2 class="font-display text-2xl text-fantasy-gold mb-4">
+      {{ editingMonster ? localeService.t('bestiary_edit_monster_title') : localeService.t('bestiary_new_monster_title') }}
+    </h2>
+
+    <form (ngSubmit)="submit()" class="flex flex-col gap-6">
+      <!-- Immagine -->
+      <div class="flex items-center gap-4">
+        @if (imageUrl) {
+          <img [src]="imageUrl" alt="" class="w-20 h-20 rounded object-cover border-2 border-gold-bright" />
+        }
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold">{{ localeService.t('bestiary_image_label') }}</label>
+          <label
+            class="text-xs px-3 py-1.5 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors self-start"
+            [class.opacity-50]="imageUploading()"
+          >
+            {{ imageUploading() ? localeService.t('loading') : localeService.t('upload_image_button') }}
+            <input type="file" accept="image/*" class="hidden" [disabled]="imageUploading()" (change)="onImageSelected($event)" />
+          </label>
+        </div>
+      </div>
+
+      <!-- 1. Informazioni generali -->
+      <section class="space-y-3">
+        <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_general_info_title') }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_name_label') }} <span class="text-red-300">*</span></label>
+            <input
+              type="text" [(ngModel)]="name" name="name" required
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_size_label') }}</label>
+            <select
+              [(ngModel)]="size" name="size"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            >
+              <option value="">—</option>
+              @for (s of sizes; track s) {
+                <option [value]="s">{{ localeService.t('bestiary_size_' + s) }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_type_label') }}</label>
+            <input
+              type="text" [(ngModel)]="type" name="type"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_alignment_label') }}</label>
+            <input
+              type="text" [(ngModel)]="alignment" name="alignment"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Difesa e movimento -->
+      <section class="space-y-3">
+        <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_defense_movement_title') }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_armor_class_label') }}</label>
+            <input
+              type="text" [(ngModel)]="armorClass" name="armorClass" placeholder="16 (corazza di piastre)"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_hit_points_label') }}</label>
+            <input
+              type="text" [(ngModel)]="hitPoints" name="hitPoints" placeholder="58 (9d8+18)"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_speed_label') }}</label>
+            <input
+              type="text" [(ngModel)]="speed" name="speed" placeholder="Camminare 9m, Volare 18m"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Caratteristiche, tiri salvezza, abilità -->
+      <section class="space-y-3">
+        <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_ability_scores_title') }}</h3>
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('ability_str') }}</label>
+            <input type="number" [(ngModel)]="str" name="str" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('ability_dex') }}</label>
+            <input type="number" [(ngModel)]="dex" name="dex" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('ability_cos') }}</label>
+            <input type="number" [(ngModel)]="con" name="con" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('ability_int') }}</label>
+            <input type="number" [(ngModel)]="intelligence" name="intelligence" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('ability_wis') }}</label>
+            <input type="number" [(ngModel)]="wis" name="wis" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('ability_cha') }}</label>
+            <input type="number" [(ngModel)]="cha" name="cha" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_saving_throws_label') }}</label>
+            <input
+              type="text" [(ngModel)]="savingThrows" name="savingThrows" placeholder="COS +5, SAG +3"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_skills_label') }}</label>
+            <input
+              type="text" [(ngModel)]="skills" name="skills" placeholder="Percezione +5, Furtività +6"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Resistenze, sensi, lingue -->
+      <section class="space-y-3">
+        <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_resistances_senses_title') }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_vulnerabilities_label') }}</label>
+            <input type="text" [(ngModel)]="damageVulnerabilities" name="damageVulnerabilities" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_resistances_label') }}</label>
+            <input type="text" [(ngModel)]="damageResistances" name="damageResistances" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_immunities_label') }}</label>
+            <input type="text" [(ngModel)]="damageImmunities" name="damageImmunities" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_condition_immunities_label') }}</label>
+            <input type="text" [(ngModel)]="conditionImmunities" name="conditionImmunities" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_senses_label') }}</label>
+            <input type="text" [(ngModel)]="senses" name="senses" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_languages_label') }}</label>
+            <input type="text" [(ngModel)]="languages" name="languages" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_challenge_rating_label') }}</label>
+            <input type="text" [(ngModel)]="challengeRating" name="challengeRating" placeholder="5" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('bestiary_experience_points_label') }}</label>
+            <input type="number" [(ngModel)]="experiencePoints" name="experiencePoints" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Tratti speciali -->
+      <section class="space-y-2">
+        <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_special_traits_title') }}</h3>
+        <app-trait-list-editor
+          [items]="specialTraits"
+          (itemsChange)="specialTraits = $event"
+          [addLabel]="localeService.t('bestiary_add_trait_row')"
+        ></app-trait-list-editor>
+      </section>
+
+      <!-- 6. Azioni -->
+      <section class="space-y-2">
+        <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_actions_title') }}</h3>
+        <app-trait-list-editor
+          [items]="actions"
+          (itemsChange)="actions = $event"
+          [addLabel]="localeService.t('bestiary_add_trait_row')"
+        ></app-trait-list-editor>
+      </section>
+
+      <!-- 7. Azioni secondarie, reazioni e altro (opzionali) -->
+      <section class="space-y-4">
+        <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_optional_extras_title') }}</h3>
+
+        <div class="space-y-2">
+          <h4 class="text-sm font-semibold text-fantasy-moonstone">{{ localeService.t('bestiary_bonus_actions_title') }}</h4>
+          <app-trait-list-editor
+            [items]="bonusActions"
+            (itemsChange)="bonusActions = $event"
+            [addLabel]="localeService.t('bestiary_add_trait_row')"
+          ></app-trait-list-editor>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="text-sm font-semibold text-fantasy-moonstone">{{ localeService.t('bestiary_reactions_title') }}</h4>
+          <app-trait-list-editor
+            [items]="reactions"
+            (itemsChange)="reactions = $event"
+            [addLabel]="localeService.t('bestiary_add_trait_row')"
+          ></app-trait-list-editor>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="text-sm font-semibold text-fantasy-moonstone">{{ localeService.t('bestiary_legendary_actions_title') }}</h4>
+          <app-trait-list-editor
+            [items]="legendaryActions"
+            (itemsChange)="legendaryActions = $event"
+            [addLabel]="localeService.t('bestiary_add_trait_row')"
+          ></app-trait-list-editor>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="text-sm font-semibold text-fantasy-moonstone">{{ localeService.t('bestiary_lair_actions_title') }}</h4>
+          <app-trait-list-editor
+            [items]="lairActions"
+            (itemsChange)="lairActions = $event"
+            [addLabel]="localeService.t('bestiary_add_trait_row')"
+          ></app-trait-list-editor>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="text-sm font-semibold text-fantasy-moonstone">{{ localeService.t('bestiary_regional_effects_title') }}</h4>
+          <app-trait-list-editor
+            [items]="regionalEffects"
+            (itemsChange)="regionalEffects = $event"
+            [addLabel]="localeService.t('bestiary_add_trait_row')"
+          ></app-trait-list-editor>
+        </div>
+      </section>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-gold/30">
+        <button
+          type="button" (click)="cancel()"
+          class="px-4 py-2 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+        >
+          {{ localeService.t('cancel_button') }}
+        </button>
+        <button
+          type="submit" [disabled]="loading()"
+          class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
+        >
+          {{ editingMonster ? localeService.t('save_changes_button') : localeService.t('bestiary_add_monster_button') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

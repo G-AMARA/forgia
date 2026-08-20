@@ -1,0 +1,51 @@
+<div class="space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-2">
+    <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_catalog_title') }}</h3>
+    <button
+      type="button"
+      (click)="openAddForm()"
+      class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+    >
+      {{ localeService.t('bestiary_add_monster_button') }}
+    </button>
+  </div>
+
+  @if (bestiaryStore.catalog().length === 0) {
+    <p class="text-slate-arcane italic text-sm">{{ localeService.t('bestiary_catalog_empty_state') }}</p>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      @for (monster of bestiaryStore.catalog(); track monster.id) {
+        <div class="flex items-center gap-3 border border-gold/50 rounded-lg p-3 bg-fantasy-black/40">
+          <div class="w-14 h-14 shrink-0 rounded overflow-hidden border-2 border-gold bg-fantasy-black/60 flex items-center justify-center">
+            @if (monster.image_url) {
+              <img [src]="monster.image_url" [alt]="monster.name" class="w-full h-full object-cover" />
+            } @else {
+              <span class="text-slate-arcane text-xl">🐲</span>
+            }
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-display text-fantasy-moonstone truncate">{{ monster.name }}</p>
+            @if (monster.challenge_rating) {
+              <p class="text-xs text-slate-arcane">{{ localeService.t('bestiary_challenge_rating_label') }}: {{ monster.challenge_rating }}</p>
+            }
+            <div class="flex gap-3 mt-1">
+              <button type="button" (click)="openEditForm(monster)" class="text-xs text-fantasy-gold underline">
+                {{ localeService.t('edit_button') }}
+              </button>
+              <button type="button" (click)="deleteMonster(monster)" class="text-xs text-red-300 underline">
+                {{ localeService.t('delete_button') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (formOpen()) {
+  <app-monster-form
+    [editingMonster]="editingMonster()"
+    (closed)="onFormClosed()"
+  ></app-monster-form>
+}

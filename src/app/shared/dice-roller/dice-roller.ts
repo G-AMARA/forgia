@@ -49,7 +49,9 @@ export class DiceRoller implements AfterViewInit{
   ngAfterViewInit() {
     setTimeout(() => {
       this.diceBox = new DiceBox("#dice-box-container", {
-        assetPath: '/dice-box/assets/',
+        // DiceBox concatena origin + assetPath (non passa dal <base href>), serve quindi
+        // il pathname assoluto risolto rispetto al base href (es. "/forgia/dice-box/assets/").
+        assetPath: new URL('dice-box/assets/', document.baseURI).pathname,
         theme: 'default',
         themeColor: '#d97706',
         scale: 11,

@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { CharacterStore } from '../../core/character-store';
@@ -7,10 +7,14 @@ import { AppNav } from '../../core/app-nav';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { getCover, getCoverImagePath } from '../../core/campaign-covers';
+import { Bestiary } from '../bestiary/bestiary';
+
+type CampaignSection = 'session-log' | 'bestiary' | 'maps';
 
 @Component({
   selector: 'app-campaign-hub',
   standalone: true,
+  imports: [Bestiary],
   templateUrl: './campaign-hub.html',
 })
 export class CampaignHub {
@@ -86,5 +90,14 @@ export class CampaignHub {
 
   goToManage() {
     this.appNav.setTab('campaign-edit');
+  }
+
+  // Stato locale a questo componente (non in AppNav, che guida la navigazione a livello
+  // di app): un semplice accordion a una sola sezione aperta per volta, per le tre card
+  // "Registro sessioni" / "Bestiario" / "Mappe e luoghi".
+  expandedSection = signal<CampaignSection | null>(null);
+
+  toggleSection(section: CampaignSection) {
+    this.expandedSection.set(this.expandedSection() === section ? null : section);
   }
 }

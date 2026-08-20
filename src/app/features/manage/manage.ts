@@ -3,17 +3,19 @@ import { WeaponCreate } from '../weapon-create/weapon-create';
 import { SpellCreate } from '../spell-create/spell-create';
 import { EquipmentCreate } from '../equipment-create/equipment-create';
 import { RaceCreate } from '../race-create/race-create';
+import { SubraceCreate } from '../subrace-create/subrace-create';
 import { BackgroundCreate } from '../background-create/background-create';
 import { ClassCreate } from '../class-create/class-create';
 import { SubclassCreate } from '../subclass-create/subclass-create';
+import { BestiaryManage } from './bestiary-manage/bestiary-manage';
 import { LocaleService } from '../../core/locale';
 
-type ManageSection = 'races' | 'classes' | 'subclasses' | 'backgrounds' | 'weapons' | 'spells' | 'equipment';
+type ManageSection = 'races' | 'subraces' | 'classes' | 'subclasses' | 'backgrounds' | 'weapons' | 'spells' | 'equipment' | 'bestiary';
 
 @Component({
   selector: 'app-manage',
   standalone: true,
-  imports: [RaceCreate, ClassCreate, SubclassCreate, BackgroundCreate, WeaponCreate, SpellCreate, EquipmentCreate],
+  imports: [RaceCreate, SubraceCreate, ClassCreate, SubclassCreate, BackgroundCreate, WeaponCreate, SpellCreate, EquipmentCreate, BestiaryManage],
   templateUrl: './manage.html',
 })
 export class Manage {

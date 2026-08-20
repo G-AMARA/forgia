@@ -1,0 +1,188 @@
+<div class="space-y-4 p-4 border border-gold/50 rounded-lg bg-fantasy-black/40">
+  <div class="flex items-center justify-between flex-wrap gap-2">
+    <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_title') }}</h3>
+    @if (canManage()) {
+      <button
+        type="button"
+        (click)="openPicker()"
+        class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+      >
+        {{ localeService.t('bestiary_select_monsters_button') }}
+      </button>
+    }
+  </div>
+
+  @if (selectedMonsters().length === 0) {
+    <p class="text-slate-arcane italic text-sm">
+      {{ canManage() ? localeService.t('bestiary_no_selection_hint') : localeService.t('bestiary_empty_state') }}
+    </p>
+  } @else {
+    <!-- Raccoglitore di carte: effetto "cards" di Swiper (mazzo sfogliabile con le dita
+         o con le frecce), ogni mostro è una carta in stile TCG (immagine + cartiglio nome). -->
+    <div class="flex justify-center">
+      <swiper-container
+        init="true"
+        effect="cards"
+        grab-cursor="true"
+        navigation="true"
+        style="--swiper-navigation-color: #c7a45e"
+        class="block w-full max-w-60 aspect-3/4"
+        (swiperslidechange)="onSlideChange($event)"
+      >
+        @for (monster of selectedMonsters(); track monster.id) {
+          <swiper-slide class="flex flex-col rounded-2xl overflow-hidden border-4 border-gold bg-fantasy-black shadow-lg shadow-black/50">
+            <div class="flex-1 min-h-0 bg-fantasy-black/60 flex items-center justify-center overflow-hidden">
+              @if (monster.image_url) {
+                <img [src]="monster.image_url" [alt]="monster.name" class="w-full h-full object-cover" />
+              } @else {
+                <span class="text-slate-arcane text-5xl">🐲</span>
+              }
+            </div>
+            <div class="shrink-0 px-2 py-1.5 bg-linear-to-t from-fantasy-black to-fantasy-black/90 border-t-2 border-gold text-center">
+              <p class="font-display text-sm text-fantasy-gold truncate">{{ monster.name }}</p>
+              <p class="text-[10px] text-slate-arcane truncate">
+                {{ monster.type }}{{ monster.challenge_rating ? ' · GS ' + monster.challenge_rating : '' }}
+              </p>
+            </div>
+          </swiper-slide>
+        }
+      </swiper-container>
+    </div>
+
+    <!-- Pannello dettagli del mostro in cima al mazzo -->
+    @if (selectedMonster(); as monster) {
+      <div class="border-2 border-gold rounded-lg p-4 bg-fantasy-black/60 space-y-3">
+        <div>
+          <h4 class="font-display text-xl text-fantasy-gold">{{ monster.name }}</h4>
+          <p class="text-xs italic text-slate-arcane">
+            {{ monster.size ? localeService.t('bestiary_size_' + monster.size) : '' }}
+            {{ monster.type }}{{ monster.alignment ? ', ' + monster.alignment : '' }}
+          </p>
+        </div>
+
+        <!-- Difesa e movimento -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+          @if (monster.armor_class) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_armor_class_label') }}:</span> {{ monster.armor_class }}</p>
+          }
+          @if (monster.hit_points) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_hit_points_label') }}:</span> {{ monster.hit_points }}</p>
+          }
+          @if (monster.speed) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_speed_label') }}:</span> {{ monster.speed }}</p>
+          }
+        </div>
+
+        <!-- Caratteristiche -->
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-sm border-y border-gold/30 py-2">
+          <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_str') }}</span>{{ monster.str ?? '—' }} ({{ abilityModifier(monster.str) }})</div>
+          <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_dex') }}</span>{{ monster.dex ?? '—' }} ({{ abilityModifier(monster.dex) }})</div>
+          <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_cos') }}</span>{{ monster.con ?? '—' }} ({{ abilityModifier(monster.con) }})</div>
+          <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_int') }}</span>{{ monster.intelligence ?? '—' }} ({{ abilityModifier(monster.intelligence) }})</div>
+          <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_wis') }}</span>{{ monster.wis ?? '—' }} ({{ abilityModifier(monster.wis) }})</div>
+          <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_cha') }}</span>{{ monster.cha ?? '—' }} ({{ abilityModifier(monster.cha) }})</div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+          @if (monster.saving_throws) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_saving_throws_label') }}:</span> {{ monster.saving_throws }}</p>
+          }
+          @if (monster.skills) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_skills_label') }}:</span> {{ monster.skills }}</p>
+          }
+          @if (monster.damage_vulnerabilities) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_vulnerabilities_label') }}:</span> {{ monster.damage_vulnerabilities }}</p>
+          }
+          @if (monster.damage_resistances) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_resistances_label') }}:</span> {{ monster.damage_resistances }}</p>
+          }
+          @if (monster.damage_immunities) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_immunities_label') }}:</span> {{ monster.damage_immunities }}</p>
+          }
+          @if (monster.condition_immunities) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_condition_immunities_label') }}:</span> {{ monster.condition_immunities }}</p>
+          }
+          @if (monster.senses) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_senses_label') }}:</span> {{ monster.senses }}</p>
+          }
+          @if (monster.languages) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_languages_label') }}:</span> {{ monster.languages }}</p>
+          }
+          @if (monster.challenge_rating) {
+            <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_challenge_rating_label') }}:</span> {{ monster.challenge_rating }} @if (monster.experience_points) { ({{ monster.experience_points }} {{ localeService.t('bestiary_experience_points_label') }}) }</p>
+          }
+        </div>
+
+        @if (monster.special_traits.length > 0) {
+          <div class="space-y-1">
+            <h5 class="font-display text-sm text-fantasy-gold">{{ localeService.t('bestiary_special_traits_title') }}</h5>
+            @for (trait of monster.special_traits; track $index) {
+              <p class="text-sm"><span class="font-semibold italic">{{ trait.name }}.</span> {{ trait.description }}</p>
+            }
+          </div>
+        }
+
+        @if (monster.actions.length > 0) {
+          <div class="space-y-1">
+            <h5 class="font-display text-sm text-fantasy-gold">{{ localeService.t('bestiary_actions_title') }}</h5>
+            @for (action of monster.actions; track $index) {
+              <p class="text-sm"><span class="font-semibold italic">{{ action.name }}.</span> {{ action.description }}</p>
+            }
+          </div>
+        }
+
+        @if (monster.bonus_actions.length > 0) {
+          <div class="space-y-1">
+            <h5 class="font-display text-sm text-fantasy-gold">{{ localeService.t('bestiary_bonus_actions_title') }}</h5>
+            @for (item of monster.bonus_actions; track $index) {
+              <p class="text-sm"><span class="font-semibold italic">{{ item.name }}.</span> {{ item.description }}</p>
+            }
+          </div>
+        }
+
+        @if (monster.reactions.length > 0) {
+          <div class="space-y-1">
+            <h5 class="font-display text-sm text-fantasy-gold">{{ localeService.t('bestiary_reactions_title') }}</h5>
+            @for (item of monster.reactions; track $index) {
+              <p class="text-sm"><span class="font-semibold italic">{{ item.name }}.</span> {{ item.description }}</p>
+            }
+          </div>
+        }
+
+        @if (monster.legendary_actions.length > 0) {
+          <div class="space-y-1">
+            <h5 class="font-display text-sm text-fantasy-gold">{{ localeService.t('bestiary_legendary_actions_title') }}</h5>
+            @for (item of monster.legendary_actions; track $index) {
+              <p class="text-sm"><span class="font-semibold italic">{{ item.name }}.</span> {{ item.description }}</p>
+            }
+          </div>
+        }
+
+        @if (monster.lair_actions.length > 0) {
+          <div class="space-y-1">
+            <h5 class="font-display text-sm text-fantasy-gold">{{ localeService.t('bestiary_lair_actions_title') }}</h5>
+            @for (item of monster.lair_actions; track $index) {
+              <p class="text-sm"><span class="font-semibold italic">{{ item.name }}.</span> {{ item.description }}</p>
+            }
+          </div>
+        }
+
+        @if (monster.regional_effects.length > 0) {
+          <div class="space-y-1">
+            <h5 class="font-display text-sm text-fantasy-gold">{{ localeService.t('bestiary_regional_effects_title') }}</h5>
+            @for (item of monster.regional_effects; track $index) {
+              <p class="text-sm"><span class="font-semibold italic">{{ item.name }}.</span> {{ item.description }}</p>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+@if (pickerOpen()) {
+  <app-monster-picker
+    [campaignId]="campaignId"
+    (closed)="onPickerClosed()"
+  ></app-monster-picker>
+}

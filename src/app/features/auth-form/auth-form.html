@@ -15,8 +15,8 @@
         </button>
 
         @if (userMenuOpen()) {
-          <button type="button" class="fixed inset-0 z-10 cursor-default" (click)="closeUserMenu()" aria-label="Chiudi menu"></button>
-          <div class="absolute right-0 top-full mt-2 w-44 bg-stone-dark border border-gold rounded shadow-lg overflow-hidden z-20">
+          <button type="button" class="fixed inset-0 z-30 cursor-default" (click)="closeUserMenu()" aria-label="Chiudi menu"></button>
+          <div class="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-44 bg-stone-dark border border-gold rounded shadow-lg overflow-hidden z-40">
             <button
               type="button"
               (click)="goToSettings()"

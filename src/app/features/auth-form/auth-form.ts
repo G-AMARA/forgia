@@ -198,7 +198,13 @@ export class AuthForm {
       if (error) {
         this.modal.error(error.message);
       } else {
-        this.infoMsg.set(this.localeService.t('signup_check_email'));
+        this.modal.success(this.localeService.t('signup_check_email'));
+        // Il nickname resta precompilato per comodità: è quello che serve per il login,
+        // una volta confermata l'email. Email e password no: niente motivo di tenerle.
+        this.email = '';
+        this.password = '';
+        this.repeat_password = '';
+        this.mode.set('login');
       }
     } else {
       const { error } = await this.auth.signInWithNickname(this.nickname, this.password);

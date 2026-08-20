@@ -11,7 +11,10 @@ import { getAbilityImagePath } from '../../core/ability-images';
 import { getSpellcastingInfo } from '../../core/spellcasting';
 import { calculateArmorClass } from '../../core/armor';
 import { translateSpellSchool } from '../../core/spell-schools';
+import { getSpellLevelTheme, type SpellLevelTheme } from '../../core/spell-level-theme';
 import { Card } from '../../shared/card/card';
+import { SpellLevelSeal } from '../../shared/spell-level-seal/spell-level-seal';
+import { SpellSchoolIcon } from '../../shared/spell-school-icon/spell-school-icon';
 import { GenericModalComponent } from '../../shared/modal/generic-adviser-modal/generic-adviser-modal';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
@@ -19,7 +22,7 @@ type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons';
 @Component({
   selector: 'app-character-sheet',
   standalone: true,
-  imports: [FormsModule, Card, GenericModalComponent],
+  imports: [FormsModule, Card, SpellLevelSeal, SpellSchoolIcon, GenericModalComponent],
   templateUrl: './character-sheet.html',
 })
 export class CharacterSheet implements OnInit {
@@ -87,6 +90,7 @@ export class CharacterSheet implements OnInit {
   private allEquipment = this.contentStore.getContent('equipment');
   private allSpells = this.contentStore.getContent('spells');
   protected races = this.contentStore.getContent('races');
+  private allSubraces = this.contentStore.getContent('subraces');
   protected classesContent = this.contentStore.getContent('classes');
   protected backgroundsContent = this.contentStore.getContent('backgrounds');
   private allSubclasses = this.contentStore.getContent('subclasses');
@@ -100,6 +104,7 @@ export class CharacterSheet implements OnInit {
   identityName = '';
   identityLevel = 1;
   identityRaceId = '';
+  identitySubraceId = '';
   identityClassId = '';
   identitySubclassId = '';
   identityBackgroundId = '';
@@ -115,6 +120,9 @@ export class CharacterSheet implements OnInit {
   identityBackgroundBonuses: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   readonly backgroundBonusMax = 3;
   readonly backgroundBonusPerAbilityMax = 2;
+  // Punti "a scelta libera" concessi da razza/sottorazza (es. Umano Variante, Draconide
+  // Cromatico), ricostruiti da applied_bonus al caricamento (vedi effect() sotto).
+  freeBonuses: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
 
   // Sottoclassi disponibili per la classe scelta, sbloccate al livello selezionato o prima.
   // Metodo (non computed): identityClassId/identityLevel sono campi ngModel, non
@@ -125,6 +133,23 @@ export class CharacterSheet implements OnInit {
     return this.allSubclasses().filter(
       (sub: any) => sub.raw.class_id === this.identityClassId && sub.raw.unlocked_at_level <= this.identityLevel
     );
+  }
+
+  // Sottorazze disponibili per la razza scelta. Stesso pattern metodo di availableSubclasses().
+  availableSubraces(): any[] {
+    if (!this.identityRaceId) return [];
+    return this.allSubraces().filter((sub: any) => sub.raw.race_id === this.identityRaceId);
+  }
+
+  onIdentityRaceChange(raceId: string) {
+    this.identityRaceId = raceId;
+    this.identitySubraceId = '';
+    this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  }
+
+  onIdentitySubraceChange(subraceId: string) {
+    this.identitySubraceId = subraceId;
+    this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   }
 
   selectedEquipmentId = '';
@@ -147,6 +172,7 @@ export class CharacterSheet implements OnInit {
         this.identityName = c.name;
         this.identityLevel = c.level;
         this.identityRaceId = c.race_id ?? '';
+        this.identitySubraceId = c.subrace_id ?? '';
         this.identityClassId = c.class_id ?? '';
         this.identitySubclassId = c.subclass_id ?? '';
         this.identityBackgroundId = c.background_id ?? '';
@@ -168,6 +194,16 @@ export class CharacterSheet implements OnInit {
         this.identityBackgroundBonuses = c.background_id
           ? { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus }
           : { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+        // Ricostruisce la quota "a scelta libera" per differenza rispetto ai bonus fissi di
+        // razza/sottorazza: applied_bonus contiene solo il totale, non la distribuzione scelta.
+        this.freeBonuses = c.background_id
+          ? { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 }
+          : Object.fromEntries(
+              this.abilityKeys.map((key) => [
+                key,
+                Math.max(0, (c.applied_bonus[key] ?? 0) - this.getRaceOrSubraceBonus(key)),
+              ])
+            );
         this.skillProficiencies = new Set(c.skill_proficiencies);
         this.damageResistancesText = c.damage_resistances.join(', ');
         this.damageImmunitiesText = c.damage_immunities.join(', ');
@@ -211,22 +247,10 @@ export class CharacterSheet implements OnInit {
     return ac;
   }
 
-  // Colore distintivo per livello incantesimo: bordo + sfumatura leggera delle card.
-  private static readonly SPELL_LEVEL_COLORS: Record<number, string> = {
-    0: '#8C8C8C',
-    1: '#4E9F3D',
-    2: '#00A8E8',
-    3: '#FF6B00',
-    4: '#D62828',
-    5: '#8A2BE2',
-    6: '#4A0E4E',
-    7: '#FF007F',
-    8: '#FFD700',
-  };
-
-  spellLevelColor(level: number): string {
-    if (level >= 9) return '#1A1A1A';
-    return CharacterSheet.SPELL_LEVEL_COLORS[level] ?? '#8C8C8C';
+  // Tema cromatico per livello incantesimo (bordo, sigillo, icona scuola, glow hover
+  // delle card): centralizzato in core/spell-level-theme, non più una mappa locale.
+  spellLevelTheme(level: number): SpellLevelTheme {
+    return getSpellLevelTheme(level);
   }
 
   spellLevelOptionLabel(level: number): string {
@@ -272,6 +296,10 @@ export class CharacterSheet implements OnInit {
     return this.allSubclasses().find((s: any) => s.id === this.identitySubclassId)?.description ?? null;
   }
 
+  getSubraceDescription(): string | null {
+    return this.allSubraces().find((s: any) => s.id === this.identitySubraceId)?.description ?? null;
+  }
+
   getBackgroundDescription(): string | null {
     return this.backgroundsContent().find((b: any) => b.id === this.identityBackgroundId)?.description ?? null;
   }
@@ -297,6 +325,11 @@ export class CharacterSheet implements OnInit {
     return subclass?.name ?? rawName;
   }
 
+  // La sottorazza è sempre homebrew (niente content_translations), il nome grezzo è già quello finale.
+  getTranslatedSubraceName(rawName: string | null | undefined): string {
+    return rawName ?? '';
+  }
+
   // Traduce il nome grezzo inglese del background al nome tradotto dal catalogo.
   getTranslatedBackgroundName(rawName: string | null | undefined): string {
     if (!rawName) return '';
@@ -314,6 +347,61 @@ export class CharacterSheet implements OnInit {
   getRaceBonus(key: keyof typeof this.abilityScores): number {
     const race = this.races().find((r: any) => r.id === this.identityRaceId);
     return normalizeAbilityBonuses(race?.raw?.ability_bonuses)[key] ?? 0;
+  }
+
+  // Bonus di sottorazza: SOSTITUISCE quello della razza madre (non regole 5e standard, scelta
+  // di design del progetto: la sottorazza scelta è l'unica fonte di bonus caratteristica).
+  getSubraceBonus(key: keyof typeof this.abilityScores): number {
+    const subrace = this.allSubraces().find((s: any) => s.id === this.identitySubraceId);
+    return normalizeAbilityBonuses(subrace?.raw?.ability_bonuses)[key] ?? 0;
+  }
+
+  // Bonus caratteristica effettivo: se è selezionata una sottorazza, conta solo il suo bonus;
+  // altrimenti quello della razza. Non si sommano mai i due.
+  getRaceOrSubraceBonus(key: keyof typeof this.abilityScores): number {
+    return this.identitySubraceId ? this.getSubraceBonus(key) : this.getRaceBonus(key);
+  }
+
+  // Monte punti "a scelta libera": della sottorazza se selezionata, altrimenti della razza
+  // (mai sommati, stessa logica di getRaceOrSubraceBonus). Stesso pattern metodo (non computed)
+  // di availableSubraces(): identityRaceId/identitySubraceId sono ngModel.
+  freeBonusPoints(): number {
+    const race = this.races().find((r: any) => r.id === this.identityRaceId);
+    const subrace = this.allSubraces().find((s: any) => s.id === this.identitySubraceId);
+    return this.identitySubraceId
+      ? (subrace?.raw?.free_bonus_points ?? 0)
+      : (race?.raw?.free_bonus_points ?? 0);
+  }
+
+  freeBonusPerAbilityMax(): number {
+    const race = this.races().find((r: any) => r.id === this.identityRaceId);
+    const subrace = this.allSubraces().find((s: any) => s.id === this.identitySubraceId);
+    return this.identitySubraceId
+      ? (subrace?.raw?.free_bonus_max_per_ability ?? 0)
+      : (race?.raw?.free_bonus_max_per_ability ?? 0);
+  }
+
+  freeBonusTotal(): number {
+    return this.abilityKeys.reduce((sum, k) => sum + this.freeBonuses[k], 0);
+  }
+
+  freeBonusRemaining(): number {
+    return this.freeBonusPoints() - this.freeBonusTotal();
+  }
+
+  maxFreeBonus(key: keyof typeof this.abilityScores): number {
+    return Math.min(this.freeBonusPerAbilityMax(), this.freeBonuses[key] + this.freeBonusRemaining());
+  }
+
+  setFreeBonus(key: keyof typeof this.abilityScores, value: number) {
+    let next = Math.max(0, Math.min(this.freeBonusPerAbilityMax(), Math.floor(value) || 0));
+    const othersSum = this.abilityKeys
+      .filter((k) => k !== key)
+      .reduce((sum, k) => sum + this.freeBonuses[k], 0);
+    if (othersSum + next > this.freeBonusPoints()) {
+      next = Math.max(0, this.freeBonusPoints() - othersSum);
+    }
+    this.freeBonuses[key] = next;
   }
 
   backgroundBonusTotal(): number {
@@ -343,7 +431,9 @@ export class CharacterSheet implements OnInit {
   // Bonus razziale e background sono alternativi, non cumulativi: quello del
   // background (se scelto) sostituisce quello automatico della razza.
   getAppliedBonus(key: keyof typeof this.abilityScores): number {
-    return this.identityBackgroundId ? this.identityBackgroundBonuses[key] : this.getRaceBonus(key);
+    return this.identityBackgroundId
+      ? this.identityBackgroundBonuses[key]
+      : this.getRaceOrSubraceBonus(key) + this.freeBonuses[key];
   }
 
   async saveIdentity() {
@@ -367,6 +457,7 @@ export class CharacterSheet implements OnInit {
       name: this.identityName,
       level: this.identityLevel,
       raceId: this.identityRaceId,
+      subraceId: this.identitySubraceId || null,
       classId: this.identityClassId,
       subclassId: this.identitySubclassId || null,
       backgroundId: this.identityBackgroundId || null,
@@ -615,11 +706,13 @@ export class CharacterSheet implements OnInit {
     for (const spell of c.spells) {
       const detail = catalogMap.get(spell.spellId);
       const level = detail?.raw?.level ?? spell.level ?? 0;
+      const schoolRaw = detail?.raw?.school ?? spell.school ?? '';
       const entry = {
         rowId: spell.rowId,
         name: detail?.name ?? spell.name,
         level,
-        school: translateSpellSchool(detail?.raw?.school ?? spell.school ?? '', locale),
+        school: translateSpellSchool(schoolRaw, locale),
+        schoolRaw,
         castingTime: detail?.raw?.casting_time ?? null,
         range: detail?.raw?.range ?? null,
         duration: detail?.raw?.duration ?? null,

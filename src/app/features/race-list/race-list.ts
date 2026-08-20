@@ -16,6 +16,11 @@ export class RaceList {
 
   races = this.contentStore.getContent('races');
 
+  freeBonusSummary(race: any): string {
+    if (!(race.raw.free_bonus_points > 0)) return '';
+    return `+${race.raw.free_bonus_points} ${this.localeService.t('free_bonus_summary_label')} (max +${race.raw.free_bonus_max_per_ability})`;
+  }
+
   traitsSummary(race: any): string {
     const traits = race.raw.traits;
     if (!traits || traits.length === 0) return '';
