@@ -49,7 +49,6 @@ export class CharacterSheet implements OnInit {
   private auth = inject(Auth);
   protected localeService = inject(LocaleService);
   protected modal = inject(Modal);
-  protected modalIsOpen = signal(false);
   protected localModalTitle = signal('');
   protected localModalImageSrc = signal<string | null>(null);
   protected localModalImageAlt = signal<string | null>(null);
@@ -312,10 +311,9 @@ export class CharacterSheet implements OnInit {
   avatarUploading = signal(false);
 
   isModalOpen = signal(false);
-
-  // Controlla la modale di modifica identità (tab Generale): i campi restano quelli
-  // esistenti (identityName, identityRaceId, ...), la modale è solo un contenitore.
   identityModalOpen = signal(false);
+  armorModalOpen = signal(false);
+  mountModalOpen = signal(false);
 
   // Maestria (Expertise 5e): raddoppia il bonus competenza, al massimo su 2 competenze tra
   // quelle in cui si è già competenti (qualunque sia la fonte: libera, background, classe).
@@ -435,23 +433,19 @@ export class CharacterSheet implements OnInit {
     );
   }
 
-  openIdentityModal() {
-    this.identityModalOpen.set(true);
-  }
-
   cancelIdentityEdit() {
     this.resetIdentityFields(this.character());
     this.identityModalOpen.set(false);
   }
 
-  // Stessa idea di identityModalOpen/resetIdentityFields, per la modale di modifica
-  // dell'armatura indossata (tab Equipaggiamento).
-  armorModalOpen = signal(false);
-
   private resetArmorFields(c: ReturnType<typeof this.character>) {
     if (!c) return;
     this.selectedArmorId = c.equipped_armor_id ?? '';
     this.shieldEquipped = c.shield_equipped;
+  }
+
+  openIdentityModal() {
+    this.identityModalOpen.set(true);
   }
 
   openArmorModal() {
@@ -462,10 +456,6 @@ export class CharacterSheet implements OnInit {
     this.resetArmorFields(this.character());
     this.armorModalOpen.set(false);
   }
-
-  // Stessa idea di armorModalOpen/resetArmorFields, per la modale di modifica della
-  // cavalcatura/veicolo posseduto (tab Equipaggiamento).
-  mountModalOpen = signal(false);
 
   private resetMountFields(c: ReturnType<typeof this.character>) {
     if (!c) return;
@@ -1231,7 +1221,7 @@ export class CharacterSheet implements OnInit {
     // Se la quantità è maggiore di 1, mostriamo il moltiplicatore nel titolo della modale
     this.localModalTitle.set(this.localeService.t('remove_character_item_modal_title'));
     this.localModalImageSrc.set('modal-png/allert-goblin.png');
-    this.localModalImageAlt.set('un goblin dietro un cartello triangolare con un punto esclamativo');
+    this.localModalImageAlt.set(this.localeService.t('generic_modal_alert_alt_img'));
     this.localModalCancelLabel.set(this.localeService.t('remove_character_item_modal_cancel'));
     this.localModalConfirmLabel.set(this.localeService.t('remove_character_item_modal_confirm'));
     this.localModalVariant.set('warning');
@@ -1258,7 +1248,7 @@ export class CharacterSheet implements OnInit {
       this.removeItem(this.modaldata.rowId, this.modaldata.quantity, this.modaldata.quantityToRemove);
     } else if (this.modaldata.rowId) {
       // È un'arma (rimozione intera)
-      this.removeWeapon(this.modaldata.rowId);
+      this.removeWeapon(this.modaldata);
     }
 
     this.closeModal();
