@@ -44,23 +44,43 @@ export class DiceRoller implements AfterViewInit{
   private diceBoxReady = false;
   isRolling3D = false;
   canClose: boolean = true;
-  private closeTimer: any;
+    private closeTimer: any;
+  criticalState: 'none' | 'success' | 'fail' = 'none';
 
   ngAfterViewInit() {
     setTimeout(() => {
+      // CONTROLLO RESPONSIVE A 3 LIVELLI: Mobile, Tablet e Desktop
+      const width = window.innerWidth;
+      let dynamicScale = 11;
+      let dynamicThrowForce = 3;
+
+      if (width < 768) {
+        // Mobile (Smartphone)
+        dynamicScale = 7;
+        dynamicThrowForce = 2;
+      } else if (width <= 1024) {
+        // Tablet (Via di mezzo)
+        dynamicScale = 9;
+        dynamicThrowForce = 2.5;
+      } else {
+        // Desktop (> 1024px)
+        dynamicScale = 11;
+        dynamicThrowForce = 3;
+      }
+
       this.diceBox = new DiceBox("#dice-box-container", {
         assetPath: '/dice-box/assets/',
         theme: 'default',
-        themeColor: '#d97706',
-        scale: 11,
+        themeColor: '#d90606',
+        scale: dynamicScale,         
         spinForce: 6,
-        throwForce: 3,
+        throwForce: dynamicThrowForce, 
         gravity: 2
       });
 
       this.diceBox.init().then(() => {
         this.diceBoxReady = true;
-        console.log("Motore 3D pronto all'uso!");
+        console.log(`Motore 3D pronto all'uso! (Larghezza: ${width}px, Scala: ${dynamicScale})`);
         if (this.abilityMode) {
           this.loadAbilityRollPreset();
         }

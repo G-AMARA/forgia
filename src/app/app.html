@@ -55,10 +55,12 @@
     </div>
   </header>
 
-    <!-- Navigazione a schede -->
+   <!-- Navigazione a schede -->
     <nav class="bg-fantasy-black border-b border-gold">
-      <div class="px-4 flex items-center justify-between gap-3">
-        <div class="flex gap-1 whitespace-nowrap overflow-x-auto">
+      <div class="px-4 py-2 flex items-center justify-between gap-4">
+        
+        <!-- SINISTRA: Tab di navigazione (Scorribili orizzontalmente se troppe) -->
+        <div class="flex gap-1 whitespace-nowrap overflow-x-auto py-1">
           <button
             class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
             [class.border-fantasy-gold]="appNav.activeTab() === 'board'"
@@ -105,35 +107,36 @@
           }
         </div>
 
-        <div class="flex items-center gap-2">
-          <button
+        <!-- DESTRA: Pulsante Lancia Dadi e Selettore Lingua (Responsive) -->
+        <div class="flex items-center gap-3 shrink-0">
+         <button
             (click)="openDiceRollerModal()"
-            class="px-3 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white text-sm uppercase tracking-wider rounded-lg shadow-lg transition-all hover:scale-[1.02] active:scale-95 z-20"
+            class="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-fantasy-gold hover:bg-gold-bright text-fantasy-black text-[10px] sm:text-sm uppercase tracking-wider rounded-lg shadow-lg transition-all hover:scale-[1.02] active:scale-95 z-20 whitespace-normal max-w-[75px] sm:max-w-none text-center leading-tight flex items-center justify-center"
           >
             {{ localeService.t('tab_dice_roller') }}
           </button>
+          <div class="flex border border-gold rounded overflow-hidden text-sm shrink-0">
+            <button
+              class="px-3 py-1"
+              [class.bg-gold]="localeService.locale() === 'it'"
+              [class.text-fantasy-black]="localeService.locale() === 'it'"
+              (click)="setLocale('it')"
+            >
+              IT
+            </button>
+            <button
+              class="px-3 py-1"
+              [class.bg-gold]="localeService.locale() === 'en'"
+              [class.text-fantasy-black]="localeService.locale() === 'en'"
+              (click)="setLocale('en')"
+            >
+              EN
+            </button>
+          </div>
         </div>
-        <div class="flex border border-gold rounded overflow-hidden text-sm shrink-0">
-          <button
-            class="px-3 py-1"
-            [class.bg-gold]="localeService.locale() === 'it'"
-            [class.text-fantasy-black]="localeService.locale() === 'it'"
-            (click)="setLocale('it')"
-          >
-            IT
-          </button>
-          <button
-            class="px-3 py-1"
-            [class.bg-gold]="localeService.locale() === 'en'"
-            [class.text-fantasy-black]="localeService.locale() === 'en'"
-            (click)="setLocale('en')"
-          >
-            EN
-          </button>
-        </div>
+
       </div>
     </nav>
-
     <div class="relative flex-1 overflow-hidden">
       <!-- Immagine decorativa in trasparenza: visibile solo nelle colonne vuote ai lati del contenuto centrale. -->
       <div class="absolute inset-0 flex justify-between pointer-events-none">
