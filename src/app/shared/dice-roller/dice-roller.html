@@ -5,16 +5,15 @@
   <div class="w-full max-w-6xl h-[95vh] md:h-[85vh] bg-stone-900 border-2 border-stone-600 rounded-xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
     
     <!-- 1. BLOCCO COMANDI E RISERVA DADI -->
-    <!-- order-2 su mobile (va in basso), lg:order-1 su desktop (torna a sinistra) -->
     <div class="w-full md:w-1/4 bg-fantasy-black p-3 md:p-6 flex flex-col border-t md:border-t-0 md:border-r border-stone-700 shrink-0 order-2 md:order-1 overflow-y-auto max-h-[45vh] md:max-h-none">
       
-      <!-- Titolo "Riserva Dadi": Visibile anche in landscape ma con font ridotto appositamente -->
-      <h2 class="text-xs landscape:text-xs md:text-2xl font-bold text-fantasy-gold mb-1 md:mb-6 text-center tracking-widest font-serif block">
+      <!-- Titolo Riserva Dadi: ridotto solo su cellulare in landscape -->
+      <h2 class="text-base sm:landscape:text-xs md:text-2xl font-bold text-fantasy-gold mb-2 md:mb-6 text-center tracking-widest font-serif block">
         Riserva Dadi
       </h2>
 
-      <!-- Griglia pulsanti dadi (manteniamo le 4 colonne) -->
-      <div class="grid grid-cols-7 landscape:grid-cols-4 md:grid-cols-4 gap-1.5 md:gap-3 mb-2 md:mb-4">
+      <!-- Griglia pulsanti dadi -->
+      <div class="grid grid-cols-7 sm:landscape:grid-cols-4 md:grid-cols-4 gap-1.5 md:gap-3 mb-2 md:mb-4">
         <button *ngFor="let dice of availableDice" 
                 (click)="addDiceToBoard(dice)"
                 [disabled]="abilityMode"
@@ -36,12 +35,12 @@
       </div>
 
       <!-- Azioni generali in basso -->
-      <div class="flex flex-col gap-1 md:gap-2 border-t border-stone-700 pt-2 md:pt-4">
+      <div class="flex flex-col gap-1.5 md:gap-2 border-t border-stone-700 pt-2 md:pt-4">
         
-        <!-- Pulsante principale: font e padding ridotti in landscape -->
+        <!-- Pulsante principale -->
         <button (click)="trigger3DRoll()" 
           [disabled]="board.length === 0 || isRolling3D || (abilityMode && !canClose)"
-          class="w-full py-1 landscape:py-1.5 md:py-3 bg-fantasy-gold hover:bg-gold-bright text-fantasy-black text-[11px] landscape:text-[11px] md:text-base uppercase tracking-wider rounded-lg shadow-lg disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-95 z-20 disabled:cursor-not-allowed whitespace-nowrap">
+          class="w-full py-2 sm:landscape:py-1 md:py-3 bg-fantasy-gold hover:bg-gold-bright text-fantasy-black text-xs sm:landscape:text-[10px] md:text-base uppercase tracking-wider rounded-lg shadow-lg disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-95 z-20 disabled:cursor-not-allowed whitespace-nowrap">
           @if (board.length === 0 && !abilityMode) {
             Seleziona Dadi
           } @else if (isRolling3D) {
@@ -56,11 +55,11 @@
           
           <!-- Svuota Plancia -->
           @if (!abilityMode) {
-            <button (click)="clearBoard()" class="w-1/2 md:w-full py-1 landscape:py-1 text-stone-400 hover:text-red-400 uppercase text-[9px] landscape:text-[9px] md:text-xs font-bold tracking-wider bg-stone-900/60 hover:bg-stone-900 border border-stone-700 rounded-lg transition-all text-center whitespace-nowrap">
+            <button (click)="clearBoard()" class="w-1/2 md:w-full py-1.5 sm:landscape:py-1 text-stone-400 hover:text-red-400 uppercase text-[9px] sm:landscape:text-[9px] md:text-xs font-bold tracking-wider bg-stone-900/60 hover:bg-stone-900 border border-stone-700 rounded-lg transition-all text-center whitespace-nowrap">
               Svuota Plancia
             </button>
           } @else {
-            <div class="w-1/2 md:w-full text-[9px] landscape:text-[9px] md:text-[11px] text-amber-400/80 text-center italic py-1 px-1 bg-stone-900/40 rounded-lg">
+            <div class="w-1/2 md:w-full text-[9px] sm:landscape:text-[9px] md:text-[11px] text-amber-400/80 text-center italic py-1 px-1 bg-stone-900/40 rounded-lg">
               4d6 (scarta peggiore)
             </div>
           }
@@ -68,7 +67,7 @@
           <!-- Chiudi -->
           <button (click)="closeModal()" 
                   [disabled]="abilityMode || !canClose"
-                  class="w-1/2 md:w-full py-1 landscape:py-1 px-2 md:px-4 bg-red-800 hover:bg-red-700 text-white rounded-lg font-bold text-[9px] landscape:text-[9px] md:text-sm shadow-md disabled:opacity-40 disabled:cursor-not-allowed text-center whitespace-nowrap">
+                  class="w-1/2 md:w-full py-1.5 sm:landscape:py-1 px-2 md:px-4 bg-red-800 hover:bg-red-700 text-white rounded-lg font-bold text-[10px] sm:landscape:text-[9px] md:text-sm shadow-md disabled:opacity-40 disabled:cursor-not-allowed text-center whitespace-nowrap">
             @if (!canClose) {
               Attendere...
             } @else {
@@ -81,13 +80,12 @@
     </div>
 
     <!-- 2. BLOCCO PLANCIA 3D -->
-    <!-- order-1 su mobile (va in alto), lg:order-2 su desktop (torna a destra) -->
     <div class="w-full md:w-3/4 p-3 md:p-6 relative flex flex-col bg-fantasy-black bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] overflow-hidden flex-1 order-1 md:order-2">
       
-     <!-- Testata Plancia -->
-      <div class="relative z-25 flex items-center justify-between w-full gap-2 mb-2 lg:mb-4">
+      <!-- Testata Plancia -->
+      <div class="relative z-25 flex items-center justify-between w-full gap-2 mb-2 md:mb-4">
 
-        <!-- Area Chips Riepilogo (A sinistra / occupa lo spazio rimanente) -->
+        <!-- Area Chips Riepilogo -->
         <div class="flex-1 min-w-0"> 
           <div *ngIf="board.length > 0 && !isRolling3D" class="flex gap-1.5 flex-wrap overflow-x-auto py-1">
             <span *ngFor="let dice of board" class="px-2 py-0.5 bg-stone-800/90 text-fantasy-gold rounded-full border border-fantasy-gold/50 text-xs font-bold cursor-pointer hover:bg-red-900 hover:text-white shadow transition-all whitespace-nowrap" (click)="removeDice(dice.id)" title="Rimuovi">
@@ -96,32 +94,38 @@
           </div>
         </div>
         
-        <!-- Totale e Pulsante X (Forzati sempre a DESTRA con shrink-0) -->
-        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-          <!-- Totale dinamico -->
-          <div class="bg-black/60 px-3 sm:px-4 py-1 rounded-full border border-stone-600 shadow-md flex items-center">
-            <span class="text-stone-400 uppercase tracking-widest text-[9px] sm:text-[10px] mr-1.5">Totale:</span>
-            <span class="text-lg sm:text-2xl font-bold text-fantasy-gold">{{ rollTotal }}</span>
+        <!-- Totale e Pulsante X -->
+        <div class="flex items-center gap-2 md:gap-3 shrink-0">
+          <div class="bg-black/60 px-3 md:px-4 py-1 rounded-full border border-stone-600 shadow-md flex items-center">
+            <span class="text-stone-400 uppercase tracking-widest text-[9px] md:text-[10px] mr-1.5">Totale:</span>
+            <span class="text-lg md:text-2xl font-bold text-fantasy-gold">{{ rollTotal }}</span>
           </div>
 
-          <!-- Pulsante X di chiusura -->
           <button (click)="closeModal()" [disabled]="abilityMode || !canClose" class="p-1.5 text-stone-500 hover:text-red-500 hover:bg-black/40 rounded-full transition-all focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed" title="Chiudi">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6 lg:w-7 lg:h-7">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6 md:w-7 md:h-7">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-
       </div>
 
       <!-- Area Tratteggiata di sfondo (Plancia 3D) -->
-      <div class="relative z-0 flex-1 rounded-xl border-2 border-dashed border-stone-700/60 bg-black/30 shadow-inner p-2 flex items-center justify-center min-h-[140px] lg:min-h-0">
+      <div class="relative z-0 flex-1 rounded-xl border-2 border-dashed border-stone-700/60 bg-black/30 shadow-inner p-2 flex items-center justify-center min-h-[140px] md:min-h-0 overflow-hidden">
+        
+        <!-- Logo di sfondo in sottoimpressione (filigrana fissa al centro) -->
+        <div class="absolute inset-0 z-5 flex items-center justify-center pointer-events-none select-none">
+          <img src="/themes/logoForgia.png" alt="Forgia Logo" class="h-20 md:h-32 w-auto opacity-10 pointer-events-none select-none" />
+        </div>
+
+        <!-- Testo "Aggiungi dei dadi..." (Sopra al logo) -->
         @if(board.length === 0){
-          <div class="text-center text-stone-500 italic text-sm lg:text-base pointer-events-none">
+          <div class="relative z-10 text-center text-stone-500 italic text-sm md:text-base pointer-events-none">
             Aggiungi dei dadi...
           </div>
         }
-        <div id="dice-box-container" class="absolute inset-0 z-10 pointer-events-none"></div>
+
+        <!-- Canvas del motore 3D -->
+        <div id="dice-box-container" class="absolute inset-0 z-20 pointer-events-none"></div>
       </div>
 
     </div>
