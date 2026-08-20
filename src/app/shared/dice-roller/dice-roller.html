@@ -2,71 +2,73 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-fantasy-black/70 backdrop-blur-xl transition-opacity p-2 sm:p-4">
   
   <!-- Contenitore Principale Modale -->
-  <div class="w-full max-w-6xl h-[90vh] lg:h-[80vh] bg-stone-900 border-2 border-stone-600 rounded-xl shadow-2xl flex flex-col lg:flex-row overflow-hidden">
+  <div class="w-full max-w-6xl h-[95vh] md:h-[85vh] bg-stone-900 border-2 border-stone-600 rounded-xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
     
     <!-- 1. BLOCCO COMANDI E RISERVA DADI -->
     <!-- order-2 su mobile (va in basso), lg:order-1 su desktop (torna a sinistra) -->
-    <div class="w-full lg:w-1/4 bg-fantasy-black p-4 lg:p-6 flex flex-col border-t lg:border-t-0 lg:border-r border-stone-700 shrink-0 order-2 lg:order-1">
-      <h2 class="text-lg lg:text-2xl font-bold text-fantasy-gold mb-3 lg:mb-6 text-center tracking-widest font-serif hidden lg:block">
+    <div class="w-full md:w-1/4 bg-fantasy-black p-3 md:p-6 flex flex-col border-t md:border-t-0 md:border-r border-stone-700 shrink-0 order-2 md:order-1 overflow-y-auto max-h-[45vh] md:max-h-none">
+      
+      <!-- Titolo "Riserva Dadi": Visibile anche in landscape ma con font ridotto appositamente -->
+      <h2 class="text-xs landscape:text-xs md:text-2xl font-bold text-fantasy-gold mb-1 md:mb-6 text-center tracking-widest font-serif block">
         Riserva Dadi
       </h2>
 
-      <!-- Griglia pulsanti dadi -->
-      <div class="grid grid-cols-7 lg:grid-cols-4 gap-1.5 lg:gap-3 mb-3 lg:mb-4">
+      <!-- Griglia pulsanti dadi (manteniamo le 4 colonne) -->
+      <div class="grid grid-cols-7 landscape:grid-cols-4 md:grid-cols-4 gap-1.5 md:gap-3 mb-2 md:mb-4">
         <button *ngFor="let dice of availableDice" 
                 (click)="addDiceToBoard(dice)"
                 [disabled]="abilityMode"
-                class="group relative flex aspect-square items-center justify-center p-1 lg:p-2 
+                class="group relative flex aspect-square items-center justify-center p-1 md:p-2 
                       bg-stone-800 hover:bg-stone-700 
-                      border border-fantasy-gold/50 lg:border-2 hover:border-gold-bright 
+                      border border-fantasy-gold/50 md:border-2 hover:border-gold-bright 
                       text-amber-500 hover:text-amber-300
-                      rounded-lg lg:rounded-xl transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+                      rounded-lg md:rounded-xl transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
                 [style.background-image]="'url(/dice-icons/' + dice.type + '.svg)'"
                 [style.background-size]="'50% 50%'"
                 [style.background-position]="'center'"
                 [style.background-repeat]="'no-repeat'"
                 [attr.title]="abilityMode ? 'Modalità Caratteristica: 4d6 fissi' : ('Aggiungi un ' + dice.label)">
           
-          <span class="absolute bottom-0.5 right-1 font-bold text-[9px] lg:text-[10px] font-serif text-stone-300">
+          <span class="absolute bottom-0.5 right-1 font-bold text-[9px] md:text-[10px] font-serif text-stone-300">
             {{ dice.label }}
           </span>
         </button>
       </div>
 
       <!-- Azioni generali in basso -->
-      <div class="flex flex-col gap-2 border-t border-stone-700 pt-3 lg:pt-4">
+      <div class="flex flex-col gap-1 md:gap-2 border-t border-stone-700 pt-2 md:pt-4">
         
-        <!-- Pulsante principale: a larghezza piena sia su mobile che su desktop -->
+        <!-- Pulsante principale: font e padding ridotti in landscape -->
         <button (click)="trigger3DRoll()" 
           [disabled]="board.length === 0 || isRolling3D || (abilityMode && !canClose)"
-          class="w-full py-2.5 lg:py-3 bg-fantasy-gold hover:bg-gold-bright text-fantasy-black text-sm lg:text-base uppercase tracking-wider rounded-lg shadow-lg disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-95 z-20 disabled:cursor-not-allowed">
+          class="w-full py-1 landscape:py-1.5 md:py-3 bg-fantasy-gold hover:bg-gold-bright text-fantasy-black text-[11px] landscape:text-[11px] md:text-base uppercase tracking-wider rounded-lg shadow-lg disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-95 z-20 disabled:cursor-not-allowed whitespace-nowrap">
           @if (board.length === 0 && !abilityMode) {
             Seleziona Dadi
           } @else if (isRolling3D) {
-            Lancio in corso...
+            Lancio...
           } @else {
             Tira i Dadi!
           }
         </button>
         
-        <!-- Blocco inferiore: affiancato al 50% su mobile (flex), in colonna a larghezza piena su desktop (lg:flex-col) -->
-        <div class="flex flex-row lg:flex-col gap-2 w-full items-center">
+        <!-- Blocco inferiore -->
+        <div class="flex flex-row md:flex-col gap-1.5 md:gap-2 w-full items-center">
           
-          <!-- Pulsante Svuota Plancia (o testo info in abilityMode) -->
+          <!-- Svuota Plancia -->
           @if (!abilityMode) {
-            <button (click)="clearBoard()" class="w-1/2 lg:w-full py-2 text-stone-400 hover:text-red-400 uppercase text-[10px] lg:text-xs font-bold tracking-wider bg-stone-900/60 hover:bg-stone-900 border border-stone-700 rounded-lg transition-all text-center">
+            <button (click)="clearBoard()" class="w-1/2 md:w-full py-1 landscape:py-1 text-stone-400 hover:text-red-400 uppercase text-[9px] landscape:text-[9px] md:text-xs font-bold tracking-wider bg-stone-900/60 hover:bg-stone-900 border border-stone-700 rounded-lg transition-all text-center whitespace-nowrap">
               Svuota Plancia
             </button>
           } @else {
-            <div class="w-1/2 lg:w-full text-[10px] lg:text-[11px] text-amber-400/80 text-center italic py-1 px-1 bg-stone-900/40 rounded-lg">
+            <div class="w-1/2 md:w-full text-[9px] landscape:text-[9px] md:text-[11px] text-amber-400/80 text-center italic py-1 px-1 bg-stone-900/40 rounded-lg">
               4d6 (scarta peggiore)
             </div>
           }
 
-          <!-- Pulsante Chiudi -->
+          <!-- Chiudi -->
           <button (click)="closeModal()" 
                   [disabled]="abilityMode || !canClose"
-                  class="w-1/2 lg:w-full py-2 lg:py-2.5 px-4 bg-red-800 hover:bg-red-700 text-white rounded-lg font-bold text-xs lg:text-sm shadow-md disabled:opacity-40 disabled:cursor-not-allowed text-center">
+                  class="w-1/2 md:w-full py-1 landscape:py-1 px-2 md:px-4 bg-red-800 hover:bg-red-700 text-white rounded-lg font-bold text-[9px] landscape:text-[9px] md:text-sm shadow-md disabled:opacity-40 disabled:cursor-not-allowed text-center whitespace-nowrap">
             @if (!canClose) {
               Attendere...
             } @else {
@@ -80,7 +82,7 @@
 
     <!-- 2. BLOCCO PLANCIA 3D -->
     <!-- order-1 su mobile (va in alto), lg:order-2 su desktop (torna a destra) -->
-    <div class="w-full lg:w-3/4 p-4 lg:p-6 relative flex flex-col bg-fantasy-black bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] overflow-hidden flex-1 lg:flex-initial order-1 lg:order-2">
+    <div class="w-full md:w-3/4 p-3 md:p-6 relative flex flex-col bg-fantasy-black bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] overflow-hidden flex-1 order-1 md:order-2">
       
      <!-- Testata Plancia -->
       <div class="relative z-25 flex items-center justify-between w-full gap-2 mb-2 lg:mb-4">
