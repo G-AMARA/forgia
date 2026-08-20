@@ -4,11 +4,13 @@ import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
+import { TraitBlock } from '../../core/bestiary-store';
+import { TraitListEditor } from '../manage/bestiary-manage/trait-list-editor';
 
 @Component({
   selector: 'app-subclass-create',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TraitListEditor],
   templateUrl: './subclass-create.html',
 })
 export class SubclassCreate {
@@ -24,6 +26,7 @@ export class SubclassCreate {
   classId = '';
   unlockedAtLevel = 3;
   description = '';
+  traits: TraitBlock[] = [];
 
   editingId: string | null = null;
 
@@ -39,6 +42,7 @@ export class SubclassCreate {
     this.classId = '';
     this.unlockedAtLevel = 3;
     this.description = '';
+    this.traits = [];
   }
 
   // Nome della classe genitrice, per mostrarlo nella lista del catalogo.
@@ -53,6 +57,7 @@ export class SubclassCreate {
     this.classId = sub.raw.class_id;
     this.unlockedAtLevel = sub.raw.unlocked_at_level ?? 3;
     this.description = sub.description ?? '';
+    this.traits = structuredClone(sub.raw.traits ?? []);
   }
 
   cancelEdit() {
@@ -67,6 +72,7 @@ export class SubclassCreate {
       class_id: this.classId,
       unlocked_at_level: this.unlockedAtLevel,
       description: this.description || null,
+      traits: this.traits,
     };
 
     const { error } = this.editingId
@@ -76,6 +82,12 @@ export class SubclassCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
+      // Senza questo, una vecchia traduzione salvata (content_translations) continuerebbe
+      // a "vincere" sul nome appena modificato qui, mostrando per sempre quello vecchio
+      // (il bug segnalato: "Il Profondo" salvato ma "Il Demone" ancora mostrato ovunque).
+      if (this.editingId) {
+        await this.contentStore.clearTranslation('subclasses', this.editingId);
+      }
       this.resetForm();
       await this.refreshSubclasses();
       this.modal.success(this.localeService.t('saved_message'));

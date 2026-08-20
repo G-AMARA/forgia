@@ -1,0 +1,164 @@
+<section class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('subrace_catalog_title') }}</h2>
+
+  <form (ngSubmit)="submit()" class="flex flex-col gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('subrace_name_label') }} <span class="text-red-300">*</span></label>
+        <input
+          type="text" [(ngModel)]="name" name="name" required
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('subrace_race_label') }} <span class="text-red-300">*</span></label>
+        <select
+          [(ngModel)]="raceId" name="raceId" required
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        >
+          <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+          @for (race of races(); track race.id) {
+            <option [value]="race.id">{{ race.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('darkvision_label') }}</label>
+        <select
+          [(ngModel)]="darkvision" name="darkvision"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        >
+          <option [ngValue]="false">{{ localeService.t('darkvision_no') }}</option>
+          <option [ngValue]="true">{{ localeService.t('darkvision_yes') }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('subrace_description_label') }}</label>
+      <textarea
+        [(ngModel)]="description" name="description" rows="3"
+        class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
+      ></textarea>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('subrace_ability_bonuses_label') }}</label>
+      <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        @for (key of abilityKeys; track key) {
+          <div class="flex flex-col gap-1">
+            <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
+            <input
+              type="number" min="0" max="4" [(ngModel)]="abilityBonuses[key]" [name]="'bonus_' + key"
+              class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            />
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('subrace_skills_label') }}</label>
+      <div class="flex flex-wrap gap-2">
+        @for (key of skillKeys; track key) {
+          <label
+            class="flex items-center gap-1 text-xs px-2 py-1 border rounded cursor-pointer"
+            [class.border-fantasy-gold]="isSkillSelected(key)"
+            [class.bg-gold]="isSkillSelected(key)"
+            [class.text-fantasy-black]="isSkillSelected(key)"
+            [class.border-gold]="!isSkillSelected(key)"
+          >
+            <input type="checkbox" class="hidden" [checked]="isSkillSelected(key)" (change)="toggleSkill(key)" />
+            {{ localeService.t('skill_' + key) }}
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('subrace_traits_label') }}</label>
+      <app-trait-list-editor
+        [items]="traits"
+        (itemsChange)="traits = $event"
+        [addLabel]="localeService.t('add_trait_row_button')"
+      ></app-trait-list-editor>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="text-sm font-semibold">{{ localeService.t('free_bonus_label') }}</label>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs">{{ localeService.t('subrace_free_bonus_points_label') }}</label>
+          <input
+            type="number" min="0" max="6" [(ngModel)]="freeBonusPoints" name="freeBonusPoints"
+            class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs">{{ localeService.t('subrace_free_bonus_max_label') }}</label>
+          <input
+            type="number" min="0" max="6" [(ngModel)]="freeBonusMaxPerAbility" name="freeBonusMaxPerAbility"
+            class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <button
+        type="submit" [disabled]="loading() || !raceId"
+        class="self-start px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
+      >
+        {{ editingId ? localeService.t('save_changes_button') : localeService.t('subrace_add_to_catalog_button') }}
+      </button>
+      @if (editingId) {
+        <button
+          type="button" (click)="cancelEdit()"
+          class="self-start px-5 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors"
+        >
+          {{ localeService.t('cancel_button') }}
+        </button>
+      }
+    </div>
+
+  </form>
+
+  <div>
+    <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('subrace_catalog_list_title') }}</h3>
+    @if (subraces().length === 0) {
+      <p class="text-slate-arcane italic">{{ localeService.t('no_subraces_yet') }}</p>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        @for (sub of subraces(); track sub.id) {
+          <div
+            class="flex border rounded-lg overflow-hidden transition-colors"
+            [class]="sub.id === editingId ? 'bg-fantasy-gold/15 border-fantasy-gold' : 'bg-fantasy-black/60 border-gold'"
+          >
+            <div class="w-1.5 shrink-0" [class]="sub.id === editingId ? 'bg-fantasy-gold' : 'bg-forest'"></div>
+            <div class="p-3 flex-1">
+              <div class="flex items-start justify-between gap-2">
+                <h4 class="font-display text-base text-fantasy-moonstone">{{ sub.name }}</h4>
+                <div class="flex gap-2 shrink-0">
+                  <button (click)="startEdit(sub)" class="text-xs text-fantasy-gold underline">
+                    {{ localeService.t('edit_button') }}
+                  </button>
+                  <button (click)="deleteSubrace(sub.id, sub.name)" class="text-xs text-red-300 underline">
+                    {{ localeService.t('delete_button') }}
+                  </button>
+                </div>
+              </div>
+              <p class="text-xs text-slate-arcane">
+                {{ raceName(sub) }} · {{ bonusSummary(sub) }}
+              </p>
+              @if (sub.raw.darkvision) {
+                <p class="text-xs text-fantasy-gold">{{ localeService.t('darkvision_label') }}</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>

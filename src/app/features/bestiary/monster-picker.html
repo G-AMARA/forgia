@@ -1,0 +1,50 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+  (click)="close()"
+>
+  <div
+    class="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+    (click)="$event.stopPropagation()"
+  >
+    <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('bestiary_picker_title') }}</h2>
+
+    @if (bestiaryStore.catalog().length === 0) {
+      <p class="text-slate-arcane italic text-sm">{{ localeService.t('bestiary_picker_empty_state') }}</p>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        @for (monster of bestiaryStore.catalog(); track monster.id) {
+          <label
+            class="flex items-center gap-3 border rounded-lg p-2 cursor-pointer transition-colors"
+            [class.border-gold-bright]="isSelected(monster)"
+            [class.bg-fantasy-black/60]="isSelected(monster)"
+            [class.border-gold]="!isSelected(monster)"
+          >
+            <input
+              type="checkbox"
+              [checked]="isSelected(monster)"
+              (change)="toggle(monster)"
+              class="shrink-0"
+            />
+            <div class="w-10 h-10 shrink-0 rounded overflow-hidden border border-gold bg-fantasy-black/60 flex items-center justify-center">
+              @if (monster.image_url) {
+                <img [src]="monster.image_url" [alt]="monster.name" class="w-full h-full object-cover" />
+              } @else {
+                <span class="text-slate-arcane text-sm">🐲</span>
+              }
+            </div>
+            <span class="text-sm truncate">{{ monster.name }}</span>
+          </label>
+        }
+      </div>
+    }
+
+    <div class="flex justify-end pt-4 mt-4 border-t border-gold/30">
+      <button
+        type="button" (click)="close()"
+        class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+      >
+        {{ localeService.t('close_button') }}
+      </button>
+    </div>
+  </div>
+</div>

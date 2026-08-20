@@ -6,6 +6,8 @@ import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { EquipmentChoiceGroup } from '../../core/starting-equipment';
 import { StartingEquipmentEditor } from '../starting-equipment-editor/starting-equipment-editor';
+import { TraitBlock } from '../../core/bestiary-store';
+import { TraitListEditor } from '../manage/bestiary-manage/trait-list-editor';
 
 const SKILL_KEYS = [
   'acrobatics', 'animal_handling', 'arcana', 'athletics', 'deception', 'history',
@@ -16,7 +18,7 @@ const SKILL_KEYS = [
 @Component({
   selector: 'app-background-create',
   standalone: true,
-  imports: [FormsModule, StartingEquipmentEditor],
+  imports: [FormsModule, StartingEquipmentEditor, TraitListEditor],
   templateUrl: './background-create.html',
 })
 export class BackgroundCreate {
@@ -34,6 +36,7 @@ export class BackgroundCreate {
   selectedSkills = new Set<string>();
   startingGold: number | null = null;
   startingEquipment = signal<EquipmentChoiceGroup[]>([]);
+  traits: TraitBlock[] = [];
 
   editingId: string | null = null;
 
@@ -64,6 +67,7 @@ export class BackgroundCreate {
     this.selectedSkills = new Set();
     this.startingGold = null;
     this.startingEquipment.set([]);
+    this.traits = [];
   }
 
   // Le competenze arrivano come stringhe piatte (homebrew), oggetti SRD con index
@@ -82,6 +86,7 @@ export class BackgroundCreate {
     this.selectedSkills = new Set(proficiencies);
     this.startingGold = background.raw.starting_gold ?? null;
     this.startingEquipment.set(structuredClone(background.raw.starting_equipment ?? []));
+    this.traits = structuredClone(background.raw.traits ?? []);
   }
 
   cancelEdit() {
@@ -97,6 +102,7 @@ export class BackgroundCreate {
       skill_proficiencies: Array.from(this.selectedSkills),
       starting_gold: this.startingGold,
       starting_equipment: this.startingEquipment(),
+      traits: this.traits,
     };
 
     const { error } = this.editingId
@@ -106,6 +112,11 @@ export class BackgroundCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
+      // Senza questo, una vecchia traduzione salvata (content_translations) continuerebbe
+      // a "vincere" sul nome appena modificato qui, mostrando per sempre quello vecchio.
+      if (this.editingId) {
+        await this.contentStore.clearTranslation('backgrounds', this.editingId);
+      }
       this.resetForm();
       await this.refreshBackgrounds();
       this.modal.success(this.localeService.t('saved_message'));

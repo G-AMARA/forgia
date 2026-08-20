@@ -1,0 +1,37 @@
+<div class="space-y-2">
+  @for (item of items; track $index) {
+    <div class="flex flex-col sm:flex-row gap-2 p-2 border border-gold/30 rounded">
+      <div class="flex flex-col gap-2 flex-1">
+        <input
+          type="text"
+          [ngModel]="item.name"
+          (ngModelChange)="updateName($index, $event)"
+          placeholder="Nome"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        />
+        <textarea
+          [ngModel]="item.description"
+          (ngModelChange)="updateDescription($index, $event)"
+          placeholder="Descrizione"
+          rows="2"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        ></textarea>
+      </div>
+      <button
+        type="button"
+        (click)="removeItem($index)"
+        class="self-start sm:self-center text-xs text-red-300 underline shrink-0"
+      >
+        Elimina
+      </button>
+    </div>
+  }
+
+  <button
+    type="button"
+    (click)="addItem()"
+    class="text-xs text-fantasy-gold underline"
+  >
+    + {{ addLabel }}
+  </button>
+</div>

@@ -25,10 +25,26 @@ export class EquipmentCreate {
   // Come per weapons/spells: stessa fonte del catalogo, nome/descrizione già
   // tradotti nella lingua corrente via content_translations.
   protected equipment = this.contentStore.getContent('equipment');
+  // Le armature indossabili hanno un catalogo dedicato (Gestione > Armature, vedi
+  // armor-create.ts) e le cavalcature/veicoli vere e proprie pure (Gestione > Cavalcature
+  // e Veicoli, vedi mount-create.ts, is_mount_or_vehicle = true): niente doppione qui, né
+  // in lista né come tipo selezionabile. Gli scudi restano invece qui: sono anch'essi
+  // type = 'Armor' (dato SRD) ma concettualmente sono equipaggiamento generico, non
+  // "armatura indossata" in senso stretto. Stesso discorso per gli accessori da
+  // cavalcatura (bardature, selle, bisacce, morso e briglia, stallaggio): condividono il
+  // type SRD 'Mounts and Vehicles' ma is_mount_or_vehicle resta false, quindi restano
+  // equipaggiamento generico gestito qui.
+  private nonArmorEquipment = computed(() =>
+    this.equipment().filter(
+      (e: any) =>
+        (e.raw.type !== 'Armor' || e.raw.armor_category === 'shield') &&
+        !(e.raw.type === 'Mounts and Vehicles' && e.raw.is_mount_or_vehicle === true)
+    )
+  );
 
   private static readonly TYPE_KEYS: Record<string, string> = {
     'Adventuring Gear': 'equipment_type_adventuring_gear',
-    'Armor': 'equipment_type_armor',
+    'Armor': 'equipment_type_shield',
     'Mounts and Vehicles': 'equipment_type_mounts_and_vehicles',
     'Tools': 'equipment_type_tools',
     'Pack': 'equipment_type_pack',
@@ -42,17 +58,18 @@ export class EquipmentCreate {
   listSearchTerm = signal('');
   protected filteredEquipment = computed(() => {
     const term = this.listSearchTerm().trim().toLowerCase();
-    return term ? this.equipment().filter((e: any) => e.name.toLowerCase().includes(term)) : this.equipment();
+    const source = this.nonArmorEquipment();
+    return term ? source.filter((e: any) => e.name.toLowerCase().includes(term)) : source;
   });
 
   name = '';
   description = '';
   weight: number | null = null;
+  costValue: number | null = null;
+  costUnit: 'cp' | 'sp' | 'ep' | 'gp' | 'pp' = 'gp';
   imageUrl: string | null = null;
   type: 'Adventuring Gear' | 'Armor' | 'Mounts and Vehicles' | 'Tools' | 'Pack' = 'Adventuring Gear';
   toolCategory: '' | 'artisan_tools' | 'musical_instrument' = '';
-  armorClass: number | null = null;
-  armorCategory: '' | 'light' | 'medium' | 'heavy' | 'shield' = '';
 
   editingId: string | null = null;
   // sourcebook_code dell'elemento in modifica: preservato al salvataggio così
@@ -132,11 +149,11 @@ export class EquipmentCreate {
     this.name = '';
     this.description = '';
     this.weight = null;
+    this.costValue = null;
+    this.costUnit = 'gp';
     this.imageUrl = null;
     this.type = 'Adventuring Gear';
     this.toolCategory = '';
-    this.armorClass = null;
-    this.armorCategory = '';
     this.selectedContents = [];
     this.contentToAddId = '';
     this.contentToAddQuantity = 1;
@@ -152,16 +169,46 @@ export class EquipmentCreate {
     this.name = isEnglish ? item.raw.name : item.name;
     this.description = isEnglish ? (item.raw.description ?? '') : (item.description ?? '');
     this.weight = item.raw.weight ?? null;
+    this.costValue = item.raw.cost_value ?? null;
+    this.costUnit = item.raw.cost_unit ?? 'gp';
     this.imageUrl = item.raw.image_url ?? null;
     this.type = item.raw.type ?? 'Adventuring Gear';
     this.toolCategory = item.raw.tool_category ?? '';
-    this.armorClass = item.raw.armor_class ?? null;
-    this.armorCategory = item.raw.armor_category ?? '';
     this.selectedContents = [...(this.contentsByParent().get(item.id) ?? [])];
   }
 
   cancelEdit() {
     this.resetForm();
+  }
+
+  // Ridimensiona lato client se l'immagine supera 100x100 (etichetta del campo upload).
+  // L'anteprima e la lista mostrano sempre un riquadro quadrato con object-cover: qui si
+  // riproduce lo stesso ritaglio "cover" centrato, altrimenti un semplice fit-in-bounds
+  // produce un rettangolo non quadrato che poi l'object-cover deve ri-tagliare/allungare
+  // partendo da un'immagine già rimpicciolita, risultando sgranato.
+  private async resizeImageIfNeeded(file: File, size = 100): Promise<Blob> {
+    const bitmap = await createImageBitmap(file);
+    if (bitmap.width <= size && bitmap.height <= size) {
+      bitmap.close();
+      return file;
+    }
+
+    const scale = Math.max(size / bitmap.width, size / bitmap.height);
+    const scaledWidth = bitmap.width * scale;
+    const scaledHeight = bitmap.height * scale;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    canvas
+      .getContext('2d')!
+      .drawImage(bitmap, (size - scaledWidth) / 2, (size - scaledHeight) / 2, scaledWidth, scaledHeight);
+    bitmap.close();
+
+    const mimeType = file.type || 'image/png';
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('canvas toBlob failed'))), mimeType, 0.92);
+    });
   }
 
   async onImageSelected(event: Event) {
@@ -171,11 +218,12 @@ export class EquipmentCreate {
 
     this.imageUploading.set(true);
 
+    const resized = await this.resizeImageIfNeeded(file);
     const ext = file.name.split('.').pop();
     const path = `${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await this.supabase.client.storage
       .from('content-images')
-      .upload(path, file, { upsert: true });
+      .upload(path, resized, { upsert: true });
 
     if (uploadError) {
       this.modal.error(uploadError.message);
@@ -217,10 +265,13 @@ export class EquipmentCreate {
     // sulla riga base a prescindere dalla lingua corrente.
     const basePayload = {
       weight: this.weight,
+      cost_value: this.costValue,
+      cost_unit: this.costUnit,
       type: this.type,
       tool_category: this.type === 'Tools' ? this.toolCategory || null : null,
-      armor_class: this.type === 'Armor' ? this.armorClass : null,
-      armor_category: this.type === 'Armor' ? this.armorCategory || null : null,
+      // "Scudo" nel select equivale a type Armor: qui l'unica armatura gestibile è lo
+      // scudo (armor_category fissa), le altre armature si gestiscono da Gestione > Armature.
+      armor_category: this.type === 'Armor' ? 'shield' : null,
       image_url: this.imageUrl,
       sourcebook_code: this.editingId ? (this.editingSourcebookCode ?? 'homebrew') : 'homebrew',
     };

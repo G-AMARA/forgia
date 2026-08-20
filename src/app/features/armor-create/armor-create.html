@@ -1,0 +1,159 @@
+<section class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('armor_catalog_title') }}</h2>
+
+  <form (ngSubmit)="submit()" class="flex flex-col gap-4">
+    <div class="flex items-start gap-4">
+      <div class="w-32 h-44 rounded-lg border-2 border-gold-bright overflow-hidden bg-stone flex items-center justify-center text-4xl shrink-0">
+        @if (imageUrl) {
+          <img [src]="imageUrl" alt="" class="w-full h-full object-cover" />
+        } @else {
+          🛡️
+        }
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold">{{ localeService.t('armor_image_label') }}</label>
+        <label class="text-xs px-3 py-1.5 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors self-start" [class.opacity-50]="imageUploading()">
+          {{ imageUploading() ? localeService.t('loading') : localeService.t('upload_image_button') }}
+          <input type="file" accept="image/*" class="hidden" [disabled]="imageUploading()" (change)="onImageSelected($event)" />
+        </label>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('equipment_name_label') }} <span class="text-red-300">*</span></label>
+        <input
+          type="text" [(ngModel)]="name" name="name" required
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('weapon_weight_kg_label') }}</label>
+        <input
+          type="number" min="0" step="0.1" [(ngModel)]="weight" name="weight"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('equipment_armor_class_label') }}</label>
+        <input
+          type="number" min="0" [(ngModel)]="armorClass" name="armorClass"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold">{{ localeService.t('equipment_armor_category_label') }}</label>
+        <select
+          [(ngModel)]="armorCategory" name="armorCategory"
+          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        >
+          <option value="">{{ localeService.t('equipment_armor_category_unset_option') }}</option>
+          <option value="light">{{ localeService.t('armor_category_light') }}</option>
+          <option value="medium">{{ localeService.t('armor_category_medium') }}</option>
+          <option value="heavy">{{ localeService.t('armor_category_heavy') }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold">{{ localeService.t('equipment_description_label') }}</label>
+      <textarea
+        [(ngModel)]="description" name="description" rows="3"
+        class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
+      ></textarea>
+    </div>
+
+    <div class="flex gap-2">
+      <button
+        type="submit" [disabled]="loading()"
+        class="self-start px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
+      >
+        {{ editingId ? localeService.t('save_changes_button') : localeService.t('armor_add_to_catalog_button') }}
+      </button>
+      @if (editingId) {
+        <button
+          type="button" (click)="cancelEdit()"
+          class="self-start px-5 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors"
+        >
+          {{ localeService.t('cancel_button') }}
+        </button>
+      }
+    </div>
+  </form>
+
+  <div>
+    <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('armor_catalog_list_title') }}</h3>
+    @if (armors().length === 0) {
+      <p class="text-slate-arcane italic">{{ localeService.t('no_homebrew_armor_yet') }}</p>
+    } @else {
+      <input
+        type="search"
+        [(ngModel)]="listSearchTerm"
+        name="listSearchTerm"
+        [placeholder]="localeService.t('spell_search_placeholder')"
+        class="w-full mb-3 px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+
+      @if (filteredArmors().length === 0) {
+        <p class="text-slate-arcane italic">{{ localeService.t('no_spells_match_filter') }}</p>
+      }
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr class="border-b border-gold text-xs uppercase tracking-wide">
+              <th class="py-2 pr-2">{{ localeService.t('armor_image_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('equipment_name_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('equipment_armor_class_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('equipment_armor_category_label') }}</th>
+              <th class="py-2 pr-2">{{ localeService.t('weapon_weight_kg_label') }}</th>
+              <th class="py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of filteredArmors(); track a.id) {
+              <tr
+                class="border-b border-gold/30 transition-colors"
+                [class.bg-fantasy-gold/20]="a.id === editingId"
+                [class.border-l-4]="a.id === editingId"
+                [class.border-l-fantasy-gold]="a.id === editingId"
+              >
+                <td class="py-2 pr-2">
+                  <div class="w-10 h-14 rounded border border-gold/40 overflow-hidden bg-stone flex items-center justify-center text-xs">
+                    @if (a.raw.image_url) {
+                      <img [src]="a.raw.image_url" alt="" class="w-full h-full object-cover" />
+                    } @else {
+                      🛡️
+                    }
+                  </div>
+                </td>
+                <td class="py-2 pr-2">
+                  {{ a.name }}
+                  <span class="text-[10px] uppercase text-slate-arcane ml-1">({{ a.raw.sourcebook_code }})</span>
+                </td>
+                <td class="py-2 pr-2">{{ a.raw.armor_class ?? '—' }}</td>
+                <td class="py-2 pr-2">{{ a.raw.armor_category ? localeService.t('armor_category_' + a.raw.armor_category) : '—' }}</td>
+                <td class="py-2 pr-2">{{ a.raw.weight }} kg</td>
+                <td class="py-2">
+                  <div class="flex gap-2">
+                    <button (click)="startEdit(a)" class="text-xs text-fantasy-gold underline">
+                      {{ localeService.t('edit_button') }}
+                    </button>
+                    @if (a.raw.sourcebook_code === 'homebrew') {
+                      <button (click)="deleteArmor(a.id, a.name)" class="text-xs text-red-300 underline">
+                        {{ localeService.t('delete_button') }}
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

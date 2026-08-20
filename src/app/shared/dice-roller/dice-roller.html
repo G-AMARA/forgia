@@ -82,31 +82,34 @@
     <!-- order-1 su mobile (va in alto), lg:order-2 su desktop (torna a destra) -->
     <div class="w-full lg:w-3/4 p-4 lg:p-6 relative flex flex-col bg-fantasy-black bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] overflow-hidden flex-1 lg:flex-initial order-1 lg:order-2">
       
-      <!-- Testata Plancia -->
-      <div class="relative z-25 flex flex-wrap justify-between items-center gap-3 mb-2 lg:mb-4">
+     <!-- Testata Plancia -->
+      <div class="relative z-25 flex items-center justify-between w-full gap-2 mb-2 lg:mb-4">
 
-        <!-- Area Chips Riepilogo -->
-        <div class="flex-1 min-w-[150px] max-w-full"> 
-          <div *ngIf="board.length > 0 && !isRolling3D" class="flex gap-2 flex-wrap">
-            <span *ngFor="let dice of board" class="px-2.5 py-0.5 bg-stone-800/90 text-fantasy-gold rounded-full border border-fantasy-gold/50 text-xs font-bold cursor-pointer hover:bg-red-900 hover:text-white shadow transition-all whitespace-nowrap" (click)="removeDice(dice.id)" title="Rimuovi">
+        <!-- Area Chips Riepilogo (A sinistra / occupa lo spazio rimanente) -->
+        <div class="flex-1 min-w-0"> 
+          <div *ngIf="board.length > 0 && !isRolling3D" class="flex gap-1.5 flex-wrap overflow-x-auto py-1">
+            <span *ngFor="let dice of board" class="px-2 py-0.5 bg-stone-800/90 text-fantasy-gold rounded-full border border-fantasy-gold/50 text-xs font-bold cursor-pointer hover:bg-red-900 hover:text-white shadow transition-all whitespace-nowrap" (click)="removeDice(dice.id)" title="Rimuovi">
               {{ dice.type }}
             </span>
           </div>
         </div>
         
-        <!-- Totale e Pulsante X -->
-        <div class="flex items-center gap-3 shrink-0">
-          <div class="bg-black/60 px-4 py-1 rounded-full border border-stone-600 shadow-md flex items-center">
-            <span class="text-stone-400 uppercase tracking-widest text-[10px] mr-1.5">Totale:</span>
-            <span class="text-xl lg:text-2xl font-bold text-fantasy-gold">{{ rollTotal }}</span>
+        <!-- Totale e Pulsante X (Forzati sempre a DESTRA con shrink-0) -->
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <!-- Totale dinamico -->
+          <div class="bg-black/60 px-3 sm:px-4 py-1 rounded-full border border-stone-600 shadow-md flex items-center">
+            <span class="text-stone-400 uppercase tracking-widest text-[9px] sm:text-[10px] mr-1.5">Totale:</span>
+            <span class="text-lg sm:text-2xl font-bold text-fantasy-gold">{{ rollTotal }}</span>
           </div>
 
+          <!-- Pulsante X di chiusura -->
           <button (click)="closeModal()" [disabled]="abilityMode || !canClose" class="p-1.5 text-stone-500 hover:text-red-500 hover:bg-black/40 rounded-full transition-all focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed" title="Chiudi">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6 lg:w-7 lg:h-7">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+
       </div>
 
       <!-- Area Tratteggiata di sfondo (Plancia 3D) -->

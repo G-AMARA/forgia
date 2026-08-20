@@ -4,6 +4,14 @@ import { Auth } from './auth';
 import { ActiveCampaign } from './active-campaign';
 import { LocaleService } from './locale';
 
+export interface DiaryEntry {
+  id: string;
+  content: string;
+  title: string | null;
+  entry_date: string;
+  created_at: string;
+}
+
 export interface CharacterSummary {
   id: string;
   name: string;
@@ -140,6 +148,7 @@ export class CharacterStore {
   async createCharacter(params: {
     name: string;
     raceId: string;
+    subraceId: string | null;
     classId: string;
     subclassId: string | null;
     backgroundId: string | null;
@@ -150,12 +159,10 @@ export class CharacterStore {
     appliedBonus: Record<string, number>;
     backstory: string;
     sex: 'M' | 'F';
-    darkvision: boolean;
     spellIds: string[];
     startingItems: { table: 'weapons' | 'equipment'; id: string; quantity: number }[];
     equippedArmorId: string | null;
     shieldEquipped: boolean;
-    equippedEquipmentIds: string[];
     startingGold: number;
   }): Promise<{ error: { message: string } | null; characterId?: string }> {
     const campaign = this.activeCampaign.current();
@@ -171,6 +178,7 @@ export class CharacterStore {
         owner_id: userId,
         name: params.name,
         race_id: params.raceId,
+        subrace_id: params.subraceId,
         background_id: params.backgroundId,
         level: params.level,
         alignment: params.alignment,
@@ -179,7 +187,6 @@ export class CharacterStore {
         applied_bonus: params.appliedBonus,
         notes: params.backstory,
         sex: params.sex,
-        darkvision: params.darkvision,
         equipped_armor_id: params.equippedArmorId,
         shield_equipped: params.shieldEquipped,
         gold: params.startingGold,
@@ -235,7 +242,7 @@ export class CharacterStore {
           character_id: character.id,
           equipment_id: i.id,
           quantity: i.quantity,
-          equipped: params.equippedEquipmentIds.includes(i.id),
+          equipped: false,
         }))
       );
       if (inventoryError) {
@@ -260,15 +267,16 @@ export class CharacterStore {
 
   private static readonly FULL_CHARACTER_SELECT = `
     id, name, level, alignment, experience_points, avatar_url, notes, owner_id,
-    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, background_id,
-    skill_proficiencies, damage_resistances, damage_immunities, condition_immunities,
-    sex, darkvision,
+    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, mount_equipment_id, copper, silver, electrum, gold, platinum, ability_scores, applied_bonus, race_id, subrace_id, background_id,
+    skill_proficiencies, skill_mastery, damage_resistances, damage_immunities, condition_immunities,
+    sex,
     races ( name ),
+    subraces ( name ),
     backgrounds ( name ),
     character_classes ( class_id, subclass_id, classes ( name, hit_die, saving_throw_proficiencies ), subclasses ( name ) ),
     character_spells ( spell_id, prepared, spells ( name, level, school ) ),
-    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name ) ),
-    character_weapons ( id, weapon_id, quantity, weapons ( name, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability ) )
+    character_inventory ( id, equipment_id, quantity, equipped, equipment ( name, image_url, weight, cost_value, cost_unit ) ),
+    character_weapons ( id, weapon_id, quantity, weapons ( name, image_url, damage_dice, damage_type, versatile_damage, range_category, normal_range, long_range, weight, suggested_attack_ability, properties, cost_value, cost_unit ) )
   `;
 
   // Recupera le traduzioni di tutti i contenuti referenziati da questa riga personaggio
@@ -327,6 +335,7 @@ export class CharacterStore {
       armor_class: row.armor_class,
       equipped_armor_id: row.equipped_armor_id ?? null,
       shield_equipped: row.shield_equipped ?? false,
+      mount_equipment_id: row.mount_equipment_id ?? null,
       copper: row.copper ?? 0,
       silver: row.silver ?? 0,
       electrum: row.electrum ?? 0,
@@ -335,13 +344,15 @@ export class CharacterStore {
       ability_scores: row.ability_scores ?? {},
       applied_bonus: row.applied_bonus ?? {},
       skill_proficiencies: row.skill_proficiencies ?? [],
+      skill_mastery: row.skill_mastery ?? [],
       damage_resistances: row.damage_resistances ?? [],
       damage_immunities: row.damage_immunities ?? [],
       condition_immunities: row.condition_immunities ?? [],
       sex: row.sex ?? null,
-      darkvision: row.darkvision ?? false,
       race_id: row.race_id ?? null,
       race_name: translations['races']?.[row.race_id] ?? row.races?.name ?? null,
+      subrace_id: row.subrace_id ?? null,
+      subrace_name: row.subraces?.name ?? null,
       background_id: row.background_id ?? null,
       background_name:
         translations['backgrounds']?.[row.background_id] ?? row.backgrounds?.name ?? null,
@@ -366,13 +377,18 @@ export class CharacterStore {
         rowId: i.id,
         equipmentId: i.equipment_id,
         name: translations['equipment']?.[i.equipment_id] ?? i.equipment?.name ?? '?',
+        imageUrl: i.equipment?.image_url ?? null,
+        weight: i.equipment?.weight ?? 0,
         quantity: i.quantity,
         equipped: i.equipped,
+        costValue: i.equipment?.cost_value ?? null,
+        costUnit: i.equipment?.cost_unit ?? null,
       })),
       weapons: (row.character_weapons ?? []).map((w: any) => ({
         rowId: w.id,
         weaponId: w.weapon_id,
         name: translations['weapons']?.[w.weapon_id] ?? w.weapons?.name ?? '?',
+        imageUrl: w.weapons?.image_url ?? null,
         quantity: w.quantity,
         attackAbilities: w.weapons?.suggested_attack_ability ?? [],
         damageDice: w.weapons?.damage_dice ?? '',
@@ -382,6 +398,9 @@ export class CharacterStore {
         normalRange: w.weapons?.normal_range ?? null,
         longRange: w.weapons?.long_range ?? null,
         weight: w.weapons?.weight ?? null,
+        properties: w.weapons?.properties ?? null,
+        costValue: w.weapons?.cost_value ?? null,
+        costUnit: w.weapons?.cost_unit ?? null,
       })),
     };
   }
@@ -448,6 +467,7 @@ export class CharacterStore {
       shieldEquipped: boolean;
       abilityScores: Record<string, number>;
       skillProficiencies: string[];
+      skillMastery: string[];
       damageResistances: string[];
       damageImmunities: string[];
       conditionImmunities: string[];
@@ -463,6 +483,7 @@ export class CharacterStore {
         shield_equipped: updates.shieldEquipped,
         ability_scores: updates.abilityScores,
         skill_proficiencies: updates.skillProficiencies,
+        skill_mastery: updates.skillMastery,
         damage_resistances: updates.damageResistances,
         damage_immunities: updates.damageImmunities,
         condition_immunities: updates.conditionImmunities,
@@ -482,6 +503,7 @@ export class CharacterStore {
       name: string;
       level: number;
       raceId: string;
+      subraceId: string | null;
       classId: string;
       subclassId: string | null;
       backgroundId: string | null;
@@ -490,7 +512,6 @@ export class CharacterStore {
       abilityScores: Record<string, number>;
       appliedBonus: Record<string, number>;
       sex: 'M' | 'F';
-      darkvision: boolean;
     }
   ) {
     const { error: charError } = await this.supabase.client
@@ -499,13 +520,13 @@ export class CharacterStore {
         name: updates.name,
         level: updates.level,
         race_id: updates.raceId,
+        subrace_id: updates.subraceId,
         background_id: updates.backgroundId,
         alignment: updates.alignment,
         experience_points: updates.experiencePoints,
         ability_scores: updates.abilityScores,
         applied_bonus: updates.appliedBonus,
         sex: updates.sex,
-        darkvision: updates.darkvision,
       })
       .eq('id', characterId);
 
@@ -540,6 +561,19 @@ export class CharacterStore {
     const { error } = await this.supabase.client
       .from('characters')
       .update({ notes })
+      .eq('id', characterId);
+
+    if (!error) {
+      await this.refreshCharacter(characterId);
+    }
+
+    return { error };
+  }
+
+  async updateMount(characterId: string, mountEquipmentId: string | null) {
+    const { error } = await this.supabase.client
+      .from('characters')
+      .update({ mount_equipment_id: mountEquipmentId })
       .eq('id', characterId);
 
     if (!error) {
@@ -591,10 +625,28 @@ export class CharacterStore {
     return { error: updateError };
   }
 
+  // Se il personaggio ha già questo oggetto in inventario, ne incrementa la quantità sulla riga
+  // esistente invece di crearne una seconda (altrimenti "aggiungi" duplica la riga ogni volta).
   async addInventoryItem(characterId: string, equipmentId: string, quantity: number) {
-    const { error } = await this.supabase.client
+    const { data: existing, error: findError } = await this.supabase.client
       .from('character_inventory')
-      .insert({ character_id: characterId, equipment_id: equipmentId, quantity, equipped: false });
+      .select('id, quantity')
+      .eq('character_id', characterId)
+      .eq('equipment_id', equipmentId)
+      .maybeSingle();
+
+    if (findError) {
+      return { error: findError };
+    }
+
+    const { error } = existing
+      ? await this.supabase.client
+          .from('character_inventory')
+          .update({ quantity: existing.quantity + quantity })
+          .eq('id', existing.id)
+      : await this.supabase.client
+          .from('character_inventory')
+          .insert({ character_id: characterId, equipment_id: equipmentId, quantity, equipped: false });
 
     if (!error) {
       await this.refreshCharacter(characterId);
@@ -635,12 +687,28 @@ export class CharacterStore {
     return { error };
   }
 
+  // Stessa logica di addInventoryItem: incrementa la riga esistente invece di duplicarla.
   async addWeapon(characterId: string, weapon: { weaponId: string; quantity: number }) {
-    const { error } = await this.supabase.client.from('character_weapons').insert({
-      character_id: characterId,
-      weapon_id: weapon.weaponId,
-      quantity: weapon.quantity,
-    });
+    const { data: existing, error: findError } = await this.supabase.client
+      .from('character_weapons')
+      .select('id, quantity')
+      .eq('character_id', characterId)
+      .eq('weapon_id', weapon.weaponId)
+      .maybeSingle();
+
+    if (findError) {
+      return { error: findError };
+    }
+
+    const { error } = existing
+      ? await this.supabase.client
+          .from('character_weapons')
+          .update({ quantity: existing.quantity + weapon.quantity })
+          .eq('id', existing.id)
+      : await this.supabase.client
+          .from('character_weapons')
+          .insert({ character_id: characterId, weapon_id: weapon.weaponId, quantity: weapon.quantity });
+
     if (!error) {
       await this.refreshCharacter(characterId);
     }
@@ -690,6 +758,70 @@ export class CharacterStore {
     }
     return { error };
   }
+
+  // Taccuino (tab Armeria+1 nella scheda): annotazioni libere del giocatore, non fanno
+  // parte di FULL_CHARACTER_SELECT (lista potenzialmente lunga, non serve ricaricarla ad
+  // ogni salvataggio di stats/inventario) — caricate a parte quando si apre il tab.
+  // Ordinate per entry_date (data della pagina, modificabile dall'utente), non per
+  // created_at: un giocatore può scrivere oggi una pagina datata qualche sessione fa.
+  readonly diaryEntries = signal<DiaryEntry[]>([]);
+
+  async loadDiaryEntries(characterId: string) {
+    const { data, error } = await this.supabase.client
+      .from('character_diary_entries')
+      .select('id, content, title, entry_date, created_at')
+      .eq('character_id', characterId)
+      .order('entry_date', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      this.diaryEntries.set([]);
+      return;
+    }
+
+    this.diaryEntries.set(data);
+  }
+
+  async addDiaryEntry(characterId: string, content: string, entryDate: string, title: string | null) {
+    const { error } = await this.supabase.client
+      .from('character_diary_entries')
+      .insert({ character_id: characterId, content, entry_date: entryDate, title });
+
+    if (!error) {
+      await this.loadDiaryEntries(characterId);
+    }
+    return { error };
+  }
+
+  async updateDiaryEntry(
+    characterId: string,
+    entryId: string,
+    content: string,
+    entryDate: string,
+    title: string | null
+  ) {
+    const { error } = await this.supabase.client
+      .from('character_diary_entries')
+      .update({ content, entry_date: entryDate, title })
+      .eq('id', entryId);
+
+    if (!error) {
+      await this.loadDiaryEntries(characterId);
+    }
+    return { error };
+  }
+
+  async deleteDiaryEntry(characterId: string, entryId: string) {
+    const { error } = await this.supabase.client
+      .from('character_diary_entries')
+      .delete()
+      .eq('id', entryId);
+
+    if (!error) {
+      await this.loadDiaryEntries(characterId);
+    }
+    return { error };
+  }
 }
 
 export interface CharacterFull {
@@ -706,6 +838,7 @@ export interface CharacterFull {
   armor_class: number | null;
   equipped_armor_id: string | null;
   shield_equipped: boolean;
+  mount_equipment_id: string | null;
   copper: number;
   silver: number;
   electrum: number;
@@ -714,13 +847,15 @@ export interface CharacterFull {
   ability_scores: Record<string, number>;
   applied_bonus: Record<string, number>;
   skill_proficiencies: string[];
+  skill_mastery: string[];
   damage_resistances: string[];
   damage_immunities: string[];
   condition_immunities: string[];
   sex: 'M' | 'F' | null;
-  darkvision: boolean;
   race_id: string | null;
   race_name: string | null;
+  subrace_id: string | null;
+  subrace_name: string | null;
   background_id: string | null;
   background_name: string | null;
   class_id: string | null;
@@ -730,11 +865,12 @@ export interface CharacterFull {
   hit_die: number | null;
   saving_throw_proficiencies: string[];
   spells: { rowId: string; spellId: string; name: string; level: number; school: string; prepared: boolean }[];
-  inventory: { rowId: string; equipmentId: string; name: string; quantity: number; equipped: boolean }[];
+  inventory: { rowId: string; equipmentId: string; name: string; imageUrl: string | null; weight: number; quantity: number; equipped: boolean; costValue: number | null; costUnit: string | null }[];
   weapons: {
     rowId: string;
     weaponId: string;
     name: string;
+    imageUrl: string | null;
     quantity: number;
     attackAbilities: string[];
     damageDice: string;
@@ -744,5 +880,8 @@ export interface CharacterFull {
     normalRange: number | null;
     longRange: number | null;
     weight: number | null;
+    properties: string | null;
+    costValue: number | null;
+    costUnit: string | null;
   }[];
 }

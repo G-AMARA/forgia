@@ -70,23 +70,31 @@ export class Auth {
   }
 
   async signUp(email: string, password: string, nickname: string, isMaster: boolean) {
-    const { data, error } = await this.supabase.client.auth.signUp({ email, password });
+    // nickname e is_master viaggiano come metadata dell'utente: li legge il trigger
+    // handle_new_user() lato DB (vedi sql/2026-08-16_profiles_signup_trigger.sql) per
+    // creare la riga profiles. Non possiamo farlo qui con un insert diretto: se la
+    // conferma email è attiva, subito dopo signUp() non esiste ancora una sessione
+    // autenticata, e l'insert fallirebbe la RLS (id = auth.uid(), con auth.uid() nullo).
+    const { data, error } = await this.supabase.client.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nickname, is_master: isMaster },
+        // Senza questo, Supabase reindirizza il link di conferma email al "Site URL"
+        // configurato da dashboard (che va comunque tenuto allineato, altrimenti questo
+        // valore viene ignorato). document.baseURI rispetta il <base href>, quindi
+        // funziona sia in locale che pubblicato in una sottocartella (GitHub Pages /forgia/).
+        emailRedirectTo: document.baseURI,
+      },
+    });
 
     if (error || !data.user) {
       return { data, error };
     }
 
-    const { error: profileError } = await this.supabase.client
-      .from('profiles')
-      .insert({ id: data.user.id, nickname, is_master: isMaster });
-
-    if (profileError) {
-      return { data, error: profileError };
-    }
-
-    // Il profilo è stato appena creato: ricarichiamolo subito,
-    // senza aspettare un evento onAuthStateChange che non arriverà più
-    // (la sessione era già attiva prima che il profilo esistesse).
+    // Il profilo è leggibile subito indipendentemente dalla sessione (la policy SELECT
+    // "Lettura pubblica profili" ha qual: true) e il trigger lo crea in modo sincrono
+    // nella stessa transazione di signUp(), quindi possiamo ricaricarlo già ora.
     await this.loadProfile(data.user.id);
 
     return { data, error: null };
@@ -144,7 +152,9 @@ export class Auth {
     }
 
     const { error } = await this.supabase.client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      // document.baseURI (non window.location.origin) rispetta il <base href>, quindi
+      // funziona anche quando l'app è pubblicata in una sottocartella (es. GitHub Pages /forgia/).
+      redirectTo: `${document.baseURI}reset-password`,
     });
     return { error };
   }

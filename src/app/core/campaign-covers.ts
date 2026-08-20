@@ -24,5 +24,5 @@ export function getCover(key: string): CampaignCover {
 }
 
 export function getCoverImagePath(cover: CampaignCover): string {
-  return `/covers/${encodeURIComponent(cover.file)}`;
+  return `covers/${encodeURIComponent(cover.file)}`;
 }

@@ -49,6 +49,7 @@ export class CharacterCreate {
   private supabase = inject(Supabase);
 
   races = this.contentStore.getContent('races');
+  private allSubraces = this.contentStore.getContent('subraces');
   classes = this.contentStore.getContent('classes');
   backgrounds = this.contentStore.getContent('backgrounds');
   private allSubclasses = this.contentStore.getContent('subclasses');
@@ -70,6 +71,7 @@ export class CharacterCreate {
 
   name = '';
   raceId = '';
+  subraceId = '';
   classId = '';
   backgroundId = '';
   subclassId = '';
@@ -78,16 +80,12 @@ export class CharacterCreate {
   experiencePoints = 0;
   backstory = '';
   sex: 'M' | 'F' = 'M';
-  darkvision = false;
 
   abilityScores = { str: 10, dex: 10, cos: 10, int: 10, wis: 10, cha: 10 };
-  backgroundBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  // Punti "a scelta libera" concessi da razza/sottorazza (es. Umano Variante, Draconide
+  // Cromatico): allocati liberamente dal giocatore entro freeBonusPerAbilityMax().
+  freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   abilityKeys: (keyof typeof this.abilityScores)[] = ['str', 'dex', 'cos', 'int', 'wis', 'cha'];
-
-  // Punti massimi assegnabili come Bonus Background e valore massimo per singola caratteristica:
-  // combinazioni valide risultanti: tre caselle a +1, oppure una a +2 e una a +1.
-  readonly backgroundBonusMax = 3;
-  readonly backgroundBonusPerAbilityMax = 2;
 
   constructor() {
     this.loadPackContents();
@@ -128,6 +126,34 @@ export class CharacterCreate {
     return this.allSubclasses().filter(
       (sub: any) => sub.raw.class_id === this.classId && sub.raw.unlocked_at_level <= this.level
     );
+  }
+
+  // Sottorazze disponibili per la razza scelta. Stesso pattern di availableSubclasses(): metodo,
+  // non computed, perché raceId è un campo ngModel normale.
+  availableSubraces(): any[] {
+    if (!this.raceId) return [];
+    return this.allSubraces().filter((sub: any) => sub.raw.race_id === this.raceId);
+  }
+
+  onRaceChange(raceId: string) {
+    this.raceId = raceId;
+    this.subraceId = '';
+    this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  }
+
+  onSubraceChange(subraceId: string) {
+    this.subraceId = subraceId;
+    this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
+  }
+
+  // Descrizione della razza/sottorazza scelta: per le "a scelta libera" (Umano Variante,
+  // Draconide Cromatico, ...) è l'unico posto dove il giocatore legge come va speso il bonus.
+  getRaceDescription(): string | null {
+    return this.races().find((r: any) => r.id === this.raceId)?.description ?? null;
+  }
+
+  getSubraceDescription(): string | null {
+    return this.allSubraces().find((s: any) => s.id === this.subraceId)?.description ?? null;
   }
 
   // Immagine di sfondo della classe scelta, versione femminile o maschile a seconda del
@@ -412,35 +438,63 @@ export class CharacterCreate {
     return normalizeAbilityBonuses(race?.raw?.ability_bonuses)[key] ?? 0;
   }
 
-  backgroundBonusTotal(): number {
-    return this.abilityKeys.reduce((sum, k) => sum + this.backgroundBonuses[k], 0);
+  // Bonus di sottorazza: SOSTITUISCE quello della razza madre (non regole 5e standard, scelta
+  // di design del progetto: la sottorazza scelta è l'unica fonte di bonus caratteristica).
+  getSubraceBonus(key: keyof typeof this.abilityScores): number {
+    const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
+    return normalizeAbilityBonuses(subrace?.raw?.ability_bonuses)[key] ?? 0;
   }
 
-  backgroundBonusRemaining(): number {
-    return this.backgroundBonusMax - this.backgroundBonusTotal();
+  // Bonus caratteristica effettivo: se è selezionata una sottorazza, conta solo il suo bonus;
+  // altrimenti quello della razza. Non si sommano mai i due.
+  getRaceOrSubraceBonus(key: keyof typeof this.abilityScores): number {
+    return this.subraceId ? this.getSubraceBonus(key) : this.getRaceBonus(key);
   }
 
-  // Tetto dinamico per l'input: non oltre il max per caratteristica, né oltre i punti rimasti.
-  maxBackgroundBonus(key: keyof typeof this.abilityScores): number {
-    return Math.min(this.backgroundBonusPerAbilityMax, this.backgroundBonuses[key] + this.backgroundBonusRemaining());
+  // Monte punti "a scelta libera": della sottorazza se selezionata, altrimenti della razza
+  // (mai sommati, stessa logica di getRaceOrSubraceBonus). Metodi, non computed: stesso motivo
+  // di availableSubraces() (raceId/subraceId sono ngModel, non signal).
+  freeBonusPoints(): number {
+    const race = this.races().find((r: any) => r.id === this.raceId);
+    const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
+    return this.subraceId ? (subrace?.raw?.free_bonus_points ?? 0) : (race?.raw?.free_bonus_points ?? 0);
   }
 
-  // Applica il nuovo valore rispettando i vincoli: max 2 per caratteristica, max 3 punti totali.
-  setBackgroundBonus(key: keyof typeof this.abilityScores, value: number) {
-    let next = Math.max(0, Math.min(this.backgroundBonusPerAbilityMax, Math.floor(value) || 0));
+  freeBonusPerAbilityMax(): number {
+    const race = this.races().find((r: any) => r.id === this.raceId);
+    const subrace = this.allSubraces().find((s: any) => s.id === this.subraceId);
+    return this.subraceId
+      ? (subrace?.raw?.free_bonus_max_per_ability ?? 0)
+      : (race?.raw?.free_bonus_max_per_ability ?? 0);
+  }
+
+  freeBonusTotal(): number {
+    return this.abilityKeys.reduce((sum, k) => sum + this.freeBonuses[k], 0);
+  }
+
+  freeBonusRemaining(): number {
+    return this.freeBonusPoints() - this.freeBonusTotal();
+  }
+
+  maxFreeBonus(key: keyof typeof this.abilityScores): number {
+    return Math.min(this.freeBonusPerAbilityMax(), this.freeBonuses[key] + this.freeBonusRemaining());
+  }
+
+  setFreeBonus(key: keyof typeof this.abilityScores, value: number) {
+    let next = Math.max(0, Math.min(this.freeBonusPerAbilityMax(), Math.floor(value) || 0));
     const othersSum = this.abilityKeys
       .filter((k) => k !== key)
-      .reduce((sum, k) => sum + this.backgroundBonuses[k], 0);
-    if (othersSum + next > this.backgroundBonusMax) {
-      next = Math.max(0, this.backgroundBonusMax - othersSum);
+      .reduce((sum, k) => sum + this.freeBonuses[k], 0);
+    if (othersSum + next > this.freeBonusPoints()) {
+      next = Math.max(0, this.freeBonusPoints() - othersSum);
     }
-    this.backgroundBonuses[key] = next;
+    this.freeBonuses[key] = next;
   }
 
-  // Il bonus razziale e quello di background sono alternativi, non cumulativi:
-  // se è stato scelto un background, il suo bonus manuale sostituisce quello automatico della razza.
+  // Bonus caratteristica: sempre e solo da razza/sottorazza (più l'eventuale quota "a scelta
+  // libera"). Il background non concede bonus caratteristica.
   getAppliedBonus(key: keyof typeof this.abilityScores): number {
-    return this.backgroundId ? this.backgroundBonuses[key] : this.getRaceBonus(key);
+    return this.getRaceOrSubraceBonus(key) + this.freeBonuses[key];
   }
 
   getTotalScore(key: keyof typeof this.abilityScores): number {
@@ -493,26 +547,25 @@ export class CharacterCreate {
 
   // Se tra l'equipaggiamento iniziale c'è un'armatura (o uno scudo), la indossa subito invece
   // di lasciarla "nessuna armatura" finché il giocatore non la equipaggia a mano dalla scheda:
-  // altrimenti la CA calcolata resterebbe sbagliata (10 + Des) nonostante l'armatura sia già
-  // in inventario.
+  // altrimenti la CA calcolata resterebbe sbagliata (10 + Des). L'armatura non finisce anche
+  // in inventario (vedi resolveStartingEquipment): equipped_armor_id/shield_equipped bastano,
+  // è già mostrata nella colonna sinistra del tab Equipaggiamento.
   private detectStartingArmor(
     items: { table: 'weapons' | 'equipment'; id: string; quantity: number }[]
-  ): { equippedArmorId: string | null; shieldEquipped: boolean; equippedEquipmentIds: string[] } {
+  ): { equippedArmorId: string | null; shieldEquipped: boolean } {
     let equippedArmorId: string | null = null;
     let shieldEquipped = false;
-    const equippedEquipmentIds: string[] = [];
 
     for (const item of items) {
       if (item.table !== 'equipment') continue;
       const equip = this.allEquipment().find((e: any) => e.id === item.id);
       if (!equip || equip.raw.type !== 'Armor') continue;
 
-      equippedEquipmentIds.push(equip.id);
       if (equip.raw.armor_category === 'shield') shieldEquipped = true;
       else if (!equippedArmorId) equippedArmorId = equip.id;
     }
 
-    return { equippedArmorId, shieldEquipped, equippedEquipmentIds };
+    return { equippedArmorId, shieldEquipped };
   }
 
   async submit() {
@@ -528,14 +581,23 @@ export class CharacterCreate {
       this.abilityKeys.map((key) => [key, this.getAppliedBonus(key)])
     );
 
-    const startingItems = this.resolveStartingEquipment();
-    const { equippedArmorId, shieldEquipped, equippedEquipmentIds } = this.detectStartingArmor(startingItems);
+    const resolvedItems = this.resolveStartingEquipment();
+    const { equippedArmorId, shieldEquipped } = this.detectStartingArmor(resolvedItems);
+    // Le armature vengono tolte dagli oggetti da inserire in inventario: restano solo
+    // equipped_armor_id/shield_equipped, la colonna sinistra del tab Equipaggiamento le
+    // mostra già da lì, non serve più anche una riga duplicata nell'inventario.
+    const startingItems = resolvedItems.filter((item) => {
+      if (item.table !== 'equipment') return true;
+      const equip = this.allEquipment().find((e: any) => e.id === item.id);
+      return equip?.raw?.type !== 'Armor';
+    });
     const background = this.backgrounds().find((b: any) => b.id === this.backgroundId);
     const startingGold = background?.raw.starting_gold ?? 0;
 
     const { error, characterId } = await this.characterStore.createCharacter({
       name: this.name,
       raceId: this.raceId,
+      subraceId: this.subraceId || null,
       classId: this.classId,
       subclassId: this.subclassId || null,
       backgroundId: this.backgroundId || null,
@@ -546,12 +608,10 @@ export class CharacterCreate {
       appliedBonus,
       backstory: this.backstory,
       sex: this.sex,
-      darkvision: this.darkvision,
       spellIds: Array.from(this.selectedSpellIds()),
       startingItems,
       equippedArmorId,
       shieldEquipped,
-      equippedEquipmentIds,
       startingGold,
     });
 

@@ -1,8 +1,32 @@
 <div class="relative">
-  <img src="/themes/altosx.png" alt="" class="absolute top-0 left-0 w-14 h-14 sm:w-20 sm:h-20 pointer-events-none select-none" />
-  <img src="/themes/altodx.png" alt="" class="absolute top-0 right-0 w-14 h-14 sm:w-20 sm:h-20 pointer-events-none select-none" />
-  <img src="/themes/bassosx.png" alt="" class="absolute bottom-0 left-0 w-14 h-14 sm:w-20 sm:h-20 pointer-events-none select-none" />
-  <img src="/themes/bassodx.png" alt="" class="absolute bottom-0 right-0 w-14 h-14 sm:w-20 sm:h-20 pointer-events-none select-none" />
+  <!-- Fregio d'angolo: un'unica illustrazione (svg-corner-flourish) ripetuta e
+       specchiata/ruotata sui quattro angoli con le utility di trasformazione di Tailwind,
+       invece di quattro PNG separati troppo densi di dettaglio per leggersi bene a
+       56-80px. -->
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+       class="absolute top-0 left-0 w-8 h-8 sm:w-10 sm:h-10 text-gold/70 pointer-events-none select-none">
+    <path d="M8 3 L11 6 L8 9 L5 6 Z" />
+    <path d="M14 6 L34 6 Q40 6 40 12 L40 16" />
+    <path d="M6 14 L6 34 Q6 40 12 40 L16 40" />
+  </svg>
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+       class="absolute top-0 right-0 w-8 h-8 sm:w-10 sm:h-10 text-gold/70 pointer-events-none select-none -scale-x-100">
+    <path d="M8 3 L11 6 L8 9 L5 6 Z" />
+    <path d="M14 6 L34 6 Q40 6 40 12 L40 16" />
+    <path d="M6 14 L6 34 Q6 40 12 40 L16 40" />
+  </svg>
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+       class="absolute bottom-0 left-0 w-8 h-8 sm:w-10 sm:h-10 text-gold/70 pointer-events-none select-none -scale-y-100">
+    <path d="M8 3 L11 6 L8 9 L5 6 Z" />
+    <path d="M14 6 L34 6 Q40 6 40 12 L40 16" />
+    <path d="M6 14 L6 34 Q6 40 12 40 L16 40" />
+  </svg>
+  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+       class="absolute bottom-0 right-0 w-8 h-8 sm:w-10 sm:h-10 text-gold/70 pointer-events-none select-none rotate-180">
+    <path d="M8 3 L11 6 L8 9 L5 6 Z" />
+    <path d="M14 6 L34 6 Q40 6 40 12 L40 16" />
+    <path d="M6 14 L6 34 Q6 40 12 40 L16 40" />
+  </svg>
 
   <div class="relative p-6 sm:p-10" [class]="contentClass">
     <ng-content></ng-content>

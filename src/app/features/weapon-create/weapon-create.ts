@@ -34,6 +34,8 @@ export class WeaponCreate {
   normalRange: number | null = null;
   longRange: number | null = null;
   weight: number | null = null;
+  costValue: number | null = null;
+  costUnit: 'cp' | 'sp' | 'ep' | 'gp' | 'pp' = 'gp';
   properties = '';
   suggestedAttackAbilities = new Set<string>(['str']);
   imageUrl: string | null = null;
@@ -76,6 +78,8 @@ export class WeaponCreate {
     this.normalRange = null;
     this.longRange = null;
     this.weight = null;
+    this.costValue = null;
+    this.costUnit = 'gp';
     this.properties = '';
     this.suggestedAttackAbilities = new Set(['str']);
     this.imageUrl = null;
@@ -97,6 +101,8 @@ export class WeaponCreate {
     this.normalRange = weapon.raw.normal_range ?? null;
     this.longRange = weapon.raw.long_range ?? null;
     this.weight = weapon.raw.weight ?? null;
+    this.costValue = weapon.raw.cost_value ?? null;
+    this.costUnit = weapon.raw.cost_unit ?? 'gp';
     this.properties = weapon.raw.properties ?? '';
     this.suggestedAttackAbilities = new Set(weapon.raw.suggested_attack_ability ?? ['str']);
     this.imageUrl = weapon.raw.image_url ?? null;
@@ -151,6 +157,8 @@ export class WeaponCreate {
       normal_range: this.rangeCategory === 'ranged' ? this.normalRange : null,
       long_range: this.rangeCategory === 'ranged' ? this.longRange : null,
       weight: this.weight,
+      cost_value: this.costValue,
+      cost_unit: this.costUnit,
       properties: this.properties || null,
       suggested_attack_ability: Array.from(this.suggestedAttackAbilities),
       image_url: this.imageUrl,
