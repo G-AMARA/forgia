@@ -1,0 +1,41 @@
+@if (weapons.selectedWeaponDetail(); as sw) {
+  <div [class]="variant() === 'mobile' ? 'flex flex-col items-center text-center gap-3' : 'grid grid-cols-2 gap-3'">
+    <div>
+      <span [class]="labelClass()">{{ localeService.t('weapon_col_attack') }}</span>
+      <p [class]="valueClass()">{{ weapons.attackAbilityNames(sw.attackAbilities) }}</p>
+    </div>
+    <div>
+      <span [class]="labelClass()">{{ localeService.t('weapon_col_damage') }}</span>
+      <p [class]="valueClass()">
+        {{ sw.damageDice }} {{ sw.damageType }}
+        @if (sw.versatileDamage) { ({{ sw.versatileDamage }} {{ localeService.t('weapon_versatile_label') }}) }
+      </p>
+    </div>
+    <div>
+      <span [class]="labelClass()">{{ localeService.t('weapon_col_range') }}</span>
+      <p [class]="valueClass()">
+        @if (sw.rangeCategory === 'ranged') { {{ sw.normalRange }}/{{ sw.longRange }} } @else { {{ localeService.t('weapon_range_melee') }} }
+      </p>
+    </div>
+    <div>
+      <span [class]="labelClass()">{{ localeService.t('weapon_col_weight') }}</span>
+      <p [class]="valueClass()">{{ sw.weight }} kg</p>
+    </div>
+    <div>
+      <span [class]="labelClass()">{{ localeService.t('quantity_label') }}</span>
+      <p [class]="valueClass()">{{ sw.quantity }}</p>
+    </div>
+    @if (sw.costValue != null) {
+      <div>
+        <span [class]="labelClass()">{{ localeService.t('weapon_col_cost') }}</span>
+        <p [class]="valueClass()">{{ sw.costValue }} {{ localeService.t('coin_unit_' + sw.costUnit) }}</p>
+      </div>
+    }
+    @if (sw.properties) {
+      <div [class.col-span-2]="variant() === 'mobile'">
+        <span [class]="labelClass()">{{ localeService.t('weapon_properties_label') }}</span>
+        <p [class]="valueClass()">{{ sw.properties }}</p>
+      </div>
+    }
+  </div>
+}

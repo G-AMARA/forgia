@@ -1,0 +1,22 @@
+<div class="flex gap-1 overflow-x-auto whitespace-nowrap">
+  <button class="px-4 py-2 font-display text-sm border-b-4 transition-colors" [class.border-fantasy-gold]="active() === 'general'" [class.border-transparent]="active() !== 'general'" (click)="tabChange.emit('general')">
+    {{ localeService.t('subtab_general') }}
+  </button>
+  <button class="px-4 py-2 font-display text-sm border-b-4 transition-colors" [class.border-fantasy-gold]="active() === 'combat'" [class.border-transparent]="active() !== 'combat'" (click)="tabChange.emit('combat')">
+    {{ localeService.t('subtab_combat') }}
+  </button>
+  <button class="px-4 py-2 font-display text-sm border-b-4 transition-colors" [class.border-fantasy-gold]="active() === 'inventory'" [class.border-transparent]="active() !== 'inventory'" (click)="tabChange.emit('inventory')">
+    {{ localeService.t('subtab_inventory') }}
+  </button>
+  @if (hasSpells()) {
+    <button class="px-4 py-2 font-display text-sm border-b-4 transition-colors" [class.border-fantasy-gold]="active() === 'spells'" [class.border-transparent]="active() !== 'spells'" (click)="tabChange.emit('spells')">
+      {{ localeService.t('subtab_spells') }}
+    </button>
+  }
+  <button class="px-4 py-2 font-display text-sm border-b-4 transition-colors" [class.border-fantasy-gold]="active() === 'weapons'" [class.border-transparent]="active() !== 'weapons'" (click)="tabChange.emit('weapons')">
+    {{ localeService.t('subtab_weapons') }}
+  </button>
+  <button class="px-4 py-2 font-display text-sm border-b-4 transition-colors" [class.border-fantasy-gold]="active() === 'diary'" [class.border-transparent]="active() !== 'diary'" (click)="tabChange.emit('diary')">
+    {{ localeService.t('subtab_diary') }}
+  </button>
+</div>

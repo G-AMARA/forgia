@@ -1,0 +1,37 @@
+@if (context.character()) {
+  <app-card contentClass="space-y-4">
+    @if (spells.spellcastingInfo(); as info) {
+      <div class="bg-fantasy-black/60 border border-gold rounded-lg p-3 text-sm space-y-1">
+        <p>
+          <strong>{{ localeService.t('cantrips_known_label') }}:</strong>
+          {{ spells.knownCantripsCount() }}/{{ info.cantripsKnown }}
+        </p>
+        @if (info.spellsKnownLimit !== null) {
+          <p>
+            <strong>{{ localeService.t('spells_know_label') }}:</strong>
+            {{ spells.knownLeveledSpellsCount() }}/{{ info.spellsKnownLimit }}
+          </p>
+        }
+        <p>
+          <strong>{{ localeService.t('spell_slots_label') }}:</strong>
+          @if (info.slots.length === 0) {
+            {{ localeService.t('no_spell_slots_label') }}
+          } @else {
+            @for (slot of info.slots; track slot.level; let last = $last) {
+              {{ slot.count }}× {{ localeService.t('spell_level_label') }} {{ slot.level }}@if (!last) {, }
+            }
+          }
+        </p>
+        @if (info.slots.length > 0) {
+          <p class="text-xs opacity-70">{{ localeService.t('recharge_label') }}: {{ localeService.t('recharge_' + info.recharge) }}</p>
+        }
+      </div>
+    }
+
+    @if (!context.readOnly()) {
+      <app-character-spell-add-form />
+    }
+
+    <app-character-spell-list />
+  </app-card>
+}
