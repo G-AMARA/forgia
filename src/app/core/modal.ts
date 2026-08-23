@@ -1,51 +1,88 @@
 import { Injectable, signal } from '@angular/core';
+import { LocaleService } from './locale';
 
-type ModalKind = 'confirm' | 'error' | 'success';
+type ModalVariant = 'confirm' | 'success' | 'error' | 'warning';
 
-interface ModalState {
-  kind: ModalKind;
+export interface UtilityModalState {
   title: string;
-  message: string;
+  modalMessage: string;
+  imageSrc?: string | null;
+  imageAlt?: string | null;
+  variant: ModalVariant;
   confirmLabel?: string;
   cancelLabel?: string;
+  showCancelButton?: boolean;
 }
 
-// Sostituisce window.confirm() e i messaggi di errore/successo sparsi inline nei
-// template: un'unica modale globale (montata in app.html), pilotata da questo
-// signal. confirm() resta in sospeso finché l'utente non risponde da AppModal.
 @Injectable({ providedIn: 'root' })
 export class Modal {
-  readonly state = signal<ModalState | null>(null);
-
+  constructor(private localeService: LocaleService) {}
+  [x: string]: any;
+  readonly state = signal<UtilityModalState | null>(null);
   private resolver: ((value: boolean) => void) | null = null;
 
   confirm(
     message: string,
-    options?: { title?: string; confirmLabel?: string; cancelLabel?: string }
+    options?:{
+      title?: string,
+      confirmLabel?: string,
+      cancelLabel?: string
+    }
   ): Promise<boolean> {
-    this.resolver?.(false); // una eventuale conferma già in sospeso viene annullata
+    this.resolver?.(false);
+
     this.state.set({
-      kind: 'confirm',
-      title: options?.title ?? 'Conferma',
-      message,
-      confirmLabel: options?.confirmLabel,
-      cancelLabel: options?.cancelLabel,
+      title: options?.title ?? this.localeService.t('generic_modal_alert_title'),
+      modalMessage: message,
+      imageSrc: 'modal-png/allert-goblin.png',
+      imageAlt: this.localeService.t('generic_modal_error_alt_img'),
+      variant: 'confirm',
+      confirmLabel: options?.confirmLabel ?? this.localeService.t('confirmLabel') ,
+      cancelLabel: options?.cancelLabel ?? this.localeService.t('cancelLabel'),
+      showCancelButton: true,
+    });
+
+    return new Promise<boolean>((resolve) => {
+      this.resolver = resolve;
+    });
+  }
+
+  error(message: string, title = this.localeService.t('generic_modal_error_title')): Promise<boolean> {
+    this.resolver?.(false);
+    this.resolver = null;
+
+    this.state.set({
+      title: title ?? this.localeService.t('generic_modal_error_title'),
+      imageSrc: 'modal-png/error-goblin.png',
+      imageAlt: this.localeService.t('generic_modal_error_alt_img'),
+      modalMessage: message,
+      variant: 'error',
+      confirmLabel:  this.localeService.t('confirmLabel'),
+      cancelLabel: this.localeService.t('cancelLabel'),
+      showCancelButton: false,
     });
     return new Promise<boolean>((resolve) => {
       this.resolver = resolve;
     });
   }
 
-  error(message: string, title = 'Errore') {
+  success(message: string, title = this.localeService.t('generic_modal_success_title')): Promise<boolean> {
     this.resolver?.(false);
     this.resolver = null;
-    this.state.set({ kind: 'error', title, message });
-  }
 
-  success(message: string, title = 'Fatto') {
-    this.resolver?.(false);
-    this.resolver = null;
-    this.state.set({ kind: 'success', title, message });
+    this.state.set({
+      title: title ?? this.localeService.t('generic_modal_success_title'),
+      imageSrc: 'modal-png/success-goblin.png',
+      imageAlt: this.localeService.t('generic_modal_success_alt_img'),
+      modalMessage: message,
+      variant: 'success',
+      confirmLabel: this.localeService.t('confirmLabel'),
+      cancelLabel: this.localeService.t('cancelLabel'),
+      showCancelButton: false,
+    });
+    return new Promise<boolean>((resolve) => {
+      this.resolver = resolve;
+    });
   }
 
   respond(result: boolean) {
@@ -54,7 +91,6 @@ export class Modal {
     this.state.set(null);
   }
 
-  // Chiudere senza scegliere (click fuori, es.) equivale sempre ad annullare, mai a confermare.
   dismiss() {
     this.respond(false);
   }

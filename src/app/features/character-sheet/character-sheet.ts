@@ -21,6 +21,7 @@ import { Card } from '../../shared/card/card';
 import { SpellLevelSeal } from '../../shared/spell-level-seal/spell-level-seal';
 import { SpellSchoolIcon } from '../../shared/spell-school-icon/spell-school-icon';
 import { DamageTypeIcon } from '../../shared/damage-type-icon/damage-type-icon';
+import { GenericModalComponent } from '../../shared/modal/generic-adviser-modal/generic-adviser-modal';
 
 type SubTab = 'general' | 'combat' | 'inventory' | 'spells' | 'weapons' | 'diary';
 
@@ -38,7 +39,7 @@ function ensureSwiperRegistered(): Promise<void> {
 @Component({
   selector: 'app-character-sheet',
   standalone: true,
-  imports: [FormsModule, Card, SpellLevelSeal, SpellSchoolIcon, DamageTypeIcon],
+  imports: [FormsModule, Card, SpellLevelSeal, SpellSchoolIcon, DamageTypeIcon, GenericModalComponent],
   templateUrl: './character-sheet.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA], // richiesto da <swiper-container>/<swiper-slide> nel tab Taccuino
 })
@@ -47,7 +48,13 @@ export class CharacterSheet implements OnInit {
   private contentStore = inject(ContentStore);
   private auth = inject(Auth);
   protected localeService = inject(LocaleService);
-  private modal = inject(Modal);
+  protected modal = inject(Modal);
+  protected localModalTitle = signal('');
+  protected localModalImageSrc = signal<string | null>(null);
+  protected localModalImageAlt = signal<string | null>(null);
+  protected localModalCancelLabel = signal('');
+  protected localModalConfirmLabel = signal('');
+  protected localModalVariant = signal<'success' | 'error' | 'warning' | 'confirm'>('confirm');
 
   // Se valorizzato (es. dalla rotta /scheda-personaggio/:id), la scheda mostra
   // quel personaggio specifico invece del personaggio dell'utente loggato
@@ -61,12 +68,7 @@ export class CharacterSheet implements OnInit {
   protected classImagePath = computed(() =>
     getClassImagePath(this.character()?.class_name, this.character()?.sex)
   );
-  protected getStatLabelImagePath = getStatLabelImagePath;
-  protected getCoinImagePath = getCoinImagePath;
-  // Illustrazione di sfondo del "libro" dettagli arma (tab Armi): cornice dorata + doppia
-  // pagina, vedi .book-container in tailwind.css.
-  protected weaponBookImage = 'themes/LIBRO.png';
-
+ 
   // Progresso XP verso il prossimo livello, per la barra nel banner: ricalcolato da
   // level + experience_points del personaggio corrente (soglie standard SRD).
   protected xpProgress = computed(() => {
@@ -82,18 +84,147 @@ export class CharacterSheet implements OnInit {
     this.character()?.owner_id !== this.auth.user()?.id && !this.auth.isAdmin()
   );
 
-  ngOnInit() {
-    ensureSwiperRegistered();
-    // Ricarica sempre all'apertura della scheda (non solo al cambio di campagna, l'unico
-    // altro momento in cui CharacterStore la aggiorna da solo): senza, un rinominare razza/
-    // sottoclasse/background/ecc. da Gestione mentre la campagna resta la stessa non si
-    // vedrebbe finché non si ricarica l'intera pagina.
-    if (this.characterId) {
-      this.characterStore.loadCharacterById(this.characterId);
-    } else {
-      this.characterStore.loadMyCharacter();
+  availableEquipment = computed(() => {
+    const term = this.equipmentSearchTerm().trim().toLowerCase();
+    const equipment = this.allEquipment();
+    if (!term) return equipment;
+    return equipment.filter((item: any) => item.name.toLowerCase().includes(term));
+  });
+  
+  protected diaryPages = computed(() => {
+    const locale = this.localeService.locale() === 'it' ? 'it-IT' : 'en-US';
+    return this.characterStore.diaryEntries().map((entry) => {
+      // Parsing manuale (non new Date(entry.entry_date) diretto) per evitare che la data
+      // "YYYY-MM-DD" venga letta come UTC e scali di un giorno nei fusi orari negativi.
+      const [y, m, d] = entry.entry_date.split('-').map(Number);
+      const dateLabel = new Date(y, m - 1, d).toLocaleDateString(locale, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      return { id: entry.id, content: entry.content, title: entry.title, dateLabel, rawDate: entry.entry_date };
+    });
+  });
+  
+  availableWeaponsCatalog = computed(() => this.allWeaponsCatalog());
+
+  selectedWeaponDetail = computed(() => {
+    const c = this.character();
+    if (!c) return null;
+    return c.weapons.find((w) => w.rowId === this.selectedWeaponRowId()) ?? null;
+  });
+
+  // Nome inglese canonico della classe del personaggio, risalito dal suo id: sia
+  // getSpellcastingInfo() sia spell.raw.classes ragionano sul nome base SRD in inglese,
+  // mentre c.class_name può essere tradotto (vedi character-store.ts) e non va usato qui.
+  private canonicalClassName = computed(() => {
+    const c = this.character();
+    if (!c || !c.class_id) return null;
+    return this.classesContent().find((cls: any) => cls.id === c.class_id)?.raw?.name ?? null;
+  });
+
+  // Slot incantesimo e trucchetti disponibili, calcolati da classe+livello secondo
+  // le tabelle standard SRD (solo per le 8 classi incantatrici canoniche: null altrimenti).
+  spellcastingInfo = computed(() => {
+    const c = this.character();
+    if (!c) return null;
+    return getSpellcastingInfo(this.canonicalClassName(), c.level, c.ability_scores);
+  });
+
+  // Incantesimi disponibili per la classe del personaggio, prima dei filtri di ricerca:
+  // serve sia per popolare le opzioni scuola/livello sia come base per il filtro.
+  private classSpells = computed(() => {
+    const canonicalClassName = this.canonicalClassName();
+    if (!canonicalClassName) return [];
+    return this.allSpells().filter((spell: any) =>
+      (spell.raw.classes ?? []).some((cn: any) => cn.name === canonicalClassName)
+    );
+  });
+
+  // value = school grezzo (inglese, usato per il filtro), label = tradotto per la UI.
+  availableSpellSchools = computed(() => {
+    const locale = this.localeService.locale();
+    const schools = [...new Set(this.classSpells().map((s: any) => s.raw.school).filter(Boolean))];
+    return schools
+      .map((school: string) => ({ value: school, label: translateSpellSchool(school, locale) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  });
+
+  availableSpellLevels = computed(() =>
+    [...new Set(this.classSpells().map((s: any) => s.raw.level ?? 0))].sort((a: number, b: number) => a - b)
+  );
+
+  availableClassSpells = computed(() => {
+    const term = this.spellSearchTerm().trim().toLowerCase();
+    const school = this.spellFilterSchool();
+    const level = this.spellFilterLevel();
+
+    return this.classSpells().filter((spell: any) => {
+      if (
+        term &&
+        !spell.name.toLowerCase().includes(term) &&
+        !(spell.description ?? '').toLowerCase().includes(term)
+      ) {
+        return false;
+      }
+      if (school && spell.raw.school !== school) return false;
+      if (level !== '' && String(spell.raw.level ?? 0) !== level) return false;
+      return true;
+    });
+  });
+
+  // Gli incantesimi del personaggio arrivano da una join diretta (characters.spells)
+  // che non applica le traduzioni: qui li arricchiamo incrociandoli con il catalogo
+  // già tradotto (allSpells), da cui prendiamo anche i dettagli per le card.
+  groupedCharacterSpells = computed(() => {
+    const c = this.character();
+    if (!c) return [];
+
+    const catalogMap = new Map(this.allSpells().map((s: any) => [s.id, s]));
+    const groups = new Map<number, any[]>();
+    const locale = this.localeService.locale();
+
+    for (const spell of c.spells) {
+      const detail = catalogMap.get(spell.spellId);
+      const level = detail?.raw?.level ?? spell.level ?? 0;
+      const schoolRaw = detail?.raw?.school ?? spell.school ?? '';
+      const entry = {
+        rowId: spell.rowId,
+        name: detail?.name ?? spell.name,
+        level,
+        school: translateSpellSchool(schoolRaw, locale),
+        schoolRaw,
+        castingTime: detail?.raw?.casting_time ?? null,
+        range: detail?.raw?.range ?? null,
+        duration: detail?.raw?.duration ?? null,
+        damageEffect: detail?.raw?.damage_effect ?? null,
+        description: detail?.description ?? null,
+        prepared: spell.prepared,
+      };
+      if (!groups.has(level)) groups.set(level, []);
+      groups.get(level)!.push(entry);
     }
-  }
+
+    return Array.from(groups.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([level, spells]) => ({
+        level,
+        label:
+          level === 0
+            ? this.localeService.t('cantrips_label')
+            : `${this.localeService.t('spell_level_label')} ${level}`,
+        spells,
+      }));
+  });
+
+  private allWeaponsCatalog = this.contentStore.getContent('weapons');
+
+  protected getStatLabelImagePath = getStatLabelImagePath;
+  protected getCoinImagePath = getCoinImagePath;
+  // Illustrazione di sfondo del "libro" dettagli arma (tab Armi): cornice dorata + doppia
+  // pagina, vedi .book-container in tailwind.css.
+  protected weaponBookImage = 'themes/LIBRO.png';
+
   protected skills = SKILLS;
   // Competenze divise in 3 colonne contigue (lette dall'alto in basso per colonna, poi si
   // passa alla successiva): serve nel tab Abilità per i separatori orizzontali "per colonna"
@@ -105,11 +236,6 @@ export class CharacterSheet implements OnInit {
   protected abilityKeys: ('str' | 'dex' | 'cos' | 'int' | 'wis' | 'cha')[] = [
     'str', 'dex', 'cos', 'int', 'wis', 'cha',
   ];
-
-  private chunkIntoColumns<T>(items: T[], columns: number): T[][] {
-    const perColumn = Math.ceil(items.length / columns);
-    return Array.from({ length: columns }, (_, i) => items.slice(i * perColumn, (i + 1) * perColumn));
-  }
 
   activeSubTab = signal<SubTab>('general');
 
@@ -137,6 +263,8 @@ export class CharacterSheet implements OnInit {
   damageImmunitiesText = '';
   conditionImmunitiesText = '';
   backstory = '';
+  modaldata : any;
+  modalItemName = '';
 
   private allEquipment = this.contentStore.getContent('equipment');
   private allSpells = this.contentStore.getContent('spells');
@@ -170,6 +298,85 @@ export class CharacterSheet implements OnInit {
   // Cromatico), ricostruiti da applied_bonus al caricamento (vedi effect() sotto).
   freeBonuses: Record<string, number> = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
 
+  selectedEquipmentId = '';
+  addQuantity = 1;
+  // Quantità da rimuovere per ogni riga d'inventario, tenuta per rowId perché ogni
+  // oggetto ha il proprio input accanto al bottone Rimuovi (default 1 finché non toccato).
+  private removeQuantities: Record<string, number> = {};
+  selectedSpellIdToAdd = '';
+  spellSearchTerm = signal('');
+  spellFilterSchool = signal('');
+  spellFilterLevel = signal('');
+
+  avatarUploading = signal(false);
+
+  isModalOpen = signal(false);
+  identityModalOpen = signal(false);
+  armorModalOpen = signal(false);
+  mountModalOpen = signal(false);
+
+  // Maestria (Expertise 5e): raddoppia il bonus competenza, al massimo su 2 competenze tra
+  // quelle in cui si è già competenti (qualunque sia la fonte: libera, background, classe).
+  // Non esclusiva del Ladro nelle regole 5e (Bardo e alcune sottoclassi la hanno), quindi
+  // disponibile per qualunque personaggio invece che ristretta a una classe specifica.
+  static readonly MAX_SKILL_MASTERY = 2;
+
+  newDiaryEntryText = '';
+  newDiaryEntryDate = this.todayDateString();
+  newDiaryEntryTitle = '';
+  // Non null mentre si modifica una pagina già scritta (vedi startEditDiaryEntry): in
+  // quel caso submitDiaryEntry() aggiorna quella riga invece di crearne una nuova.
+  editingDiaryEntryId: string | null = null;
+
+  equipmentSearchTerm = signal('');
+
+
+  selectedWeaponId = '';
+  weaponQuantity = 1;
+
+  constructor() {
+    effect(() => {
+      const c = this.character();
+      if (c) {
+        this.resetIdentityFields(c);
+        this.currentHp = c.current_hp ?? 0;
+        this.maxHp = c.max_hp ?? 0;
+        this.copper = c.copper ?? 0;
+        this.silver = c.silver ?? 0;
+        this.electrum = c.electrum ?? 0;
+        this.gold = c.gold ?? 0;
+        this.platinum = c.platinum ?? 0;
+        this.resetArmorFields(c);
+        this.resetMountFields(c);
+        this.appliedBonus = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
+        this.skillProficiencies = new Set(c.skill_proficiencies);
+        this.skillMastery = new Set(c.skill_mastery);
+        this.resistanceProficiencies = new Set(c.damage_resistances);
+        this.damageImmunitiesText = c.damage_immunities.join(', ');
+        this.conditionImmunitiesText = c.condition_immunities.join(', ');
+        this.backstory = c.notes ?? '';
+      }
+    });
+  }
+
+  ngOnInit() {
+    ensureSwiperRegistered();
+    // Ricarica sempre all'apertura della scheda (non solo al cambio di campagna, l'unico
+    // altro momento in cui CharacterStore la aggiorna da solo): senza, un rinominare razza/
+    // sottoclasse/background/ecc. da Gestione mentre la campagna resta la stessa non si
+    // vedrebbe finché non si ricarica l'intera pagina.
+    if (this.characterId) {
+      this.characterStore.loadCharacterById(this.characterId);
+    } else {
+      this.characterStore.loadMyCharacter();
+    }
+  }
+
+  private chunkIntoColumns<T>(items: T[], columns: number): T[][] {
+    const perColumn = Math.ceil(items.length / columns);
+    return Array.from({ length: columns }, (_, i) => items.slice(i * perColumn, (i + 1) * perColumn));
+  }
+  
   // Sottoclassi disponibili per la classe scelta, sbloccate al livello selezionato o prima.
   // Metodo (non computed): identityClassId/identityLevel sono campi ngModel, non
   // signal, quindi un computed() non li tracciherebbe e resterebbe bloccato al
@@ -197,22 +404,6 @@ export class CharacterSheet implements OnInit {
     this.identitySubraceId = subraceId;
     this.freeBonuses = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0 };
   }
-
-  selectedEquipmentId = '';
-  addQuantity = 1;
-  // Quantità da rimuovere per ogni riga d'inventario, tenuta per rowId perché ogni
-  // oggetto ha il proprio input accanto al bottone Rimuovi (default 1 finché non toccato).
-  private removeQuantities: Record<string, number> = {};
-  selectedSpellIdToAdd = '';
-  spellSearchTerm = signal('');
-  spellFilterSchool = signal('');
-  spellFilterLevel = signal('');
-
-  avatarUploading = signal(false);
-
-  // Controlla la modale di modifica identità (tab Generale): i campi restano quelli
-  // esistenti (identityName, identityRaceId, ...), la modale è solo un contenitore.
-  identityModalOpen = signal(false);
 
   // Popola i campi identità modificabili a partire dal personaggio salvato: usato sia
   // al caricamento (effect sotto) sia per annullare le modifiche in corso quando si
@@ -242,23 +433,19 @@ export class CharacterSheet implements OnInit {
     );
   }
 
-  openIdentityModal() {
-    this.identityModalOpen.set(true);
-  }
-
   cancelIdentityEdit() {
     this.resetIdentityFields(this.character());
     this.identityModalOpen.set(false);
   }
 
-  // Stessa idea di identityModalOpen/resetIdentityFields, per la modale di modifica
-  // dell'armatura indossata (tab Equipaggiamento).
-  armorModalOpen = signal(false);
-
   private resetArmorFields(c: ReturnType<typeof this.character>) {
     if (!c) return;
     this.selectedArmorId = c.equipped_armor_id ?? '';
     this.shieldEquipped = c.shield_equipped;
+  }
+
+  openIdentityModal() {
+    this.identityModalOpen.set(true);
   }
 
   openArmorModal() {
@@ -269,10 +456,6 @@ export class CharacterSheet implements OnInit {
     this.resetArmorFields(this.character());
     this.armorModalOpen.set(false);
   }
-
-  // Stessa idea di armorModalOpen/resetArmorFields, per la modale di modifica della
-  // cavalcatura/veicolo posseduto (tab Equipaggiamento).
-  mountModalOpen = signal(false);
 
   private resetMountFields(c: ReturnType<typeof this.character>) {
     if (!c) return;
@@ -286,31 +469,6 @@ export class CharacterSheet implements OnInit {
   cancelMountEdit() {
     this.resetMountFields(this.character());
     this.mountModalOpen.set(false);
-  }
-
-  constructor() {
-    effect(() => {
-      const c = this.character();
-      if (c) {
-        this.resetIdentityFields(c);
-        this.currentHp = c.current_hp ?? 0;
-        this.maxHp = c.max_hp ?? 0;
-        this.copper = c.copper ?? 0;
-        this.silver = c.silver ?? 0;
-        this.electrum = c.electrum ?? 0;
-        this.gold = c.gold ?? 0;
-        this.platinum = c.platinum ?? 0;
-        this.resetArmorFields(c);
-        this.resetMountFields(c);
-        this.appliedBonus = { str: 0, dex: 0, cos: 0, int: 0, wis: 0, cha: 0, ...c.applied_bonus };
-        this.skillProficiencies = new Set(c.skill_proficiencies);
-        this.skillMastery = new Set(c.skill_mastery);
-        this.resistanceProficiencies = new Set(c.damage_resistances);
-        this.damageImmunitiesText = c.damage_immunities.join(', ');
-        this.conditionImmunitiesText = c.condition_immunities.join(', ');
-        this.backstory = c.notes ?? '';
-      }
-    });
   }
 
   setSubTab(tab: SubTab) {
@@ -451,12 +609,6 @@ export class CharacterSheet implements OnInit {
   isSkillChecked(key: string): boolean {
     return this.isSkillLocked(key) || this.skillProficiencies.has(key);
   }
-
-  // Maestria (Expertise 5e): raddoppia il bonus competenza, al massimo su 2 competenze tra
-  // quelle in cui si è già competenti (qualunque sia la fonte: libera, background, classe).
-  // Non esclusiva del Ladro nelle regole 5e (Bardo e alcune sottoclassi la hanno), quindi
-  // disponibile per qualunque personaggio invece che ristretta a una classe specifica.
-  static readonly MAX_SKILL_MASTERY = 2;
 
   toggleSkillMastery(key: string) {
     if (!this.isSkillChecked(key)) return;
@@ -783,9 +935,8 @@ export class CharacterSheet implements OnInit {
       this.modal.error(error.message);
       return;
     }
-
     this.identityModalOpen.set(false);
-    this.showSaved();
+    this.modal.success(this.localeService.t('saved_message'));
   }
 
   async saveCombat() {
@@ -805,9 +956,8 @@ export class CharacterSheet implements OnInit {
       damageImmunities: this.splitList(this.damageImmunitiesText),
       conditionImmunities: this.splitList(this.conditionImmunitiesText),
     });
-
     this.armorModalOpen.set(false);
-    this.showSaved();
+    this.modal.success(this.localeService.t('saved_message'));  
   }
 
   async saveMount() {
@@ -821,15 +971,16 @@ export class CharacterSheet implements OnInit {
     }
 
     this.mountModalOpen.set(false);
-    this.showSaved();
+    this.modal.success(this.localeService.t('saved_message'));
   }
 
   async saveBackstory() {
     const c = this.character();
     if (!c || this.readOnly()) return;
     await this.characterStore.updateNotes(c.id, this.backstory);
-    this.showSaved();
+     this.modal.success(this.localeService.t('saved_message'));
   }
+
 
   // Taccuino: ogni riga è una pagina a sé con la propria data (entry_date), modificabile
   // in fase di scrittura invece che dedotta automaticamente da created_at — così si può
@@ -842,28 +993,6 @@ export class CharacterSheet implements OnInit {
     const d = String(now.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   }
-
-  newDiaryEntryText = '';
-  newDiaryEntryDate = this.todayDateString();
-  newDiaryEntryTitle = '';
-  // Non null mentre si modifica una pagina già scritta (vedi startEditDiaryEntry): in
-  // quel caso submitDiaryEntry() aggiorna quella riga invece di crearne una nuova.
-  editingDiaryEntryId: string | null = null;
-
-  protected diaryPages = computed(() => {
-    const locale = this.localeService.locale() === 'it' ? 'it-IT' : 'en-US';
-    return this.characterStore.diaryEntries().map((entry) => {
-      // Parsing manuale (non new Date(entry.entry_date) diretto) per evitare che la data
-      // "YYYY-MM-DD" venga letta come UTC e scali di un giorno nei fusi orari negativi.
-      const [y, m, d] = entry.entry_date.split('-').map(Number);
-      const dateLabel = new Date(y, m - 1, d).toLocaleDateString(locale, {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
-      return { id: entry.id, content: entry.content, title: entry.title, dateLabel, rawDate: entry.entry_date };
-    });
-  });
 
   async submitDiaryEntry() {
     const c = this.character();
@@ -926,15 +1055,11 @@ export class CharacterSheet implements OnInit {
       gold: this.gold,
       platinum: this.platinum,
     });
-    this.showSaved();
+    this.modal.success(this.localeService.t('saved_message'));
   }
 
   private splitList(text: string): string[] {
     return text.split(',').map((s) => s.trim()).filter(Boolean);
-  }
-
-  private showSaved() {
-    this.modal.success(this.localeService.t('saved_message'));
   }
 
   async onAvatarSelected(event: Event) {
@@ -956,15 +1081,6 @@ export class CharacterSheet implements OnInit {
     input.value = '';
   }
 
-  equipmentSearchTerm = signal('');
-
-  availableEquipment = computed(() => {
-    const term = this.equipmentSearchTerm().trim().toLowerCase();
-    const equipment = this.allEquipment();
-    if (!term) return equipment;
-    return equipment.filter((item: any) => item.name.toLowerCase().includes(term));
-  });
-
   async addItem() {
     const c = this.character();
     if (!c || !this.selectedEquipmentId || this.readOnly()) return;
@@ -985,12 +1101,14 @@ export class CharacterSheet implements OnInit {
     this.removeQuantities[rowId] = Math.max(1, Math.floor(value) || 1);
   }
 
-  async removeItem(rowId: string, currentQuantity: number, name: string) {
+  async removeItem(rowId: string, currentQuantity: number, customQtyToRemove?: number) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_item')} "${name}"?`);
-    if (!confirmed) return;
-    const quantityToRemove = Math.min(this.removeQty(rowId), currentQuantity);
+    
+    // Utilizza la quantità personalizzata passata (es. dalla modale) oppure ripiega sull'input della riga
+    const qtySelected = customQtyToRemove ?? this.removeQty(rowId);
+    const quantityToRemove = Math.min(qtySelected, currentQuantity);
+
     const { error } = await this.characterStore.removeInventoryItem(c.id, rowId, quantityToRemove, currentQuantity);
     if (error) {
       this.modal.error(error.message);
@@ -1005,12 +1123,6 @@ export class CharacterSheet implements OnInit {
     const { error } = await this.characterStore.toggleEquipped(c.id, rowId, !currentlyEquipped);
     if (error) this.modal.error(error.message);
   }
-
-  private allWeaponsCatalog = this.contentStore.getContent('weapons');
-  availableWeaponsCatalog = computed(() => this.allWeaponsCatalog());
-
-  selectedWeaponId = '';
-  weaponQuantity = 1;
 
   async addWeapon() {
     const c = this.character();
@@ -1034,12 +1146,14 @@ export class CharacterSheet implements OnInit {
     return abilities.map((a) => this.localeService.t('ability_' + a)).join(' ' + this.localeService.t('or_label') + ' ');
   }
 
-  async removeWeapon(rowId: string, name: string) {
+  //per ora any poi tipizzare con interfaccia weapon
+  async removeWeapon(weapon: any) {
+    console.log(weapon)
     const c = this.character();
     if (!c || this.readOnly()) return;
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_weapon')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_weapon')} ${weapon.name}?`)
     if (!confirmed) return;
-    const { error } = await this.characterStore.removeWeapon(c.id, rowId);
+    const { error } = await this.characterStore.removeWeapon(c.id, weapon.rowId);
     if (error) this.modal.error(error.message);
   }
 
@@ -1051,29 +1165,6 @@ export class CharacterSheet implements OnInit {
     this.selectedWeaponRowId.update((current) => (current === rowId ? null : rowId));
   }
 
-  selectedWeaponDetail = computed(() => {
-    const c = this.character();
-    if (!c) return null;
-    return c.weapons.find((w) => w.rowId === this.selectedWeaponRowId()) ?? null;
-  });
-
-  // Nome inglese canonico della classe del personaggio, risalito dal suo id: sia
-  // getSpellcastingInfo() sia spell.raw.classes ragionano sul nome base SRD in inglese,
-  // mentre c.class_name può essere tradotto (vedi character-store.ts) e non va usato qui.
-  private canonicalClassName = computed(() => {
-    const c = this.character();
-    if (!c || !c.class_id) return null;
-    return this.classesContent().find((cls: any) => cls.id === c.class_id)?.raw?.name ?? null;
-  });
-
-  // Slot incantesimo e trucchetti disponibili, calcolati da classe+livello secondo
-  // le tabelle standard SRD (solo per le 8 classi incantatrici canoniche: null altrimenti).
-  spellcastingInfo = computed(() => {
-    const c = this.character();
-    if (!c) return null;
-    return getSpellcastingInfo(this.canonicalClassName(), c.level, c.ability_scores);
-  });
-
   knownCantripsCount(): number {
     return this.character()?.spells.filter((s) => s.level === 0).length ?? 0;
   }
@@ -1081,92 +1172,6 @@ export class CharacterSheet implements OnInit {
   knownLeveledSpellsCount(): number {
     return this.character()?.spells.filter((s) => s.level > 0).length ?? 0;
   }
-
-  // Incantesimi disponibili per la classe del personaggio, prima dei filtri di ricerca:
-  // serve sia per popolare le opzioni scuola/livello sia come base per il filtro.
-  private classSpells = computed(() => {
-    const canonicalClassName = this.canonicalClassName();
-    if (!canonicalClassName) return [];
-    return this.allSpells().filter((spell: any) =>
-      (spell.raw.classes ?? []).some((cn: any) => cn.name === canonicalClassName)
-    );
-  });
-
-  // value = school grezzo (inglese, usato per il filtro), label = tradotto per la UI.
-  availableSpellSchools = computed(() => {
-    const locale = this.localeService.locale();
-    const schools = [...new Set(this.classSpells().map((s: any) => s.raw.school).filter(Boolean))];
-    return schools
-      .map((school: string) => ({ value: school, label: translateSpellSchool(school, locale) }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  });
-
-  availableSpellLevels = computed(() =>
-    [...new Set(this.classSpells().map((s: any) => s.raw.level ?? 0))].sort((a: number, b: number) => a - b)
-  );
-
-  availableClassSpells = computed(() => {
-    const term = this.spellSearchTerm().trim().toLowerCase();
-    const school = this.spellFilterSchool();
-    const level = this.spellFilterLevel();
-
-    return this.classSpells().filter((spell: any) => {
-      if (
-        term &&
-        !spell.name.toLowerCase().includes(term) &&
-        !(spell.description ?? '').toLowerCase().includes(term)
-      ) {
-        return false;
-      }
-      if (school && spell.raw.school !== school) return false;
-      if (level !== '' && String(spell.raw.level ?? 0) !== level) return false;
-      return true;
-    });
-  });
-
-  // Gli incantesimi del personaggio arrivano da una join diretta (characters.spells)
-  // che non applica le traduzioni: qui li arricchiamo incrociandoli con il catalogo
-  // già tradotto (allSpells), da cui prendiamo anche i dettagli per le card.
-  groupedCharacterSpells = computed(() => {
-    const c = this.character();
-    if (!c) return [];
-
-    const catalogMap = new Map(this.allSpells().map((s: any) => [s.id, s]));
-    const groups = new Map<number, any[]>();
-    const locale = this.localeService.locale();
-
-    for (const spell of c.spells) {
-      const detail = catalogMap.get(spell.spellId);
-      const level = detail?.raw?.level ?? spell.level ?? 0;
-      const schoolRaw = detail?.raw?.school ?? spell.school ?? '';
-      const entry = {
-        rowId: spell.rowId,
-        name: detail?.name ?? spell.name,
-        level,
-        school: translateSpellSchool(schoolRaw, locale),
-        schoolRaw,
-        castingTime: detail?.raw?.casting_time ?? null,
-        range: detail?.raw?.range ?? null,
-        duration: detail?.raw?.duration ?? null,
-        damageEffect: detail?.raw?.damage_effect ?? null,
-        description: detail?.description ?? null,
-        prepared: spell.prepared,
-      };
-      if (!groups.has(level)) groups.set(level, []);
-      groups.get(level)!.push(entry);
-    }
-
-    return Array.from(groups.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([level, spells]) => ({
-        level,
-        label:
-          level === 0
-            ? this.localeService.t('cantrips_label')
-            : `${this.localeService.t('spell_level_label')} ${level}`,
-        spells,
-      }));
-  });
 
   async addSpell() {
     const c = this.character();
@@ -1198,10 +1203,14 @@ export class CharacterSheet implements OnInit {
     this.selectedSpellIdToAdd = '';
   }
 
-  async removeSpell(rowId: string) {
+  async removeSpell(spell: any) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    const { error } = await this.characterStore.removeSpellFromCharacter(c.id, rowId);
+
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_character_spell')} ${spell.name}?`);
+    if (!confirmed) return;
+
+    const { error } = await this.characterStore.removeSpellFromCharacter(c.id, spell.rowId);
     if (error) this.modal.error(error.message);
   }
 
@@ -1210,5 +1219,43 @@ export class CharacterSheet implements OnInit {
     if (!c || this.readOnly()) return;
     const { error } = await this.characterStore.togglePrepared(c.id, rowId, !currentlyPrepared);
     if (error) this.modal.error(error.message);
+  }
+
+  openModal(data?: any, quantityToRemove?: number) {
+    const qty = quantityToRemove ?? data.quantity ?? 1;
+    // Se la quantità è maggiore di 1, mostriamo il moltiplicatore nel titolo della modale
+    this.localModalTitle.set(this.localeService.t('remove_character_item_modal_title'));
+    this.localModalImageSrc.set('modal-png/allert-goblin.png');
+    this.localModalImageAlt.set(this.localeService.t('generic_modal_alert_alt_img'));
+    this.localModalCancelLabel.set(this.localeService.t('remove_character_item_modal_cancel'));
+    this.localModalConfirmLabel.set(this.localeService.t('remove_character_item_modal_confirm'));
+    this.localModalVariant.set('warning');
+    this.modalItemName = qty > 1 ? `${qty}× ${data.name}` : data.name;
+    
+    this.modaldata = { 
+      ...data, 
+      quantityToRemove: qty,
+      quantity: data.quantity ?? 1
+    };
+    this.isModalOpen.set(true);
+  }
+
+  closeModal() {
+    this.isModalOpen.set(false);
+  }
+
+  onConfirm() {
+    if (!this.modaldata) return;
+
+    // Distinguiamo se stiamo rimuovendo un oggetto dall'inventario o un'arma
+    if (this.modaldata.rowId && this.modaldata.quantity !== undefined && this.modaldata.quantityToRemove !== undefined) {
+      // È un oggetto dell'inventario: passiamo la quantità esatta selezionata dall'utente
+      this.removeItem(this.modaldata.rowId, this.modaldata.quantity, this.modaldata.quantityToRemove);
+    } else if (this.modaldata.rowId) {
+      // È un'arma (rimozione intera)
+      this.removeWeapon(this.modaldata);
+    }
+
+    this.closeModal();
   }
 }

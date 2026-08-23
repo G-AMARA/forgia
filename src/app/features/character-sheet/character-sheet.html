@@ -1034,7 +1034,7 @@
                             class="w-14 px-1 py-0.5 rounded border border-gold bg-fantasy-black/60 text-xs text-center"
                           />
                           <button
-                            (click)="removeItem(item.rowId, item.quantity, item.name)"
+                            (click)="openModal(item, removeQty(item.rowId))"
                             [attr.aria-label]="localeService.t('remove_button')"
                             class="p-1 rounded hover:bg-red-900/40 transition-colors"
                           >
@@ -1340,7 +1340,7 @@
                             <span [class]="spell.prepared ? 'text-forest' : 'text-slate-500'">{{ localeService.t('prepared_label') }}</span>
                           </label>
                           @if (!readOnly()) {
-                            <button (click)="removeSpell(spell.rowId)" class="shrink-0 text-[11px] text-red-300/80 underline underline-offset-2 hover:text-red-300">
+                            <button (click)="removeSpell(spell)" class="shrink-0 text-[11px] text-red-300/80 underline underline-offset-2 hover:text-red-300">
                               {{ localeService.t('remove_button') }}
                             </button>
                           }
@@ -1365,8 +1365,8 @@
                 class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 sm:col-span-2"
               >
                 <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-                @for (w of availableWeaponsCatalog(); track w.id) {
-                  <option [value]="w.id">{{ w.name }}</option>
+                @for (weapon of availableWeaponsCatalog(); track weapon.id) {
+                  <option [value]="weapon.id">{{ weapon.name }}</option>
                 }
               </select>
               <input
@@ -1399,31 +1399,31 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @for (w of c.weapons; track w.rowId; let odd = $odd) {
+                  @for (weapon of c.weapons; track weapon.rowId; let odd = $odd) {
                     <tr
-                      (click)="toggleWeaponSelection(w.rowId)"
+                      (click)="toggleWeaponSelection(weapon.rowId)"
                       class="cursor-pointer transition-colors hover:bg-fantasy-gold/20"
-                      [class]="selectedWeaponRowId() === w.rowId ? 'bg-fantasy-gold/30' : (odd ? 'bg-fantasy-black/20' : 'bg-fantasy-black/50')"
+                      [class]="selectedWeaponRowId() === weapon.rowId ? 'bg-fantasy-gold/30' : (odd ? 'bg-fantasy-black/20' : 'bg-fantasy-black/50')"
                     >
-                      <td class="py-2 px-2">{{ w.name }} × {{ w.quantity }}</td>
-                      <td class="py-2 px-2">{{ attackAbilityNames(w.attackAbilities) }}</td>
+                      <td class="py-2 px-2">{{ weapon.name }} × {{ weapon.quantity }}</td>
+                      <td class="py-2 px-2">{{ attackAbilityNames(weapon.attackAbilities) }}</td>
                       <td class="py-2 px-2">
-                        {{ w.damageDice }} {{ w.damageType }}
-                        @if (w.versatileDamage) {
-                          ({{ w.versatileDamage }} {{ localeService.t('weapon_versatile_label') }})
+                        {{ weapon.damageDice }} {{ weapon.damageType }}
+                        @if (weapon.versatileDamage) {
+                          ({{ weapon.versatileDamage }} {{ localeService.t('weapon_versatile_label') }})
                         }
                       </td>
                       <td class="py-2 px-2">
-                        @if (w.rangeCategory === 'ranged') {
-                          {{ w.normalRange }}/{{ w.longRange }}
+                        @if (weapon.rangeCategory === 'ranged') {
+                          {{ weapon.normalRange }}/{{ weapon.longRange }}
                         } @else {
                           {{ localeService.t('weapon_range_melee') }}
                         }
                       </td>
-                      <td class="py-2 px-2">{{ w.weight }} kg</td>
+                      <td class="py-2 px-2">{{ weapon.weight }} kg</td>
                       <td class="py-2 px-2">
-                        @if (w.costValue != null) {
-                          {{ w.costValue }} {{ localeService.t('coin_unit_' + w.costUnit) }}
+                        @if (weapon.costValue != null) {
+                          {{ weapon.costValue }} {{ localeService.t('coin_unit_' + weapon.costUnit) }}
                         } @else {
                           <span class="text-slate-arcane">—</span>
                         }
@@ -1431,7 +1431,7 @@
                       @if (!readOnly()) {
                         <td class="py-2 px-2">
                           <button
-                            (click)="$event.stopPropagation(); removeWeapon(w.rowId, w.name)"
+                            (click)="$event.stopPropagation(); removeWeapon(weapon)"
                             [attr.aria-label]="localeService.t('remove_button')"
                             class="p-1 rounded hover:bg-red-900/40 transition-colors"
                           >
@@ -1737,4 +1737,29 @@
   } @else {
     <p class="text-slate-arcane italic">{{ localeService.t('loading') }}</p>
   }
+
+<app-generic-modal
+  [isOpen]="isModalOpen()"
+  [title]="localModalTitle()"
+  [imageSrc]="localModalImageSrc()"
+  [imageAlt]="localModalImageAlt()"
+  [cancelLabel]="localModalCancelLabel()"
+  [confirmLabel]="localModalConfirmLabel()"
+  [variant]="localModalVariant()"
+  [modalCustomBody]="true"
+  (closeModal)="closeModal()"
+  (confirmModal)="onConfirm()">
+  <!-- Inietto il pattern del messaggio personalizzato nel body -->
+  <div modal-custom-body class="flex-1 text-left">
+      <p class="text-sm leading-6 text-fantasy-moonstone">
+        {{ localeService.t('remove_character_item_modal_message') }}
+      </p>
+      <p class="text-sm text-center py-2 leading-6 text-fantasy-moonstone">
+        <strong>{{ modalItemName }}</strong>
+      </p>
+      <p class="text-sm leading-6 text-fantasy-moonstone">
+        {{ localeService.t('remove_character_item_modal_message_2') }}
+      </p>
+  </div>
+</app-generic-modal>
   

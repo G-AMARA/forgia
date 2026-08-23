@@ -251,9 +251,10 @@ export class SpellCreate {
       if (error) {
         this.modal.error(error.message);
       } else {
-        this.resetForm();
         await this.contentStore.refresh('spells');
-        this.modal.success(this.localeService.t('saved_message'));
+        this.modal.success(this.localeService.t(!this.editingId ? 'well_spell_created' : 'well_spell_updated')
+      );
+      this.resetForm();
       }
 
       this.loading.set(false);
@@ -271,16 +272,22 @@ export class SpellCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
+      await this.contentStore.refresh('spells'); 
+      this.modal.success(this.localeService.t(!this.editingId ? 'well_spell_created' : 'well_spell_updated'));
       this.resetForm();
-      await this.contentStore.refresh('spells');
-      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
   }
 
   async deleteSpell(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_spell')} "${name}"?`);
+    const confirmed = await this.modal.confirm(
+      `${this.localeService.t('confirm_delete_spell')} "${name}"?`, 
+      {
+       cancelLabel: this.localeService.t('cancel_button'), 
+       confirmLabel: this.localeService.t('confirm_delete_spell_title')
+      }
+    );
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('spells').delete().eq('id', id);
@@ -289,11 +296,15 @@ export class SpellCreate {
     } else {
       // Ripulisce eventuali traduzioni orfane rimaste agganciate a questo incantesimo.
       await this.supabase.client
-        .from('content_translations')
-        .delete()
-        .eq('content_table', 'spells')
-        .eq('content_id', id);
+      .from('content_translations')
+      .delete()
+      .eq('content_table', 'spells')
+      .eq('content_id', id);
       await this.contentStore.refresh('spells');
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('spell_deleted_msg_1')} ${name}, ${this.localeService.t('spell_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }
