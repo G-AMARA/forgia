@@ -1340,7 +1340,7 @@
                             <span [class]="spell.prepared ? 'text-forest' : 'text-slate-500'">{{ localeService.t('prepared_label') }}</span>
                           </label>
                           @if (!readOnly()) {
-                            <button (click)="removeSpell(spell.rowId)" class="shrink-0 text-[11px] text-red-300/80 underline underline-offset-2 hover:text-red-300">
+                            <button (click)="removeSpell(spell)" class="shrink-0 text-[11px] text-red-300/80 underline underline-offset-2 hover:text-red-300">
                               {{ localeService.t('remove_button') }}
                             </button>
                           }

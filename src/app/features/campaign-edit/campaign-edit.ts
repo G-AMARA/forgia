@@ -53,7 +53,7 @@ export class CampaignEdit implements OnInit {
     if (error) {
       this.modal.error(error.message);
     } else {
-      this.modal.success(this.localeService.t('update_campaign'));
+      this.modal.success(this.localeService.t('well_updated_campaign'));
       this.appNav.setTab('hub');
     }
 

@@ -1148,11 +1148,12 @@ export class CharacterSheet implements OnInit {
 
   //per ora any poi tipizzare con interfaccia weapon
   async removeWeapon(weapon: any) {
+    console.log(weapon)
     const c = this.character();
     if (!c || this.readOnly()) return;
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_weapon')} "${weapon.name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_weapon')} ${weapon.name}?`)
     if (!confirmed) return;
-    const { error } = await this.characterStore.removeWeapon(c.id, weapon.id);
+    const { error } = await this.characterStore.removeWeapon(c.id, weapon.rowId);
     if (error) this.modal.error(error.message);
   }
 
@@ -1202,10 +1203,14 @@ export class CharacterSheet implements OnInit {
     this.selectedSpellIdToAdd = '';
   }
 
-  async removeSpell(rowId: string) {
+  async removeSpell(spell: any) {
     const c = this.character();
     if (!c || this.readOnly()) return;
-    const { error } = await this.characterStore.removeSpellFromCharacter(c.id, rowId);
+
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_character_spell')} ${spell.name}?`);
+    if (!confirmed) return;
+
+    const { error } = await this.characterStore.removeSpellFromCharacter(c.id, spell.rowId);
     if (error) this.modal.error(error.message);
   }
 

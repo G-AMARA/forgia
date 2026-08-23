@@ -251,9 +251,10 @@ export class SpellCreate {
       if (error) {
         this.modal.error(error.message);
       } else {
-        this.resetForm();
         await this.contentStore.refresh('spells');
-        this.modal.success(this.localeService.t('well_created_spell'));
+        this.modal.success(this.localeService.t(!this.editingId ? 'well_spell_created' : 'well_spell_updated')
+      );
+      this.resetForm();
       }
 
       this.loading.set(false);
@@ -271,9 +272,9 @@ export class SpellCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
+      await this.contentStore.refresh('spells'); 
+      this.modal.success(this.localeService.t(!this.editingId ? 'well_spell_created' : 'well_spell_updated'));
       this.resetForm();
-      await this.contentStore.refresh('spells');
-      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
@@ -293,17 +294,17 @@ export class SpellCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
-      let confirmed = await this.modal.success(
-        `${this.localeService.t('spell_deleted_msg_1')} "${name}" ${this.localeService.t('spell_deleted_msg_2')}`
-      );
-      if(!confirmed) return;
       // Ripulisce eventuali traduzioni orfane rimaste agganciate a questo incantesimo.
       await this.supabase.client
-        .from('content_translations')
-        .delete()
-        .eq('content_table', 'spells')
-        .eq('content_id', id);
+      .from('content_translations')
+      .delete()
+      .eq('content_table', 'spells')
+      .eq('content_id', id);
       await this.contentStore.refresh('spells');
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('spell_deleted_msg_1')} ${name}, ${this.localeService.t('spell_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }

@@ -111,9 +111,11 @@ export class ClassCreate {
       if (this.editingId) {
         await this.contentStore.clearTranslation('classes', this.editingId);
       }
-      this.resetForm();
       await this.refreshClasses();
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(this.localeService.t(
+        !this.editingId ? 'well_class_created' : 'well_class_updated'
+      ));
+      this.resetForm();
     }
 
     this.loading.set(false);
@@ -140,12 +142,13 @@ export class ClassCreate {
     const { error } = await this.supabase.client.from('classes').delete().eq('id', id);
     if (error) {
       this.modal.error(error.message);
-    } else {
+    } 
+    else {
+      await this.refreshClasses();
       let confirmed = await this.modal.success(
-        `${this.localeService.t('class_deleted_msg_1')} "${name}" ${this.localeService.t('class_deleted_msg_2')}`
+        `${this.localeService.t('class_deleted_msg_1')} ${name}, ${this.localeService.t('class_deleted_msg_2')}`
       );
       if(!confirmed) return;
-      await this.refreshClasses();
     }
   }
 }

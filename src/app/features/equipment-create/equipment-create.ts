@@ -331,10 +331,12 @@ export class EquipmentCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
-      this.resetForm();
       await this.contentStore.refresh('equipment');
       await this.loadContents();
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(this.localeService.t(
+      !this.editingId ? 'well_item_created' : 'well_item_updated'
+      ));
+      this.resetForm();
     }
 
     this.loading.set(false);
@@ -356,17 +358,17 @@ export class EquipmentCreate {
     } else {
       // Ripulisce eventuali traduzioni orfane rimaste agganciate a questo elemento.
       // equipment_contents si ripulisce da sé (ON DELETE CASCADE sulla FK).
-      let confirmed = await this.modal.success(
-        `${this.localeService.t('equipment_deleted_msg_1')} "${name}" ${this.localeService.t('equipment_deleted_msg_2')}`
-      );
-      if(!confirmed) return;
       await this.supabase.client
-        .from('content_translations')
-        .delete()
-        .eq('content_table', 'equipment')
-        .eq('content_id', id);
+      .from('content_translations')
+      .delete()
+      .eq('content_table', 'equipment')
+      .eq('content_id', id);
       await this.contentStore.refresh('equipment');
       await this.loadContents();
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('equipment_deleted_msg_1')} ${name}, ${this.localeService.t('equipment_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }

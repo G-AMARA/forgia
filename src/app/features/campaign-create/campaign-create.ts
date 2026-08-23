@@ -46,7 +46,7 @@ export class CampaignCreate {
       this.name = '';
       this.description = '';
       this.coverKey = CAMPAIGN_COVERS[0].key;
-      this.modal.success(`${this.localeService.t('campaign_well_created')}` )
+      this.modal.success(`${this.localeService.t('well_created_campaign')}` )
     }
 
     this.loading.set(false);

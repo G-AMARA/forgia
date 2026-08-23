@@ -117,11 +117,11 @@ export class BackgroundCreate {
       if (this.editingId) {
         await this.contentStore.clearTranslation('backgrounds', this.editingId);
       }
-      this.resetForm();
       await this.refreshBackgrounds();
-      this.editingId
-      ? this.modal.success(this.localeService.t('Background_well_created'))
-      : this.modal.success(this.localeService.t('Background_well_created'))
+      this.modal.success(
+        this.localeService.t(!this.editingId ? 'background_well_created' : 'background_well_updated')
+      );
+      this.resetForm();
     }
 
     this.loading.set(false);
@@ -146,12 +146,13 @@ export class BackgroundCreate {
     const { error } = await this.supabase.client.from('backgrounds').delete().eq('id', id);
     if (error) {
       this.modal.error(error.message);
-    } else {
+    } 
+    else {
+      await this.refreshBackgrounds();
       let confirmed = await this.modal.success(
-        `${this.localeService.t('background_deleted_msg_1')} "${name}" ${this.localeService.t('background_deleted_msg_2')}`
+        `${this.localeService.t('background_deleted_msg_1')} ${name}, ${this.localeService.t('background_deleted_msg_2')}`
       );
       if(!confirmed) return;
-      await this.refreshBackgrounds();
     }
   }
 }

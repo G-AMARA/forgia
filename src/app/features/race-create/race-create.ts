@@ -116,11 +116,11 @@ export class RaceCreate {
       if (this.editingId) {
         await this.contentStore.clearTranslation('races', this.editingId);
       }
-      this.resetForm();
       await this.refreshRaces();
-      !this.editingId 
-      ? this.modal.success(this.localeService.t('well_saved_race')) 
-      : this.modal.success(this.localeService.t('well_updated_race')) 
+      this.modal.success(this.localeService.t(
+        !this.editingId ? 'well_race_created' : 'well_race_updated'
+      ));
+      this.resetForm();
     }
 
     this.loading.set(false);
@@ -139,7 +139,7 @@ export class RaceCreate {
 
   async deleteRace(id: string, name: string) {
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_race')} "${name}"?`,
+      `${this.localeService.t('confirm_delete_race')} ${name}?`,
       {
         cancelLabel: this.localeService.t('cancel_button'),
         confirmLabel: this.localeService.t('confirm_delete_race_title')
@@ -151,11 +151,11 @@ export class RaceCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
+      await this.refreshRaces();
       let confirmed = await this.modal.success(
-        `${this.localeService.t('race_deleted_msg_1')} "${name}" ${this.localeService.t('race_deleted_msg_2')}`
+        `${this.localeService.t('race_deleted_msg_1')} ${name}, ${this.localeService.t('race_deleted_msg_2')}`
       );
       if(!confirmed) return;
-      await this.refreshRaces();
     }
   }
 }

@@ -191,9 +191,11 @@ export class WeaponCreate {
       if (error) {
         this.modal.error(error.message);
       } else {
-        this.resetForm();
         await this.refreshWeapons();
-        this.modal.success(this.localeService.t('well_weapon_created'));
+         this.modal.success(this.localeService.t(
+        !this.editingId ? 'well_weapon_created' : 'well_weapon_updated'
+      ));
+        this.resetForm();
       }
 
       this.loading.set(false);
@@ -211,9 +213,11 @@ export class WeaponCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
-      this.resetForm();
       await this.refreshWeapons();
-      this.modal.success(this.localeService.t('saved_message'));
+       this.modal.success(this.localeService.t(
+        !this.editingId ? 'well_weapon_created' : 'well_weapon_updated'
+      ));
+      this.resetForm();
     }
 
     this.loading.set(false);
@@ -225,13 +229,14 @@ export class WeaponCreate {
 
   async deleteWeapon(id: string, name: string) {
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_weapon')} "${name}"?`, 
+      `${this.localeService.t('confirm_delete_weapon')} ${name}?`, 
       {
        cancelLabel: this.localeService.t('cancel_button'), 
        confirmLabel: this.localeService.t('confirm_delete_weapon_title')
       }
     );
     if (!confirmed) return;
+    
 
     const { data, error } = await this.supabase.client.from('weapons').delete().eq('id', id).select();
 
@@ -252,13 +257,17 @@ export class WeaponCreate {
       return;
     }
 
+    
     // Ripulisce eventuali traduzioni orfane rimaste agganciate a questa arma.
     await this.supabase.client
-      .from('content_translations')
-      .delete()
-      .eq('content_table', 'weapons')
-      .eq('content_id', id);
-
+    .from('content_translations')
+    .delete()
+    .eq('content_table', 'weapons')
+    .eq('content_id', id);
     await this.refreshWeapons();
+    let confirmedDelete = await this.modal.success(
+        `${this.localeService.t('weapon_deleted_msg_1')} ${name}, ${this.localeService.t('weapon_deleted_msg_2')}`
+      );
+      if(!confirmedDelete) return;
   }
 }
