@@ -124,6 +124,10 @@ export class ActiveCampaign {
       maxPlayers: number | null;
       startingLevel: number;
       isPublic: boolean;
+      // Riassegnare il Game Master richiede la RLS admin (vedi
+      // sql/2026-08-25_campaigns_admin_update.sql): un owner non-admin che salva la sua
+      // stessa campagna ripassa qui semplicemente il proprio id, quindi nessun cambiamento.
+      ownerId: string;
     }
   ) {
     const { data, error } = await this.supabase.client
@@ -137,6 +141,7 @@ export class ActiveCampaign {
         max_players: updates.maxPlayers,
         starting_level: updates.startingLevel,
         is_public: updates.isPublic,
+        owner_id: updates.ownerId,
       })
       .eq('id', campaignId)
       .select(CAMPAIGN_COLUMNS)

@@ -48,7 +48,7 @@
           }
 
           <div class="flex flex-wrap gap-2 pt-2">
-            @if (isOwner()) {
+            @if (isOwner() || auth.isAdmin()) {
               <button
                 (click)="goToManage()"
                 class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
