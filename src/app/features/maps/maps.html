@@ -1,0 +1,33 @@
+@if (selectedAlbum(); as album) {
+  <app-map-album-detail [album]="album" [canManage]="canManage()" (back)="closeAlbum()" />
+} @else {
+  <div class="space-y-4">
+    @if (canManage()) {
+      <div class="flex gap-2">
+        <input
+          type="text" [(ngModel)]="newAlbumName" [placeholder]="localeService.t('map_album_name_placeholder')"
+          class="flex-1 px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        />
+        <button
+          (click)="createAlbum()"
+          class="px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors text-sm shrink-0"
+        >
+          {{ localeService.t('create_album_button') }}
+        </button>
+      </div>
+    }
+
+    @if (mapAlbumsStore.albums().length === 0) {
+      <p class="text-slate-arcane italic text-sm">{{ localeService.t('map_albums_empty') }}</p>
+    } @else {
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        @for (album of mapAlbumsStore.albums(); track album.id) {
+          <app-map-album-card
+            [album]="album" [canManage]="canManage()"
+            (open)="selectAlbum(album.id)" (delete)="deleteAlbum(album.id, album.name)"
+          />
+        }
+      </div>
+    }
+  </div>
+}

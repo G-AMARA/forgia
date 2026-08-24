@@ -1,0 +1,23 @@
+<div class="relative border-2 border-gold rounded-lg overflow-hidden bg-fantasy-black/60 group">
+  @if (canManage()) {
+    <button
+      (click)="delete.emit()"
+      class="absolute top-1.5 right-1.5 z-10 text-[0.65rem] px-1.5 py-0.5 bg-red-900/80 text-white rounded hover:bg-red-800 transition-colors"
+    >
+      {{ localeService.t('delete_button') }}
+    </button>
+  }
+  <button (click)="open.emit()" class="flex flex-col w-full text-left">
+    <div class="h-28 bg-fantasy-black/40 flex items-center justify-center overflow-hidden">
+      @if (album().images[0]; as cover) {
+        <img [src]="cover.imageUrl" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+      } @else {
+        <span class="text-4xl opacity-30">🗺️</span>
+      }
+    </div>
+    <div class="p-2">
+      <p class="font-display text-sm text-fantasy-moonstone truncate">{{ album().name }}</p>
+      <p class="text-[0.65rem] text-slate-arcane">{{ album().images.length }} {{ localeService.t('map_images_label') }}</p>
+    </div>
+  </button>
+</div>
