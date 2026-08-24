@@ -1,0 +1,27 @@
+@if (context.character(); as c) {
+  <app-card contentClass="space-y-5">
+    <app-character-vital-stats />
+
+    <!-- Tiri Salvezza e Scurovisione affiancati -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      @if (c.saving_throw_proficiencies.length > 0) {
+        <div>
+          <label class="text-sm font-semibold block mb-1">{{ localeService.t('saving_throws_label') }}</label>
+          <p class="text-sm opacity-80">{{ privileges.savingThrowNames(c.saving_throw_proficiencies) }}</p>
+        </div>
+      }
+
+      <!-- Scurovisione: tratto automatico di razza/sottorazza, di sola lettura (si imposta in Gestione). -->
+      <div>
+        <label class="text-sm font-semibold block mb-1">{{ localeService.t('darkvision_label') }}</label>
+        <span class="inline-block px-2 py-1 rounded border border-gold text-xs font-semibold"
+          [class]="identity.hasDarkvision() ? 'bg-forest text-white' : 'bg-fantasy-black/60 text-slate-arcane'">
+          {{ identity.hasDarkvision() ? localeService.t('darkvision_yes') : localeService.t('darkvision_no') }}
+        </span>
+      </div>
+    </div>
+
+    <app-character-skills-table />
+    <app-character-resistances-table />
+  </app-card>
+}

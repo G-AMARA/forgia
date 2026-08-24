@@ -1,0 +1,51 @@
+<div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+  <div class="col-span-3 sm:col-span-6 mb-1">
+    <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('ability_scores_label') }}</label>
+  </div>
+  @for (key of abilityKeys; track key) {
+    <div class="flex flex-col gap-1">
+      <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
+      <input type="number" [ngModel]="identity.abilityScores()[key]" (ngModelChange)="identity.setAbilityScore(key, $event)"
+        class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm" />
+    </div>
+  }
+</div>
+
+<!-- Bonus Razziale: automatico dalla razza (o sottorazza, se scelta) selezionata. -->
+<div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
+  <div class="col-span-3 sm:col-span-6 mb-1">
+    <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('racial_bonus_label') }}</label>
+  </div>
+  @for (key of abilityKeys; track key) {
+    <div class="flex flex-col gap-1">
+      <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
+      <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
+        @if (identity.getRaceOrSubraceBonus(key) > 0) { +{{ identity.getRaceOrSubraceBonus(key) }} } @else { — }
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Bonus a Scelta: monte punti dato da razza/sottorazza "a scelta libera" (es. Umano
+     Variante, Draconide Cromatico). Nascosto se razza/sottorazza scelte non ne concedono. -->
+@if (identity.freeBonusPoints() > 0) {
+  <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
+    <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
+      <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('free_bonus_label') }}</label>
+      <span class="text-xs font-semibold" [class]="identity.freeBonusRemaining() > 0 ? 'text-fantasy-gold' : 'text-fantasy-red'">
+        {{ localeService.t('points_remaining_label') }}: {{ identity.freeBonusRemaining() }}/{{ identity.freeBonusPoints() }}
+      </span>
+    </div>
+    @for (key of abilityKeys; track key) {
+      <div class="flex flex-col gap-1">
+        <label class="text-xs uppercase text-center text-slate-arcane">{{ localeService.t('ability_' + key) }}</label>
+        <input
+          type="number" min="0" [attr.max]="identity.maxFreeBonus(key)"
+          [disabled]="identity.freeBonuses()[key] === 0 && identity.freeBonusRemaining() === 0"
+          [ngModel]="identity.freeBonuses()[key]" (ngModelChange)="identity.setFreeBonus(key, $event)"
+          class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm disabled:opacity-50"
+        />
+      </div>
+    }
+  </div>
+}

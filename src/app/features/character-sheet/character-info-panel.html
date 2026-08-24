@@ -1,0 +1,82 @@
+@if (context.character(); as c) {
+  <div class="flex flex-col gap-4">
+    <div class="flex items-center justify-between">
+      <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('character_info_title') }}</h3>
+      @if (!context.readOnly()) {
+        <button
+          (click)="identity.openModal()"
+          class="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+        >
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 shrink-0 text-gold-dark" fill="currentColor" aria-hidden="true">
+            <g transform="rotate(45 12 12)">
+              <rect x="10.5" y="2" width="3" height="3" rx="0.5" />
+              <rect x="10.5" y="5.5" width="3" height="11" />
+              <polygon points="10.5,16.5 13.5,16.5 12,20.5" />
+            </g>
+          </svg>
+          {{ localeService.t('edit_button') }}
+        </button>
+      }
+    </div>
+
+    <div class="parchment-panel rounded-sm p-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
+        <div>
+          <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('character_name_label') }}</span>
+          <p class="font-body text-sm text-gold-bright leading-tight">{{ c.name }}</p>
+        </div>
+        <div>
+          <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('race_label') }}</span>
+          <p class="font-body text-sm text-gold-bright leading-tight">
+            {{ privileges.getTranslatedRaceName(c.race_name) }}
+            @if (c.subrace_name) { ({{ privileges.getTranslatedSubraceName(c.subrace_name) }}) }
+          </p>
+        </div>
+        <div>
+          <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('class_label') }}</span>
+          <p class="font-body text-sm text-gold-bright leading-tight">
+            {{ privileges.getTranslatedClassName(c.class_name) }}
+            @if (c.subclass_name) { ({{ privileges.getTranslatedSubclassName(c.subclass_name) }}) }
+          </p>
+        </div>
+        <div>
+          <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('background_label') }}</span>
+          <p class="font-body text-sm text-gold-bright leading-tight">{{ privileges.getTranslatedBackgroundName(c.background_name) || '—' }}</p>
+        </div>
+        <div>
+          <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('level_label') }}</span>
+          <p class="font-body text-sm text-gold-bright leading-tight">{{ c.level }}</p>
+        </div>
+        <div>
+          <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('alignment_label') }}</span>
+          <p class="font-body text-sm text-gold-bright leading-tight">{{ localeService.t('alignment_' + c.alignment) }}</p>
+        </div>
+        <div>
+          <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('sex_label') }}</span>
+          <p class="font-body text-sm text-gold-bright leading-tight">{{ c.sex === 'F' ? localeService.t('sex_female') : localeService.t('sex_male') }}</p>
+        </div>
+        <div>
+          <span class="block text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ localeService.t('racial_bonus_label') }}</span>
+          <p class="font-body text-sm text-gold-bright leading-tight">{{ identity.racialBonusSummary() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Storia: vera pergamena PNG (rullo in cima, carta strappata in fondo). Il testo
+         scorre internamente (overflow-y-auto) invece di far crescere il riquadro: resta
+         sempre dentro il foglio disegnato. -->
+    <div class="flex flex-col gap-2">
+      <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('backstory_label') }}</h3>
+      <div
+        class="relative w-full aspect-683/604 mt-2 mb-1.5 mx-1 overflow-hidden bg-no-repeat bg-top bg-size-[100%_auto]"
+        style="background-image: url('themes/PERGAMENA.png');"
+      >
+        <textarea
+          [ngModel]="identity.backstory()" (ngModelChange)="identity.backstory.set($event)" [disabled]="context.readOnly()"
+          class="absolute top-[18%] bottom-[calc(20%-10px)] left-[calc(16%+5px)] right-[16%] overflow-y-auto bg-transparent border-0 resize-none focus:outline-none font-body text-base font-bold text-stone-950 placeholder:text-stone-900/40 disabled:opacity-90"
+          style="text-shadow: 0 0 3px #ffffff, 0 0 6px #ffffff;"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+}

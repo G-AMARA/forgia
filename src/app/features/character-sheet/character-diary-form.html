@@ -1,0 +1,28 @@
+<div class="flex flex-col gap-3 lg:h-120">
+  <div class="flex flex-col gap-1">
+    <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('diary_date_label') }}</label>
+    <input type="date" [ngModel]="diary.newEntryDate()" (ngModelChange)="diary.newEntryDate.set($event)"
+      class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+  </div>
+  <div class="flex flex-col gap-1">
+    <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('diary_title_label') }}</label>
+    <input type="text" [ngModel]="diary.newEntryTitle()" (ngModelChange)="diary.newEntryTitle.set($event)"
+      class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+  </div>
+  <div class="flex flex-col gap-1 flex-1">
+    <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('subtab_diary') }}</label>
+    <textarea [ngModel]="diary.newEntryText()" (ngModelChange)="diary.newEntryText.set($event)" [placeholder]="localeService.t('diary_placeholder')"
+      class="w-full flex-1 min-h-40 px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"></textarea>
+  </div>
+  <div class="flex gap-2">
+    <button (click)="diary.submit()" [disabled]="!diary.newEntryText().trim() || !diary.newEntryDate()"
+      class="self-start px-4 py-2 bg-fantasy-gold text-fantasy-black font-display text-sm tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50">
+      {{ diary.editingEntryId() ? localeService.t('save_changes_button') : localeService.t('diary_add_button') }}
+    </button>
+    @if (diary.editingEntryId()) {
+      <button (click)="diary.cancelEdit()" class="self-start px-4 py-2 border-2 border-gold rounded font-display text-sm hover:bg-gold hover:text-fantasy-black transition-colors">
+        {{ localeService.t('cancel_button') }}
+      </button>
+    }
+  </div>
+</div>

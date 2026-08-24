@@ -1,0 +1,30 @@
+@if (equipment.armorModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm" (click)="equipment.cancelArmorEdit()">
+    <div class="relative w-full max-w-md bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone" (click)="$event.stopPropagation()">
+      <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('armor_select_label') }}</h2>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold">{{ localeService.t('armor_select_label') }}</label>
+          <select [ngModel]="equipment.selectedArmorId()" (ngModelChange)="equipment.selectedArmorId.set($event)" class="px-2 py-2 rounded border border-gold bg-fantasy-black/40 text-fantasy-moonstone">
+            <option value="">{{ localeService.t('armor_none_label') }}</option>
+            @for (armor of equipment.availableArmors(); track armor.id) { <option [value]="armor.id">{{ armor.name }} (CA {{ armor.raw.armor_class }})</option> }
+          </select>
+        </div>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="checkbox" [ngModel]="equipment.shieldEquipped()" (ngModelChange)="equipment.shieldEquipped.set($event)" />
+          {{ localeService.t('armor_category_shield') }} (+2)
+        </label>
+
+        <div class="flex justify-end gap-2">
+          <button type="button" (click)="equipment.cancelArmorEdit()" class="px-4 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors">
+            {{ localeService.t('cancel_button') }}
+          </button>
+          <button type="button" (click)="combat.saveCombat()" class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors">
+            {{ localeService.t('save_button') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

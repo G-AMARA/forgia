@@ -1,0 +1,27 @@
+<div class="space-y-2">
+  <div class="flex flex-col sm:flex-row gap-2">
+    <input type="search" [ngModel]="spells.spellSearchTerm()" (ngModelChange)="spells.spellSearchTerm.set($event)"
+      [placeholder]="localeService.t('spell_search_placeholder')"
+      class="flex-1 px-3 py-2 rounded border border-gold bg-fantasy-black/60 text-fantasy-moonstone text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright" />
+    <select [ngModel]="spells.spellFilterSchool()" (ngModelChange)="spells.spellFilterSchool.set($event)" class="px-3 py-2 rounded border border-gold text-sm">
+      <option value="">{{ localeService.t('spell_filter_school_label') }}</option>
+      @for (school of spells.availableSpellSchools(); track school.value) { <option [value]="school.value">{{ school.label }}</option> }
+    </select>
+    <select [ngModel]="spells.spellFilterLevel()" (ngModelChange)="spells.spellFilterLevel.set($event)" class="px-3 py-2 rounded border border-gold text-sm">
+      <option value="">{{ localeService.t('spell_filter_level_label') }}</option>
+      @for (level of spells.availableSpellLevels(); track level) { <option [value]="level">{{ spells.spellLevelOptionLabel(level) }}</option> }
+    </select>
+  </div>
+  <div class="flex flex-col sm:flex-row gap-2">
+    <select [ngModel]="spells.selectedSpellIdToAdd()" (ngModelChange)="spells.selectedSpellIdToAdd.set($event)" class="flex-1 px-3 py-2 rounded border border-gold">
+      <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+      @for (spell of spells.availableClassSpells(); track spell.id) { <option [value]="spell.id">{{ spell.name }}</option> }
+    </select>
+    <button (click)="spells.addSpell()" class="px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors">
+      {{ localeService.t('add_button') }}
+    </button>
+  </div>
+  @if (spells.availableClassSpells().length === 0) {
+    <p class="text-slate-arcane italic text-xs">{{ localeService.t('no_spells_match_filter') }}</p>
+  }
+</div>

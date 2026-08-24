@@ -1,0 +1,48 @@
+<div class="flex flex-col gap-1">
+  <label class="text-sm font-semibold">{{ localeService.t('race_label') }}</label>
+  <select [ngModel]="identity.raceId()" (ngModelChange)="identity.onRaceChange($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+    <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+    @for (race of identity.races(); track race.id) { <option [value]="race.id">{{ race.name }}</option> }
+  </select>
+  @if (privileges.getRaceDescription(); as desc) { <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p> }
+</div>
+
+@if (identity.availableSubraces().length > 0) {
+  <div class="flex flex-col gap-1">
+    <label class="text-sm font-semibold">{{ localeService.t('subrace_label') }}</label>
+    <select [ngModel]="identity.subraceId()" (ngModelChange)="identity.onSubraceChange($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+      <option value="">{{ localeService.t('subrace_none') }}</option>
+      @for (sub of identity.availableSubraces(); track sub.id) { <option [value]="sub.id">{{ sub.name }}</option> }
+    </select>
+    @if (privileges.getSubraceDescription(); as desc) { <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p> }
+  </div>
+}
+
+<div class="flex flex-col gap-1">
+  <label class="text-sm font-semibold">{{ localeService.t('class_label') }}</label>
+  <select [ngModel]="identity.classId()" (ngModelChange)="identity.classId.set($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+    <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
+    @for (cls of identity.classesContent(); track cls.id) { <option [value]="cls.id">{{ cls.name }}</option> }
+  </select>
+  @if (privileges.getClassDescription(); as desc) { <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p> }
+</div>
+
+@if (identity.availableSubclasses().length > 0) {
+  <div class="flex flex-col gap-1">
+    <label class="text-sm font-semibold">{{ localeService.t('subclass_label') }}</label>
+    <select [ngModel]="identity.subclassId()" (ngModelChange)="identity.subclassId.set($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+      <option value="">{{ localeService.t('subclass_none') }}</option>
+      @for (sub of identity.availableSubclasses(); track sub.id) { <option [value]="sub.id">{{ sub.name }}</option> }
+    </select>
+    @if (privileges.getSubclassDescription(); as desc) { <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p> }
+  </div>
+}
+
+<div class="flex flex-col gap-1">
+  <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
+  <select [ngModel]="identity.backgroundId()" (ngModelChange)="identity.backgroundId.set($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+    <option value="">{{ localeService.t('subclass_none') }}</option>
+    @for (bg of identity.backgroundsContent(); track bg.id) { <option [value]="bg.id">{{ bg.name }}</option> }
+  </select>
+  @if (privileges.getBackgroundDescription(); as desc) { <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p> }
+</div>

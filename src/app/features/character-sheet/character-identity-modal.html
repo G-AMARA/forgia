@@ -1,0 +1,57 @@
+@if (identity.modalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm" (click)="identity.cancelEdit()">
+    <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone" (click)="$event.stopPropagation()">
+      <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('edit_character_title') }}</h2>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }}</label>
+          <input type="text" [ngModel]="identity.name()" (ngModelChange)="identity.name.set($event)"
+            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <app-character-identity-lineage-fields />
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('level_label') }}</label>
+            <input type="number" min="1" max="20" [ngModel]="identity.level()" (ngModelChange)="identity.level.set($event)"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }}</label>
+            <select [ngModel]="identity.alignment()" (ngModelChange)="identity.alignment.set($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+              @for (al of identity.alignments; track al) { <option [value]="al">{{ localeService.t('alignment_' + al) }}</option> }
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('xp_label') }}</label>
+            <input type="number" min="0" [ngModel]="identity.xp()" (ngModelChange)="identity.xp.set($event)"
+              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold">{{ localeService.t('sex_label') }}</label>
+            <select [ngModel]="identity.sex()" (ngModelChange)="identity.sex.set($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
+              <option value="M">{{ localeService.t('sex_male') }}</option>
+              <option value="F">{{ localeService.t('sex_female') }}</option>
+            </select>
+          </div>
+        </div>
+
+        <app-character-ability-score-editor />
+
+        <div class="flex justify-end gap-2">
+          <button type="button" (click)="identity.cancelEdit()" class="px-4 py-2 border-2 border-gold rounded font-display hover:bg-gold hover:text-fantasy-black transition-colors">
+            {{ localeService.t('cancel_button') }}
+          </button>
+          <button type="button" (click)="identity.save()" class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors">
+            {{ localeService.t('save_button') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
