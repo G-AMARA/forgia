@@ -9,7 +9,7 @@ import { CharacterDiarySwiper } from './character-diary-swiper';
   selector: 'app-character-diary-tab',
   imports: [Card, CharacterDiaryForm, CharacterDiarySwiper],
   template: `
-    <app-card contentClass="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <app-card contentClass="grid grid-cols-1 @4xl:grid-cols-2 gap-6">
       @if (!context.readOnly()) {
         <app-character-diary-form />
       }

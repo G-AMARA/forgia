@@ -11,7 +11,7 @@ import { CharacterIdentityModal } from './character-identity-modal';
   imports: [Card, CharacterTraitsPanel, CharacterInfoPanel, CharacterIdentityModal],
   template: `
     <app-card>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="grid grid-cols-1 @4xl:grid-cols-2 gap-8">
         <app-character-traits-panel />
         <app-character-info-panel />
       </div>

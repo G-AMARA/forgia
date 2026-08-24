@@ -715,8 +715,17 @@ export class CharacterStore {
     return { error };
   }
 
-  async removeWeapon(characterId: string, rowId: string) {
-    const { error } = await this.supabase.client.from('character_weapons').delete().eq('id', rowId);
+  // Stessa logica di removeInventoryItem: quantityToRemove >= currentQuantity elimina
+  // la riga, altrimenti decrementa solo la quantità.
+  async removeWeapon(characterId: string, rowId: string, quantityToRemove: number, currentQuantity: number) {
+    const { error } =
+      quantityToRemove >= currentQuantity
+        ? await this.supabase.client.from('character_weapons').delete().eq('id', rowId)
+        : await this.supabase.client
+            .from('character_weapons')
+            .update({ quantity: currentQuantity - quantityToRemove })
+            .eq('id', rowId);
+
     if (!error) {
       await this.refreshCharacter(characterId);
     }

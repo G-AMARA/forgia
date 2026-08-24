@@ -55,12 +55,15 @@ export class CampaignHub {
     this.appNav.setTab('characters');
   }
 
-  goToMyCharacter() {
-    const userId = this.auth.user()?.id;
-    const myCharacter = this.characterStore.characters().find((c) => c.owner_id === userId);
-    if (!myCharacter) return;
+  // Porta alla pagina "Gioca" (/gioca/:campaignId): il Master la vede sempre (non serve
+  // un proprio personaggio), il giocatore solo se ha già un personaggio nel roster —
+  // la colonna sinistra della pagina mostra proprio quello.
+  goToPlaySession() {
+    const campaignId = this.campaignStore.current()?.id;
+    if (!campaignId) return;
 
-    this.goToCharacterSheet(myCharacter.id);
+    this.appNav.setTab('play');
+    this.router.navigate(['/gioca', campaignId]);
   }
 
   // Apre la scheda di un personaggio del roster (proprio o altrui). Chi non è

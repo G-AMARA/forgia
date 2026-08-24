@@ -56,19 +56,12 @@
                 {{ localeService.t('manage_campaign_button') }}
               </button>
             }
-            @if (hasOwnCharacter()) {
+            @if (isOwner() || hasOwnCharacter()) {
               <button
-                (click)="goToMyCharacter()"
+                (click)="goToPlaySession()"
                 class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
               >
                 {{ localeService.t('play_button') }}
-              </button>
-            } @else if (isOwner()) {
-              <button
-                (click)="goToCharacters()"
-                class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
-              >
-                {{ localeService.t('create_my_character_button') }}
               </button>
             } @else {
               <button

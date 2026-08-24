@@ -1,0 +1,70 @@
+@if (context.character(); as c) {
+  <div class="flex-1 min-h-0 flex flex-col gap-2">
+    <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('privileges_traits_title') }}</h3>
+
+    <div class="flex gap-1 border-b border-gold/30">
+      <button type="button" class="px-3 py-1.5 font-display text-xs uppercase tracking-wide border-b-2 transition-colors"
+        [class.border-fantasy-gold]="privilegesTab() === 'racial'" [class.text-fantasy-gold]="privilegesTab() === 'racial'"
+        [class.border-transparent]="privilegesTab() !== 'racial'" [class.text-slate-arcane]="privilegesTab() !== 'racial'"
+        (click)="privilegesTab.set('racial')">
+        {{ privileges.getTranslatedRaceName(c.race_name) }}
+      </button>
+      @if (c.subclass_name) {
+        <button type="button" class="px-3 py-1.5 font-display text-xs uppercase tracking-wide border-b-2 transition-colors"
+          [class.border-fantasy-gold]="privilegesTab() === 'subclass'" [class.text-fantasy-gold]="privilegesTab() === 'subclass'"
+          [class.border-transparent]="privilegesTab() !== 'subclass'" [class.text-slate-arcane]="privilegesTab() !== 'subclass'"
+          (click)="privilegesTab.set('subclass')">
+          {{ privileges.getTranslatedSubclassName(c.subclass_name) }}
+        </button>
+      }
+      @if (c.background_name) {
+        <button type="button" class="px-3 py-1.5 font-display text-xs uppercase tracking-wide border-b-2 transition-colors"
+          [class.border-fantasy-gold]="privilegesTab() === 'background'" [class.text-fantasy-gold]="privilegesTab() === 'background'"
+          [class.border-transparent]="privilegesTab() !== 'background'" [class.text-slate-arcane]="privilegesTab() !== 'background'"
+          (click)="privilegesTab.set('background')">
+          {{ privileges.getTranslatedBackgroundName(c.background_name) }}
+        </button>
+      }
+    </div>
+
+    <div class="parchment-panel rounded-sm p-3 flex-1 min-h-32 overflow-y-auto space-y-3">
+      @if (privilegesTab() === 'racial') {
+        @if (privileges.raceTraits().length === 0 && privileges.subraceTraits().length === 0) {
+          <p class="text-xs text-slate-arcane italic">{{ localeService.t('no_traits_yet') }}</p>
+        }
+        @for (trait of privileges.raceTraits(); track $index) {
+          <div>
+            <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+            <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+          </div>
+        }
+        @for (trait of privileges.subraceTraits(); track $index) {
+          <div>
+            <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+            <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+          </div>
+        }
+      } @else if (privilegesTab() === 'subclass') {
+        @if (privileges.subclassTraits().length === 0) {
+          <p class="text-xs text-slate-arcane italic">{{ localeService.t('no_traits_yet') }}</p>
+        }
+        @for (trait of privileges.subclassTraits(); track $index) {
+          <div>
+            <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+            <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+          </div>
+        }
+      } @else {
+        @if (privileges.backgroundTraits().length === 0) {
+          <p class="text-xs text-slate-arcane italic">{{ localeService.t('no_traits_yet') }}</p>
+        }
+        @for (trait of privileges.backgroundTraits(); track $index) {
+          <div>
+            <h5 class="text-[0.6rem] uppercase tracking-wider text-fantasy-gold/60">{{ trait.name }}</h5>
+            <p class="text-sm text-gold-bright leading-snug">{{ trait.description }}</p>
+          </div>
+        }
+      }
+    </div>
+  </div>
+}

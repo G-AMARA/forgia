@@ -1,40 +1,88 @@
-<div>
-  <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('currency_title') }}</h3>
-  <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-    <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
-      <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('copper') + ')'"></div>
-      <div class="absolute inset-0 bg-fantasy-black/70"></div>
-      <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_copper_label') }}</span>
-      <input type="number" min="0" [ngModel]="inventory.copper()" (ngModelChange)="inventory.copper.set($event)" [disabled]="context.readOnly()"
-        class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
-    </div>
-    <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
-      <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('silver') + ')'"></div>
-      <div class="absolute inset-0 bg-fantasy-black/70"></div>
-      <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_silver_label') }}</span>
-      <input type="number" min="0" [ngModel]="inventory.silver()" (ngModelChange)="inventory.silver.set($event)" [disabled]="context.readOnly()"
-        class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
-    </div>
-    <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
-      <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('electrum') + ')'"></div>
-      <div class="absolute inset-0 bg-fantasy-black/70"></div>
-      <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_electrum_label') }}</span>
-      <input type="number" min="0" [ngModel]="inventory.electrum()" (ngModelChange)="inventory.electrum.set($event)" [disabled]="context.readOnly()"
-        class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
-    </div>
-    <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
-      <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('gold') + ')'"></div>
-      <div class="absolute inset-0 bg-fantasy-black/70"></div>
-      <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_gold_label') }}</span>
-      <input type="number" min="0" [ngModel]="inventory.gold()" (ngModelChange)="inventory.gold.set($event)" [disabled]="context.readOnly()"
-        class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
-    </div>
-    <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
-      <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('platinum') + ')'"></div>
-      <div class="absolute inset-0 bg-fantasy-black/70"></div>
-      <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_platinum_label') }}</span>
-      <input type="number" min="0" [ngModel]="inventory.platinum()" (ngModelChange)="inventory.platinum.set($event)" [disabled]="context.readOnly()"
-        class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
+@if (banner()) {
+  <div>
+    <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('currency_title') }}</h3>
+    <div class="flex flex-col gap-3">
+      <div class="relative self-start h-8">
+        <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)]" [style.background-color]="coinColors['copper']"></div>
+        <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+          <span class="text-[0.7rem] uppercase tracking-wider font-bold text-white whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_copper_label') }}</span>
+          <input type="number" min="0" [ngModel]="inventory.copper()" (ngModelChange)="inventory.copper.set($event)" [disabled]="context.readOnly()"
+            class="w-12 bg-transparent border-0 text-center text-3xl leading-none font-black text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.95)] focus:outline-none disabled:opacity-90" />
+        </div>
+      </div>
+      <div class="relative self-start h-8">
+        <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)]" [style.background-color]="coinColors['silver']"></div>
+        <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+          <span class="text-[0.7rem] uppercase tracking-wider font-bold text-white whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_silver_label') }}</span>
+          <input type="number" min="0" [ngModel]="inventory.silver()" (ngModelChange)="inventory.silver.set($event)" [disabled]="context.readOnly()"
+            class="w-12 bg-transparent border-0 text-center text-3xl leading-none font-black text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.95)] focus:outline-none disabled:opacity-90" />
+        </div>
+      </div>
+      <div class="relative self-start h-8">
+        <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)]" [style.background-color]="coinColors['electrum']"></div>
+        <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+          <span class="text-[0.7rem] uppercase tracking-wider font-bold text-white whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_electrum_label') }}</span>
+          <input type="number" min="0" [ngModel]="inventory.electrum()" (ngModelChange)="inventory.electrum.set($event)" [disabled]="context.readOnly()"
+            class="w-12 bg-transparent border-0 text-center text-3xl leading-none font-black text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.95)] focus:outline-none disabled:opacity-90" />
+        </div>
+      </div>
+      <div class="relative self-start h-8">
+        <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)]" [style.background-color]="coinColors['gold']"></div>
+        <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+          <span class="text-[0.7rem] uppercase tracking-wider font-bold text-white whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_gold_label') }}</span>
+          <input type="number" min="0" [ngModel]="inventory.gold()" (ngModelChange)="inventory.gold.set($event)" [disabled]="context.readOnly()"
+            class="w-12 bg-transparent border-0 text-center text-3xl leading-none font-black text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.95)] focus:outline-none disabled:opacity-90" />
+        </div>
+      </div>
+      <div class="relative self-start h-8">
+        <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)]" [style.background-color]="coinColors['platinum']"></div>
+        <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+          <span class="text-[0.7rem] uppercase tracking-wider font-bold text-white whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_platinum_label') }}</span>
+          <input type="number" min="0" [ngModel]="inventory.platinum()" (ngModelChange)="inventory.platinum.set($event)" [disabled]="context.readOnly()"
+            class="w-12 bg-transparent border-0 text-center text-3xl leading-none font-black text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.95)] focus:outline-none disabled:opacity-90" />
+        </div>
+      </div>
     </div>
   </div>
-</div>
+} @else {
+  <div>
+    <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('currency_title') }}</h3>
+    <div class="grid grid-cols-2 @2xl:grid-cols-5 gap-3">
+      <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('copper') + ')'"></div>
+        <div class="absolute inset-0 bg-fantasy-black/70"></div>
+        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_copper_label') }}</span>
+        <input type="number" min="0" [ngModel]="inventory.copper()" (ngModelChange)="inventory.copper.set($event)" [disabled]="context.readOnly()"
+          class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
+      </div>
+      <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('silver') + ')'"></div>
+        <div class="absolute inset-0 bg-fantasy-black/70"></div>
+        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_silver_label') }}</span>
+        <input type="number" min="0" [ngModel]="inventory.silver()" (ngModelChange)="inventory.silver.set($event)" [disabled]="context.readOnly()"
+          class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
+      </div>
+      <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('electrum') + ')'"></div>
+        <div class="absolute inset-0 bg-fantasy-black/70"></div>
+        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_electrum_label') }}</span>
+        <input type="number" min="0" [ngModel]="inventory.electrum()" (ngModelChange)="inventory.electrum.set($event)" [disabled]="context.readOnly()"
+          class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
+      </div>
+      <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('gold') + ')'"></div>
+        <div class="absolute inset-0 bg-fantasy-black/70"></div>
+        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_gold_label') }}</span>
+        <input type="number" min="0" [ngModel]="inventory.gold()" (ngModelChange)="inventory.gold.set($event)" [disabled]="context.readOnly()"
+          class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
+      </div>
+      <div class="frame-medieval relative rounded-sm p-3 flex flex-col items-center justify-center gap-1 overflow-hidden">
+        <div class="absolute inset-0 bg-cover bg-center" [style.background-image]="'url(' + getCoinImagePath('platinum') + ')'"></div>
+        <div class="absolute inset-0 bg-fantasy-black/70"></div>
+        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('currency_platinum_label') }}</span>
+        <input type="number" min="0" [ngModel]="inventory.platinum()" (ngModelChange)="inventory.platinum.set($event)" [disabled]="context.readOnly()"
+          class="relative w-full bg-transparent border-0 text-center text-2xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
+      </div>
+    </div>
+  </div>
+}

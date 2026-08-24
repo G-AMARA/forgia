@@ -23,14 +23,16 @@
   </div>
 
   <!-- Rappresentazione grafica: immagine caricata in Gestione > Armature per l'armatura
-       scelta (raw.image_url). Placeholder se assente. -->
-  <div class="frame-medieval relative w-full aspect-3/4 max-w-65 mx-auto rounded-sm overflow-hidden flex items-center justify-center bg-fantasy-black/40">
-    @if (equipment.selectedArmor()?.raw?.image_url; as armorImg) {
-      <img [src]="armorImg" alt="" class="w-full h-full object-contain" />
-    } @else {
-      <span class="text-5xl opacity-30">🛡️</span>
-    }
-  </div>
+       scelta (raw.image_url). Placeholder se assente. Nascosta in modalità compact. -->
+  @if (!compact()) {
+    <div class="frame-medieval relative w-full aspect-3/4 max-w-65 mx-auto rounded-sm overflow-hidden flex items-center justify-center bg-fantasy-black/40">
+      @if (equipment.selectedArmor()?.raw?.image_url; as armorImg) {
+        <img [src]="armorImg" alt="" class="w-full h-full object-contain" />
+      } @else {
+        <span class="text-5xl opacity-30">🛡️</span>
+      }
+    </div>
+  }
 
   <!-- Peso complessivo: armatura indossata + tutto l'inventario. -->
   <span class="block text-center text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('total_weight_label') }}</span>

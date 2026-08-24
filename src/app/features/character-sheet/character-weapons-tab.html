@@ -1,8 +1,8 @@
 @if (context.character(); as c) {
   <app-card contentClass="space-y-4">
     @if (!context.readOnly()) {
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        <select [ngModel]="weapons.selectedWeaponId()" (ngModelChange)="weapons.selectedWeaponId.set($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 sm:col-span-2">
+      <div class="grid grid-cols-1 @2xl:grid-cols-2 @4xl:grid-cols-3 gap-2">
+        <select [ngModel]="weapons.selectedWeaponId()" (ngModelChange)="weapons.selectedWeaponId.set($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 @2xl:col-span-2">
           <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
           @for (w of weapons.availableWeaponsCatalog(); track w.id) { <option [value]="w.id">{{ w.name }}</option> }
         </select>
@@ -20,8 +20,10 @@
       <app-character-weapons-table />
 
       <!-- "Libro" dei dettagli arma: sempre visibile, si popola al click su una riga. Solo
-           da sm in su, vedi card mobile sotto. -->
-      <div class="relative mt-4 hidden sm:block">
+           da @2xl in su (container query, non viewport: qui sotto per "abbastanza largo"
+           si intende la larghezza reale del contenitore, che nella pagina Gioca è la
+           colonna 1/4 — vedi card mobile sotto per lo spazio stretto. -->
+      <div class="relative mt-4 hidden @2xl:block">
         @if (weapons.selectedWeaponDetail(); as sw) {
           <button (click)="weapons.toggleWeaponSelection(sw.rowId)" [attr.aria-label]="localeService.t('cancel_button')"
             class="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded-full bg-fantasy-black/70 text-gold-glow hover:bg-fantasy-black transition-colors">
@@ -56,7 +58,7 @@
 
       <!-- Mobile: niente overlay sull'immagine, card normale in flusso invece. -->
       @if (weapons.selectedWeaponDetail(); as sw) {
-        <div class="sm:hidden mt-4 parchment-panel rounded-lg p-4 space-y-3">
+        <div class="@2xl:hidden mt-4 parchment-panel rounded-lg p-4 space-y-3">
           <div class="flex items-start justify-between gap-2">
             <h3 class="font-display text-lg text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ sw.name }}</h3>
             <button (click)="weapons.toggleWeaponSelection(sw.rowId)" [attr.aria-label]="localeService.t('cancel_button')"

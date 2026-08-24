@@ -30,6 +30,9 @@
         <app-auth-form variant="landing" class="block w-full"></app-auth-form>
       </div>
     </div>
+  } @else if (appNav.activeTab() === 'play') {
+    <!-- Pagina "Gioca": a tutto schermo, niente header/navbar/footer dell'app shell. -->
+    <router-outlet />
   } @else {
   <!-- Immagine decorativa in trasparenza, fissa rispetto al viewport (non al contenuto):
        così il cavaliere resta sempre alla stessa scala qualunque sia la tab attiva, invece

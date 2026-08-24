@@ -1,12 +1,14 @@
 import { Routes } from '@angular/router';
 import { Dashboard } from './features/dashboard/dashboard';
 import { CharacterSheetPage } from './features/character-sheet-page/character-sheet-page';
+import { Play } from './features/play/play';
 import { ResetPassword } from './features/reset-password/reset-password';
 import { authGuard } from './core/auth-guard';
 
 export const routes: Routes = [
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'scheda-personaggio/:id', component: CharacterSheetPage, canActivate: [authGuard] },
+  { path: 'gioca/:campaignId', component: Play, canActivate: [authGuard] },
   { path: 'reset-password', component: ResetPassword },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

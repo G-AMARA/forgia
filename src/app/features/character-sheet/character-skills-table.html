@@ -1,7 +1,7 @@
 @if (context.character(); as c) {
   <div class="border-t border-gold/20 pt-5">
     <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('skills_label') }}</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-3 sm:gap-x-6">
+    <div class="grid grid-cols-1 @2xl:grid-cols-3 @2xl:gap-x-6">
       @for (column of skillColumns; track $index) {
         <div class="divide-y divide-gold/20">
           @for (skill of column; track skill.key) {

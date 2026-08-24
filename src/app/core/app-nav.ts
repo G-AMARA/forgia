@@ -8,13 +8,15 @@ export type Tab =
   | 'characters'
   | 'catalog'
   | 'character-sheet'
+  | 'play'
   | 'manage'
   | 'profile';
 
-// 'character-sheet' non viene persistita: è derivata dall'URL (/scheda-personaggio/:id),
-// che app.ts già ripristina autonomamente al caricamento leggendo il path richiesto.
+// 'character-sheet' e 'play' non vengono persistite: sono derivate dall'URL
+// (/scheda-personaggio/:id, /gioca/:campaignId), che app.ts già ripristina autonomamente
+// al caricamento leggendo il path richiesto.
 const STORAGE_KEY = 'fanta-active-tab';
-const NON_PERSISTED_TABS: Tab[] = ['character-sheet'];
+const NON_PERSISTED_TABS: Tab[] = ['character-sheet', 'play'];
 
 function readStoredTab(): Tab {
   const stored = sessionStorage.getItem(STORAGE_KEY) as Tab | null;

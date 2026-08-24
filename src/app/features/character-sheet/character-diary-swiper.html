@@ -1,9 +1,9 @@
-<div [class.lg:col-span-2]="context.readOnly()" class="flex flex-col gap-3">
+<div class="flex flex-col gap-3" [class]="context.readOnly() ? '@4xl:col-span-2' : ''">
   @if (diary.pages().length === 0) {
     <p class="text-slate-arcane italic text-sm text-center py-6">{{ localeService.t('diary_empty_label') }}</p>
   } @else {
     <swiper-container init="true" navigation="true" style="--swiper-navigation-color: #c7a45e"
-      class="block w-full aspect-671/942 lg:aspect-auto lg:w-[21.4rem] lg:h-120 mx-auto">
+      class="block w-full aspect-671/942 @4xl:aspect-auto @4xl:w-[21.4rem] @4xl:h-120 mx-auto">
       @for (page of diary.pages(); track page.id) {
         <swiper-slide class="relative">
           @if (!context.readOnly()) {

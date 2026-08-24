@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-3 lg:h-120">
+<div class="flex flex-col gap-3 @4xl:h-120">
   <div class="flex flex-col gap-1">
     <label class="text-sm font-semibold text-fantasy-gold">{{ localeService.t('diary_date_label') }}</label>
     <input type="date" [ngModel]="diary.newEntryDate()" (ngModelChange)="diary.newEntryDate.set($event)"
