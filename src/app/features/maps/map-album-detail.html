@@ -1,0 +1,40 @@
+<div class="space-y-4">
+  <div class="flex items-center gap-2">
+    <button
+      (click)="back.emit()"
+      class="shrink-0 text-xs px-3 py-1 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+    >
+      ← {{ localeService.t('back_to_albums_button') }}
+    </button>
+    <h3 class="flex-1 text-center font-display text-lg text-fantasy-gold truncate">{{ album().name }}</h3>
+  </div>
+
+  @if (canManage()) {
+    <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-fantasy-black/40 border border-gold/40 rounded p-3">
+      <label
+        class="text-xs px-3 py-2 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors shrink-0"
+        [class.opacity-50]="uploading()"
+      >
+        {{ uploading() ? localeService.t('loading') : localeService.t('choose_image_label') }}
+        <input type="file" accept="image/*" class="hidden" [disabled]="uploading()" (change)="onFileSelected($event)" />
+      </label>
+      <input
+        type="text" [(ngModel)]="captionDraft" [placeholder]="localeService.t('map_image_caption_placeholder')"
+        class="flex-1 w-full px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+    </div>
+  }
+
+  @if (album().images.length === 0) {
+    <p class="text-slate-arcane italic text-sm">{{ localeService.t('no_images_yet') }}</p>
+  } @else {
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      @for (image of album().images; track image.id) {
+        <app-map-image-card
+          [image]="image" [canManage]="canManage()"
+          (captionSave)="saveCaption(image.id, $event)" (delete)="deleteImage(image.id)"
+        />
+      }
+    </div>
+  }
+</div>

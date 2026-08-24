@@ -7,14 +7,16 @@ import { AppNav } from '../../core/app-nav';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { getCover, getCoverImagePath } from '../../core/campaign-covers';
+import { formatDateTime } from '../../core/datetime-local';
 import { Bestiary } from '../bestiary/bestiary';
+import { Maps } from '../maps/maps';
 
 type CampaignSection = 'session-log' | 'bestiary' | 'maps';
 
 @Component({
   selector: 'app-campaign-hub',
   standalone: true,
-  imports: [Bestiary],
+  imports: [Bestiary, Maps],
   templateUrl: './campaign-hub.html',
 })
 export class CampaignHub {
@@ -32,6 +34,10 @@ export class CampaignHub {
   });
 
   getCoverImagePath = getCoverImagePath;
+
+  formatNextSession(iso: string | null): string | null {
+    return formatDateTime(iso, this.localeService.locale());
+  }
 
   isOwner = computed(() => {
     const campaign = this.campaignStore.current();
