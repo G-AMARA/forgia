@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { LocaleService } from '../../core/locale';
 import { CharacterSheetContext } from './character-sheet-context';
 import { CharacterEquipmentService } from './character-equipment';
@@ -13,4 +13,8 @@ export class CharacterMountPanel {
   protected context = inject(CharacterSheetContext);
   protected equipment = inject(CharacterEquipmentService);
   protected localeService = inject(LocaleService);
+
+  // Nasconde l'immagine della cavalcatura: usato dal pannello compatto della pagina
+  // "Gioca" (PlayCharacterPanel), stesso motivo di CharacterArmorPanel.compact.
+  readonly compact = input(false);
 }

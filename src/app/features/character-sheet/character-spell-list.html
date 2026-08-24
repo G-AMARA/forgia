@@ -6,7 +6,7 @@
       @for (group of spells.groupedCharacterSpells(); track group.level) {
         <div>
           <h4 class="font-display text-sm text-fantasy-gold mb-2">{{ group.label }} ({{ group.spells.length }})</h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 @2xl:grid-cols-2 gap-3">
             @for (spell of group.spells; track spell.rowId) {
               <app-character-spell-card [spell]="spell" />
             }

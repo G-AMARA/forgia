@@ -100,6 +100,9 @@ export class App {
       if (!hasHandledInitialAuth && initialPath.startsWith('/scheda-personaggio/')) {
         this.appNav.setTab('character-sheet');
         this.router.navigateByUrl(initialPath);
+      } else if (!hasHandledInitialAuth && initialPath.startsWith('/gioca/')) {
+        this.appNav.setTab('play');
+        this.router.navigateByUrl(initialPath);
       } else if (!hasHandledInitialAuth && initialPath.startsWith('/reset-password')) {
         // Il link di recupero password nell'email autentica automaticamente l'utente
         // (Supabase rileva il token nell'URL) mentre si trova ancora su /reset-password:

@@ -30,13 +30,17 @@
               @if (w.costValue != null) { {{ w.costValue }} {{ localeService.t('coin_unit_' + w.costUnit) }} } @else { <span class="text-slate-arcane">—</span> }
             </td>
             @if (!context.readOnly()) {
-              <td class="py-2 px-2">
-                <button (click)="$event.stopPropagation(); weapons.removeWeapon(w.rowId, w.name)" [attr.aria-label]="localeService.t('remove_button')" class="p-1 rounded hover:bg-red-900/40 transition-colors">
-                  <svg viewBox="0 0 24 24" class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                    <line x1="5" y1="5" x2="19" y2="19" />
-                    <line x1="19" y1="5" x2="5" y2="19" />
-                  </svg>
-                </button>
+              <td class="py-2 px-2" (click)="$event.stopPropagation()">
+                <div class="flex items-center gap-1.5">
+                  <input type="number" min="1" [max]="w.quantity" [ngModel]="weapons.removeQty(w.rowId)" (ngModelChange)="weapons.setRemoveQty(w.rowId, $event)"
+                    class="w-14 px-1 py-0.5 rounded border border-gold bg-fantasy-black/60 text-xs text-center" />
+                  <button (click)="weapons.openRemoveModal(w.rowId, w.quantity, w.name)" [attr.aria-label]="localeService.t('remove_button')" class="p-1 rounded hover:bg-red-900/40 transition-colors">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                      <line x1="5" y1="5" x2="19" y2="19" />
+                      <line x1="19" y1="5" x2="5" y2="19" />
+                    </svg>
+                  </button>
+                </div>
               </td>
             }
           </tr>
@@ -44,4 +48,28 @@
       </tbody>
     </table>
   </div>
+
+  <app-generic-modal
+    [isOpen]="weapons.isModalOpen()"
+    [title]="weapons.localModalTitle()"
+    [imageSrc]="weapons.localModalImageSrc()"
+    [imageAlt]="weapons.localModalImageAlt()"
+    [cancelLabel]="weapons.localModalCancelLabel()"
+    [confirmLabel]="weapons.localModalConfirmLabel()"
+    [variant]="weapons.localModalVariant()"
+    [modalCustomBody]="true"
+    (closeModal)="weapons.closeModal()"
+    (confirmModal)="weapons.confirmRemoveWeapon()">
+    <div modal-custom-body class="flex-1 text-left">
+      <p class="text-sm leading-6 text-fantasy-moonstone">
+        {{ localeService.t('remove_character_item_modal_message') }}
+      </p>
+      <p class="text-sm text-center py-2 leading-6 text-fantasy-moonstone">
+        <strong>{{ weapons.modalItemName }}</strong>
+      </p>
+      <p class="text-sm leading-6 text-fantasy-moonstone">
+        {{ localeService.t('remove_character_item_modal_message_2') }}
+      </p>
+    </div>
+  </app-generic-modal>
 }

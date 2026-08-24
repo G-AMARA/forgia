@@ -21,13 +21,15 @@
     <p class="relative text-center text-lg font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ equipment.selectedMount()?.name ?? localeService.t('mount_none_label') }}</p>
   </div>
 
-  <div class="frame-medieval relative w-full aspect-3/4 max-w-65 mx-auto rounded-sm overflow-hidden flex items-center justify-center bg-fantasy-black/40">
-    @if (equipment.selectedMount()?.raw?.image_url; as mountImg) {
-      <img [src]="mountImg" alt="" class="w-full h-full object-contain" />
-    } @else {
-      <span class="text-5xl opacity-30">🐴</span>
-    }
-  </div>
+  @if (!compact()) {
+    <div class="frame-medieval relative w-full aspect-3/4 max-w-65 mx-auto rounded-sm overflow-hidden flex items-center justify-center bg-fantasy-black/40">
+      @if (equipment.selectedMount()?.raw?.image_url; as mountImg) {
+        <img [src]="mountImg" alt="" class="w-full h-full object-contain" />
+      } @else {
+        <span class="text-5xl opacity-30">🐴</span>
+      }
+    </div>
+  }
 
   @if (equipment.selectedMount()?.raw?.carrying_capacity; as capacity) {
     <div class="flex items-center justify-center gap-2 px-3 py-2 rounded border border-gold/40 bg-fantasy-black/40 max-w-65 mx-auto w-full text-xs">

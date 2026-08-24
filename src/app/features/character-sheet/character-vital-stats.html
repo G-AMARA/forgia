@@ -1,39 +1,90 @@
 @if (context.character(); as c) {
-  <div>
-    <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('vital_stats_title') }}</h3>
-    <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
-      <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
-        <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
-        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('current_hp_label') }}</span>
-        <input type="number" [ngModel]="combat.currentHp()" (ngModelChange)="combat.currentHp.set($event)" [disabled]="context.readOnly()"
-          class="relative w-full bg-transparent border-0 text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
-      </div>
-      <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
-        <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
-        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('max_hp_label') }}</span>
-        <input type="number" [ngModel]="combat.maxHp()" (ngModelChange)="combat.maxHp.set($event)" [disabled]="context.readOnly()"
-          class="relative w-full bg-transparent border-0 text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
-      </div>
-      <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
-        <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
-        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('armor_class_label') }}</span>
-        <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ combat.currentArmorClass() }}</p>
-      </div>
-      <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
-        <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
-        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('proficiency_bonus_label') }}</span>
-        <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ formatModifier(combat.proficiencyBonus(c.level)) }}</p>
-      </div>
-      <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
-        <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
-        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('initiative_label') }}</span>
-        <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ formatModifier(abilityModifier(identity.abilityScores()['dex'])) }}</p>
-      </div>
-      <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
-        <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
-        <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('speed_label') }}</span>
-        <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ combat.totalSpeed() }}m</p>
+  @if (banner()) {
+    <div>
+      <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('vital_stats_title') }}</h3>
+      <div class="flex flex-col gap-3">
+        <div class="relative self-start h-8">
+          <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)] bg-linear-to-r from-fantasy-gold via-gold-bright to-fantasy-gold"></div>
+          <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+            <span class="text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('current_hp_label_full') }}</span>
+            <input type="number" [ngModel]="combat.currentHp()" (ngModelChange)="combat.currentHp.set($event)" [disabled]="context.readOnly()"
+              class="w-12 bg-transparent border-0 text-center text-3xl leading-none font-black text-gold-glow [text-shadow:0_2px_6px_rgba(0,0,0,0.95)] focus:outline-none disabled:opacity-90" />
+          </div>
+        </div>
+        <div class="relative self-start h-8">
+          <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)] bg-linear-to-r from-fantasy-gold via-gold-bright to-fantasy-gold"></div>
+          <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+            <span class="text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('max_hp_label_full') }}</span>
+            <span class="text-3xl leading-none font-black text-gold-glow [text-shadow:0_2px_6px_rgba(0,0,0,0.95)]">{{ combat.maxHp() }}</span>
+          </div>
+        </div>
+        <div class="relative self-start h-8">
+          <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)] bg-linear-to-r from-fantasy-gold via-gold-bright to-fantasy-gold"></div>
+          <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+            <span class="text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('armor_class_label') }}</span>
+            <span class="text-3xl leading-none font-black text-gold-glow [text-shadow:0_2px_6px_rgba(0,0,0,0.95)]">{{ combat.currentArmorClass() }}</span>
+          </div>
+        </div>
+        <div class="relative self-start h-8">
+          <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)] bg-linear-to-r from-fantasy-gold via-gold-bright to-fantasy-gold"></div>
+          <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+            <span class="text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('proficiency_bonus_label') }}</span>
+            <span class="text-3xl leading-none font-black text-gold-glow [text-shadow:0_2px_6px_rgba(0,0,0,0.95)]">{{ formatModifier(combat.proficiencyBonus(c.level)) }}</span>
+          </div>
+        </div>
+        <div class="relative self-start h-8">
+          <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)] bg-linear-to-r from-fantasy-gold via-gold-bright to-fantasy-gold"></div>
+          <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+            <span class="text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('initiative_label') }}</span>
+            <span class="text-3xl leading-none font-black text-gold-glow [text-shadow:0_2px_6px_rgba(0,0,0,0.95)]">{{ formatModifier(abilityModifier(identity.abilityScores()['dex'])) }}</span>
+          </div>
+        </div>
+        <div class="relative self-start h-8">
+          <div class="absolute inset-0 rounded-sm [clip-path:polygon(0_0,100%_0,85%_100%,0_100%)] bg-linear-to-r from-fantasy-gold via-gold-bright to-fantasy-gold"></div>
+          <div class="relative flex items-center gap-3 h-full pl-3 pr-5">
+            <span class="text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('speed_label') }}</span>
+            <span class="text-3xl leading-none font-black text-gold-glow [text-shadow:0_2px_6px_rgba(0,0,0,0.95)]">{{ combat.totalSpeed() }}m</span>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  } @else {
+    <div>
+      <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('vital_stats_title') }}</h3>
+      <div class="grid grid-cols-2 @2xl:grid-cols-6 gap-3">
+        <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+          <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+          <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('current_hp_label') }}</span>
+          <input type="number" [ngModel]="combat.currentHp()" (ngModelChange)="combat.currentHp.set($event)" [disabled]="context.readOnly()"
+            class="relative w-full bg-transparent border-0 text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
+        </div>
+        <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+          <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+          <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('max_hp_label') }}</span>
+          <input type="number" [ngModel]="combat.maxHp()" (ngModelChange)="combat.maxHp.set($event)" [disabled]="context.readOnly()"
+            class="relative w-full bg-transparent border-0 text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)] focus:outline-none disabled:opacity-90" />
+        </div>
+        <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+          <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+          <span [title]="localeService.t('armor_class_label')" class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('armor_class_label_abbr') }}</span>
+          <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ combat.currentArmorClass() }}</p>
+        </div>
+        <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+          <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+          <span [title]="localeService.t('proficiency_bonus_label')" class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('proficiency_bonus_label_abbr') }}</span>
+          <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ formatModifier(combat.proficiencyBonus(c.level)) }}</p>
+        </div>
+        <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+          <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+          <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('initiative_label') }}</span>
+          <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ formatModifier(abilityModifier(identity.abilityScores()['dex'])) }}</p>
+        </div>
+        <div class="frame-medieval relative rounded-sm px-3 py-2 flex flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+          <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+          <span class="relative text-[0.7rem] uppercase tracking-wider font-bold text-gold-glow whitespace-nowrap [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('speed_label') }}</span>
+          <p class="relative w-full text-center text-3xl font-black text-gold-glow [text-shadow:0_2px_5px_rgba(0,0,0,0.9)]">{{ combat.totalSpeed() }}m</p>
+        </div>
+      </div>
+    </div>
+  }
 }
