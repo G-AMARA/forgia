@@ -98,6 +98,7 @@ export class SubraceCreate {
 
   async submit() {
     this.loading.set(true);
+    const editingId = this.editingId;
 
     const payload = {
       name: this.name,
@@ -111,8 +112,8 @@ export class SubraceCreate {
       skill_proficiencies: Array.from(this.selectedSkills),
     };
 
-    const { error } = this.editingId
-      ? await this.supabase.client.from('subraces').update(payload).eq('id', this.editingId)
+    const { error } = editingId
+      ? await this.supabase.client.from('subraces').update(payload).eq('id', editingId)
       : await this.supabase.client.from('subraces').insert(payload);
 
     if (error) {
@@ -120,12 +121,14 @@ export class SubraceCreate {
     } else {
       // Senza questo, una vecchia traduzione salvata (content_translations) continuerebbe
       // a "vincere" sul nome appena modificato qui, mostrando per sempre quello vecchio.
-      if (this.editingId) {
-        await this.contentStore.clearTranslation('subraces', this.editingId);
+      if (editingId) {
+        await this.contentStore.clearTranslation('subraces', editingId);
       }
+      this.modal.success(this.localeService.t(
+        !editingId ? 'well_subrace_created' : 'well_subrace_updated'
+      ));
       this.resetForm();
       await this.refreshSubraces();
-      this.modal.success(this.localeService.t('saved_message'));
     }
 
     this.loading.set(false);
@@ -143,14 +146,19 @@ export class SubraceCreate {
   }
 
   async deleteSubrace(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_subrace')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_subrace')} ${name}?`);
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('subraces').delete().eq('id', id);
     if (error) {
       this.modal.error(error.message);
-    } else {
+    } 
+    else {
       await this.refreshSubraces();
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('subrace_deleted_msg_1')} ${name}, ${this.localeService.t('subrace_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }

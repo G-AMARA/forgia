@@ -188,7 +188,9 @@ export class MonsterForm implements OnInit {
       return;
     }
 
-    this.modal.success(this.localeService.t('saved_message'));
+    this.modal.success(this.localeService.t(
+        !this.editingId ? 'well_creature_created' : 'well_creature_updated'
+      ));
     this.closed.emit();
   }
 }

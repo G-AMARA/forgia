@@ -156,7 +156,7 @@ export class AuthForm {
 
     if (this.mode() === 'signup') {
       if (!this.isEmailValid(this.email)) {
-        this.modal.error('Inserisci un indirizzo email valido.');
+        this.modal.error(this.localeService.t('recover_check_email_invalid_email'));
         this.loading.set(false);
         return;
       }
@@ -170,13 +170,13 @@ export class AuthForm {
       }
 
       if (!this.isPasswordStrong(this.password)) {
-        this.modal.error('La password deve avere almeno 8 caratteri, una maiuscola, un numero e un simbolo.');
+        this.modal.error(this.localeService.t('password_pattern_hint'));
         this.loading.set(false);
         return;
       }
 
       if (this.password !== this.repeat_password) {
-        this.modal.error('Le password non coincidono.');
+        this.modal.error(this.localeService.t('no_matching_passwords'));
         this.loading.set(false);
         return;
       }

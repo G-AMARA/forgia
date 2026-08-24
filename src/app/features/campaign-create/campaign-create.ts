@@ -63,7 +63,7 @@ export class CampaignCreate {
       this.maxPlayers = null;
       this.startingLevel = 1;
       this.isPublic = false;
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(this.localeService.t('well_created_campaign'));
     }
 
     this.loading.set(false);
@@ -71,13 +71,23 @@ export class CampaignCreate {
 
   async deleteCampaign(campaignId: string, campaignName: string) {
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_campaign')} "${campaignName}"?`
+      `${this.localeService.t('confirm_delete_campaign')}` + `"${campaignName}"?`,
+      { 
+        confirmLabel: this.localeService.t('confirm_delete_button_confirm'),
+        cancelLabel: this.localeService.t('cancel_button'),
+      }
     );
     if (!confirmed) return;
 
     const { error } = await this.campaignStore.deleteCampaign(campaignId);
     if (error) {
       this.modal.error(error.message);
+    }
+    else{
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('campaign_deleted_msg_1')} "${campaignName}" ${this.localeService.t('campaign_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }

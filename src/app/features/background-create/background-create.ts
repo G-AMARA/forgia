@@ -117,9 +117,11 @@ export class BackgroundCreate {
       if (this.editingId) {
         await this.contentStore.clearTranslation('backgrounds', this.editingId);
       }
-      this.resetForm();
       await this.refreshBackgrounds();
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(
+        this.localeService.t(!this.editingId ? 'background_well_created' : 'background_well_updated')
+      );
+      this.resetForm();
     }
 
     this.loading.set(false);
@@ -134,14 +136,23 @@ export class BackgroundCreate {
   }
 
   async deleteBackground(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_background')} "${name}"?`);
+    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_background')} "${name}"?`, 
+    { 
+      confirmLabel: this.localeService.t('confirm_delete_background_title'),
+      cancelLabel: this.localeService.t('cancel_button'), 
+    })
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('backgrounds').delete().eq('id', id);
     if (error) {
       this.modal.error(error.message);
-    } else {
+    } 
+    else {
       await this.refreshBackgrounds();
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('background_deleted_msg_1')} ${name}, ${this.localeService.t('background_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }

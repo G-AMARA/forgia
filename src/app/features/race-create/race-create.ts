@@ -116,9 +116,11 @@ export class RaceCreate {
       if (this.editingId) {
         await this.contentStore.clearTranslation('races', this.editingId);
       }
-      this.resetForm();
       await this.refreshRaces();
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(this.localeService.t(
+        !this.editingId ? 'well_race_created' : 'well_race_updated'
+      ));
+      this.resetForm();
     }
 
     this.loading.set(false);
@@ -136,7 +138,13 @@ export class RaceCreate {
   }
 
   async deleteRace(id: string, name: string) {
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_delete_race')} "${name}"?`);
+    const confirmed = await this.modal.confirm(
+      `${this.localeService.t('confirm_delete_race')} ${name}?`,
+      {
+        cancelLabel: this.localeService.t('cancel_button'),
+        confirmLabel: this.localeService.t('confirm_delete_race_title')
+      }
+    );
     if (!confirmed) return;
 
     const { error } = await this.supabase.client.from('races').delete().eq('id', id);
@@ -144,6 +152,10 @@ export class RaceCreate {
       this.modal.error(error.message);
     } else {
       await this.refreshRaces();
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('race_deleted_msg_1')} ${name}, ${this.localeService.t('race_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }
