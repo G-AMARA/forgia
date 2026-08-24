@@ -14,7 +14,39 @@
           @if (campaignStore.current()?.description) {
             <p class="text-sm italic opacity-80">{{ campaignStore.current()?.description }}</p>
           }
-  
+
+          @if (campaignStore.current(); as c) {
+            <div class="flex flex-wrap gap-1.5 text-[0.7rem]">
+              <span
+                class="px-2 py-0.5 rounded-full border"
+                [class]="{
+                  active: 'border-forest text-forest',
+                  paused: 'border-fantasy-gold text-fantasy-gold',
+                  completed: 'border-slate-arcane text-slate-arcane'
+                }[c.status]"
+              >
+                {{ localeService.t('campaign_status_' + c.status) }}
+              </span>
+              @if (formatNextSession(c.next_session_at); as nextSession) {
+                <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">📅 {{ nextSession }}</span>
+              }
+              <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">
+                {{ localeService.t('level_label') }} {{ c.starting_level }}
+              </span>
+              @if (c.max_players) {
+                <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">
+                  {{ localeService.t('max_players_label') }}: {{ c.max_players }}
+                </span>
+              }
+              <span
+                class="px-2 py-0.5 rounded-full border"
+                [class]="c.is_public ? 'border-forest text-forest' : 'border-slate-arcane text-slate-arcane'"
+              >
+                {{ localeService.t(c.is_public ? 'campaign_public_label' : 'campaign_private_label') }}
+              </span>
+            </div>
+          }
+
           <div class="flex flex-wrap gap-2 pt-2">
             @if (isOwner()) {
               <button
@@ -23,27 +55,27 @@
               >
                 {{ localeService.t('manage_campaign_button') }}
               </button>
-              @if (!hasOwnCharacter()) {
-                <button
-                  (click)="goToCharacters()"
-                  class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
-                >
-                  {{ localeService.t('create_my_character_button') }}
-                </button>
-              }
-            } @else if (!hasOwnCharacter()) {
+            }
+            @if (hasOwnCharacter()) {
+              <button
+                (click)="goToMyCharacter()"
+                class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+              >
+                {{ localeService.t('play_button') }}
+              </button>
+            } @else if (isOwner()) {
+              <button
+                (click)="goToCharacters()"
+                class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+              >
+                {{ localeService.t('create_my_character_button') }}
+              </button>
+            } @else {
               <button
                 (click)="goToCharacters()"
                 class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
               >
                 {{ localeService.t('create_character_button') }}
-              </button>
-            } @else {
-              <button
-                (click)="goToMyCharacter()"
-                class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
-              >
-                {{ localeService.t('view_my_character_button') }}
               </button>
             }
           </div>
@@ -99,14 +131,23 @@
             <p class="font-display text-sm text-fantasy-moonstone">🐲 {{ localeService.t('bestiary_title') }}</p>
           </button>
         }
-        <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
-          <p class="font-display text-sm text-fantasy-moonstone">🗺️ {{ localeService.t('maps_title') }}</p>
-          <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
-        </div>
+        @if (isOwner() || auth.isAdmin()) {
+          <button
+            type="button"
+            (click)="toggleSection('maps')"
+            class="border border-gold/50 rounded-lg p-4 text-center cursor-pointer hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
+            [class.border-gold-bright]="expandedSection() === 'maps'"
+          >
+            <p class="font-display text-sm text-fantasy-moonstone">🗺️ {{ localeService.t('maps_title') }}</p>
+          </button>
+        }
       </div>
 
       @if (expandedSection() === 'bestiary') {
         <app-bestiary [campaignId]="campaignStore.current()!.id"></app-bestiary>
+      }
+      @if (expandedSection() === 'maps') {
+        <app-maps [campaignId]="campaignStore.current()!.id"></app-maps>
       }
     </section>
   }

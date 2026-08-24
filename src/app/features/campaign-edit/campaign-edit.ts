@@ -1,10 +1,11 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActiveCampaign } from '../../core/active-campaign';
+import { ActiveCampaign, CampaignStatus } from '../../core/active-campaign';
 import { AppNav } from '../../core/app-nav';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { CAMPAIGN_COVERS, getCoverImagePath } from '../../core/campaign-covers';
+import { toDatetimeLocalValue, fromDatetimeLocalValue } from '../../core/datetime-local';
 
 @Component({
   selector: 'app-campaign-edit',
@@ -22,10 +23,16 @@ export class CampaignEdit implements OnInit {
   getCoverImagePath = getCoverImagePath;
 
   readonly maxDescriptionLength = 700;
+  readonly statuses: CampaignStatus[] = ['active', 'paused', 'completed'];
 
   name = '';
   description = '';
   coverKey = '';
+  status: CampaignStatus = 'active';
+  nextSessionAtLocal = '';
+  maxPlayers: number | null = null;
+  startingLevel = 1;
+  isPublic = false;
 
   loading = signal(false);
 
@@ -35,6 +42,11 @@ export class CampaignEdit implements OnInit {
       this.name = campaign.name;
       this.description = campaign.description ?? '';
       this.coverKey = campaign.cover_key;
+      this.status = campaign.status;
+      this.nextSessionAtLocal = toDatetimeLocalValue(campaign.next_session_at);
+      this.maxPlayers = campaign.max_players;
+      this.startingLevel = campaign.starting_level;
+      this.isPublic = campaign.is_public;
     }
   }
 
@@ -48,12 +60,17 @@ export class CampaignEdit implements OnInit {
       name: this.name,
       description: this.description,
       coverKey: this.coverKey,
+      status: this.status,
+      nextSessionAt: fromDatetimeLocalValue(this.nextSessionAtLocal),
+      maxPlayers: this.maxPlayers,
+      startingLevel: this.startingLevel,
+      isPublic: this.isPublic,
     });
 
     if (error) {
       this.modal.error(error.message);
     } else {
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(this.localeService.t('well_updated_campaign'));
       this.appNav.setTab('hub');
     }
 
@@ -65,7 +82,11 @@ export class CampaignEdit implements OnInit {
     if (!campaign) return;
 
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`
+      `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`,
+      {
+        cancelLabel: this.localeService.t('cancel_button'),
+        confirmLabel: this.localeService.t('confirm_delete_button_confirm'),
+      }
     );
     if (!confirmed) return;
 
@@ -73,6 +94,10 @@ export class CampaignEdit implements OnInit {
     if (error) {
       this.modal.error(error.message);
     } else {
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('campaign_deleted_msg_1')} "${campaign.name}" ${this.localeService.t('campaign_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
       this.appNav.setTab('board');
     }
   }

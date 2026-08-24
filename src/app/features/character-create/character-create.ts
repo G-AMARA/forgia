@@ -616,7 +616,7 @@ export class CharacterCreate {
     });
 
     if (error || !characterId) {
-      this.modal.error(error?.message ?? 'Errore sconosciuto');
+      this.modal.error(error?.message ?? this.localeService.t('error_generic'));
       this.loading.set(false);
       return;
     }

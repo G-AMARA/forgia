@@ -41,7 +41,15 @@
 
               <!-- Corpo -->
               <div class="p-4 flex flex-col gap-2 flex-1">
-                <h3 class="font-display text-lg text-fantasy-moonstone">{{ campaign.name }}</h3>
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="font-display text-lg text-fantasy-moonstone">{{ campaign.name }}</h3>
+                  <span
+                    class="shrink-0 text-[0.6rem] uppercase tracking-wide px-1.5 py-0.5 rounded border"
+                    [class]="campaign.isPublic ? 'border-forest text-forest' : 'border-slate-arcane text-slate-arcane'"
+                  >
+                    {{ localeService.t(campaign.isPublic ? 'campaign_public_label' : 'campaign_private_label') }}
+                  </span>
+                </div>
                 <p class="text-xs text-slate-arcane">
                   {{ localeService.t('master_label') }}: <strong>{{ campaign.masterNickname }}</strong>
                 </p>
@@ -50,9 +58,35 @@
                   <p class="text-sm italic opacity-80">{{ campaign.description }}</p>
                 }
 
+                <div class="flex flex-wrap gap-1.5 text-[0.65rem]">
+                  <span
+                    class="px-2 py-0.5 rounded-full border"
+                    [class]="{
+                      active: 'border-forest text-forest',
+                      paused: 'border-fantasy-gold text-fantasy-gold',
+                      completed: 'border-slate-arcane text-slate-arcane'
+                    }[campaign.status]"
+                  >
+                    {{ localeService.t('campaign_status_' + campaign.status) }}
+                  </span>
+                  @if (formatNextSession(campaign.nextSessionAt); as nextSession) {
+                    <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">📅 {{ nextSession }}</span>
+                  }
+                  <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">
+                    {{ localeService.t('level_label') }} {{ campaign.startingLevel }}
+                  </span>
+                </div>
+
                 <div class="mt-auto pt-2 border-t border-gold/40 flex justify-between items-center">
-                  <span class="text-xs px-2 py-1 bg-gold/20 rounded-full text-fantasy-moonstone">
-                    {{ campaign.characterCount }} {{ localeService.t('characters_label') }}
+                  <span
+                    class="flex items-center gap-1 text-xs px-2 py-1 bg-gold/20 rounded-full text-fantasy-moonstone"
+                    [attr.title]="localeService.t('characters_label')"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" [attr.aria-label]="localeService.t('characters_label')" role="img">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+                    </svg>
+                    {{ campaign.characterCount }}@if (campaign.maxPlayers) {/{{ campaign.maxPlayers }}}
                   </span>
                   <span class="text-xs text-fantasy-gold underline">{{ localeService.t('enter_campaign') }}</span>
                 </div>

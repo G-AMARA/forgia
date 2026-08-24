@@ -161,9 +161,11 @@ export class ArmorCreate {
     if (error) {
       this.modal.error(error.message);
     } else {
-      this.resetForm();
       await this.refreshEquipment();
-      this.modal.success(this.localeService.t('saved_message'));
+      this.modal.success(this.localeService.t(
+      this.localeService.t(!this.editingId ? 'well_armor_created' : 'well_armor_updated')
+      ));
+      this.resetForm();
     }
 
     this.loading.set(false);
@@ -183,6 +185,10 @@ export class ArmorCreate {
         .eq('content_table', 'equipment')
         .eq('content_id', id);
       await this.refreshEquipment();
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('armor_deleted_msg_1')} ${name}, ${this.localeService.t('armor_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }

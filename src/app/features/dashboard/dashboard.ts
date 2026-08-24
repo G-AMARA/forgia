@@ -1,12 +1,13 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Supabase } from '../../core/supabase';
-import { ActiveCampaign } from '../../core/active-campaign';
+import { ActiveCampaign, CampaignStatus } from '../../core/active-campaign';
 import { AppNav } from '../../core/app-nav';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { getCover, CampaignCover, getCoverImagePath } from '../../core/campaign-covers';
+import { formatDateTime } from '../../core/datetime-local';
 
 interface BoardCampaign {
   id: string;
@@ -17,6 +18,11 @@ interface BoardCampaign {
   characterCount: number;
   editionCode: string;
   ownerId: string;
+  status: CampaignStatus;
+  nextSessionAt: string | null;
+  maxPlayers: number | null;
+  startingLevel: number;
+  isPublic: boolean;
 }
 
 @Component({
@@ -54,7 +60,9 @@ export class Dashboard implements OnInit {
 
     const { data: campaigns, error } = await this.supabase.client
       .from('campaigns')
-      .select('id, name, description, edition_code, cover_key, owner_id')
+      .select(
+        'id, name, description, edition_code, cover_key, owner_id, status, next_session_at, max_players, starting_level, is_public'
+      )
       .order('created_at', { ascending: false });
 
     if (error || !campaigns) {
@@ -87,6 +95,11 @@ export class Dashboard implements OnInit {
       characterCount: countMap.get(c.id) ?? 0,
       editionCode: c.edition_code,
       ownerId: c.owner_id,
+      status: c.status,
+      nextSessionAt: c.next_session_at,
+      maxPlayers: c.max_players,
+      startingLevel: c.starting_level,
+      isPublic: c.is_public,
     }));
 
     this.boardCampaigns.set(mapped);
@@ -101,15 +114,29 @@ export class Dashboard implements OnInit {
       edition_code: campaign.editionCode,
       cover_key: campaign.cover.key,
       owner_id: campaign.ownerId,
+      status: campaign.status,
+      next_session_at: campaign.nextSessionAt,
+      max_players: campaign.maxPlayers,
+      starting_level: campaign.startingLevel,
+      is_public: campaign.isPublic,
     });
     this.appNav.setTab('hub');
+  }
+
+  // Formattazione locale-aware per il badge "Prossima sessione" sulla card.
+  formatNextSession(iso: string | null): string | null {
+    return formatDateTime(iso, this.localeService.locale());
   }
 
   async deleteCampaign(event: Event, campaign: BoardCampaign) {
     event.stopPropagation(); // evita che il click apra anche enterCampaign()
 
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`
+      `${this.localeService.t('confirm_delete_campaign')} "${campaign.name}"?`,
+      {
+        confirmLabel: this.localeService.t('confirm_delete_campaign_button_confirm'),
+        cancelLabel: this.localeService.t('cancel_button')
+      }
     );
     if (!confirmed) return;
 
@@ -117,7 +144,11 @@ export class Dashboard implements OnInit {
     if (error) {
       this.modal.error(error.message);
     } else {
-      await this.loadBoard();
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('campaign_deleted_msg_1')} "${campaign.name}" ${this.localeService.t('campaign_deleted_msg_2')}`
+      );
+      if(!confirmed) return
+      this.loadBoard();
     }
   }
 }

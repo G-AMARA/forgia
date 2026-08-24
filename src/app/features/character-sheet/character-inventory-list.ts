@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LocaleService } from '../../core/locale';
+import { GenericModalComponent } from '../../shared/modal/generic-adviser-modal/generic-adviser-modal';
 import { CharacterSheetContext } from './character-sheet-context';
 import { CharacterInventoryService } from './character-inventory';
 
 // Form "aggiungi oggetto" (ricerca + select + quantità) + tabella dell'inventario posseduto.
 @Component({
   selector: 'app-character-inventory-list',
-  imports: [FormsModule],
+  imports: [FormsModule, GenericModalComponent],
   templateUrl: './character-inventory-list.html',
 })
 export class CharacterInventoryList {

@@ -7,14 +7,16 @@ import { AppNav } from '../../core/app-nav';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { getCover, getCoverImagePath } from '../../core/campaign-covers';
+import { formatDateTime } from '../../core/datetime-local';
 import { Bestiary } from '../bestiary/bestiary';
+import { Maps } from '../maps/maps';
 
 type CampaignSection = 'session-log' | 'bestiary' | 'maps';
 
 @Component({
   selector: 'app-campaign-hub',
   standalone: true,
-  imports: [Bestiary],
+  imports: [Bestiary, Maps],
   templateUrl: './campaign-hub.html',
 })
 export class CampaignHub {
@@ -32,6 +34,10 @@ export class CampaignHub {
   });
 
   getCoverImagePath = getCoverImagePath;
+
+  formatNextSession(iso: string | null): string | null {
+    return formatDateTime(iso, this.localeService.locale());
+  }
 
   isOwner = computed(() => {
     const campaign = this.campaignStore.current();
@@ -66,15 +72,25 @@ export class CampaignHub {
 
   async deleteCharacter(event: Event, characterId: string, characterName: string) {
     event.stopPropagation(); // evita che il click apra anche la scheda
-
+    //controlla in giro per il codcie di inserire e creare le firme giuste per le modali di conferma.
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_character')} "${characterName}"?`
+      `${this.localeService.t('confirm_delete_character')} "${characterName}"?`,
+      {
+        cancelLabel: this.localeService.t('cancel_button'),
+        confirmLabel: this.localeService.t('confirm_delete_button_confirm'),
+      }
     );
     if (!confirmed) return;
 
     const { error } = await this.characterStore.deleteCharacter(characterId);
     if (error) {
       this.modal.error(error.message);
+    }
+    else{
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('character_deleted_msg_1')} "${characterName}" ${this.localeService.t('character_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 

@@ -33,6 +33,17 @@ export class CharacterInventoryService {
   // ha il proprio input accanto al bottone Rimuovi (default 1 finché non toccato).
   private removeQuantities: Record<string, number> = {};
 
+  // Modale di conferma rimozione oggetto (app-generic-modal in character-inventory-list.html).
+  readonly isModalOpen = signal(false);
+  readonly localModalTitle = signal('');
+  readonly localModalImageSrc = signal<string | null>(null);
+  readonly localModalImageAlt = signal<string | null>(null);
+  readonly localModalCancelLabel = signal('');
+  readonly localModalConfirmLabel = signal('');
+  readonly localModalVariant = signal<'success' | 'error' | 'warning' | 'confirm'>('confirm');
+  modalItemName = '';
+  private pendingRemoval: { rowId: string; currentQuantity: number; quantityToRemove: number } | null = null;
+
   readonly availableEquipment = computed(() => {
     const term = this.equipmentSearchTerm().trim().toLowerCase();
     const equipment = this.allEquipment();
@@ -101,18 +112,42 @@ export class CharacterInventoryService {
     this.removeQuantities[rowId] = Math.max(1, Math.floor(value) || 1);
   }
 
-  async removeItem(rowId: string, currentQuantity: number, name: string) {
+  openRemoveModal(rowId: string, currentQuantity: number, name: string) {
+    const qty = this.removeQty(rowId);
+    // Se la quantità è maggiore di 1, mostriamo il moltiplicatore nel titolo della modale.
+    this.localModalTitle.set(this.localeService.t('remove_character_item_modal_title'));
+    this.localModalImageSrc.set('modal-png/allert-goblin.png');
+    this.localModalImageAlt.set(this.localeService.t('generic_modal_alert_alt_img'));
+    this.localModalCancelLabel.set(this.localeService.t('remove_character_item_modal_cancel'));
+    this.localModalConfirmLabel.set(this.localeService.t('remove_character_item_modal_confirm'));
+    this.localModalVariant.set('warning');
+    this.modalItemName = qty > 1 ? `${qty}× ${name}` : name;
+    this.pendingRemoval = { rowId, currentQuantity, quantityToRemove: Math.min(qty, currentQuantity) };
+    this.isModalOpen.set(true);
+  }
+
+  closeModal() {
+    this.isModalOpen.set(false);
+    this.pendingRemoval = null;
+  }
+
+  async confirmRemoveItem() {
     const c = this.context.character();
-    if (!c || this.context.readOnly()) return;
-    const confirmed = await this.modal.confirm(`${this.localeService.t('confirm_remove_item')} "${name}"?`);
-    if (!confirmed) return;
-    const quantityToRemove = Math.min(this.removeQty(rowId), currentQuantity);
-    const { error } = await this.characterStore.removeInventoryItem(c.id, rowId, quantityToRemove, currentQuantity);
+    const pending = this.pendingRemoval;
+    this.closeModal();
+    if (!c || this.context.readOnly() || !pending) return;
+
+    const { error } = await this.characterStore.removeInventoryItem(
+      c.id,
+      pending.rowId,
+      pending.quantityToRemove,
+      pending.currentQuantity
+    );
     if (error) {
       this.modal.error(error.message);
       return;
     }
-    delete this.removeQuantities[rowId];
+    delete this.removeQuantities[pending.rowId];
   }
 
   async toggleEquip(rowId: string, currentlyEquipped: boolean) {

@@ -1,10 +1,11 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActiveCampaign } from '../../core/active-campaign';
+import { ActiveCampaign, CampaignStatus } from '../../core/active-campaign';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { CAMPAIGN_COVERS, getCoverImagePath } from '../../core/campaign-covers';
+import { fromDatetimeLocalValue } from '../../core/datetime-local';
 
 @Component({
   selector: 'app-campaign-create',
@@ -19,6 +20,7 @@ export class CampaignCreate {
   private modal = inject(Modal);
 
   readonly maxDescriptionLength = 700;
+  readonly statuses: CampaignStatus[] = ['active', 'paused', 'completed'];
 
   covers = CAMPAIGN_COVERS;
   getCoverImagePath = getCoverImagePath;
@@ -27,18 +29,28 @@ export class CampaignCreate {
   description = '';
   editionCode = '5e-2014';
   coverKey = CAMPAIGN_COVERS[0].key;
+  status: CampaignStatus = 'active';
+  nextSessionAtLocal = '';
+  maxPlayers: number | null = null;
+  startingLevel = 1;
+  isPublic = false;
 
   loading = signal(false);
 
   async submit() {
     this.loading.set(true);
 
-    const { error } = await this.campaignStore.createCampaign(
-      this.name,
-      this.description,
-      this.editionCode,
-      this.coverKey
-    );
+    const { error } = await this.campaignStore.createCampaign({
+      name: this.name,
+      description: this.description,
+      editionCode: this.editionCode,
+      coverKey: this.coverKey,
+      status: this.status,
+      nextSessionAt: fromDatetimeLocalValue(this.nextSessionAtLocal),
+      maxPlayers: this.maxPlayers,
+      startingLevel: this.startingLevel,
+      isPublic: this.isPublic,
+    });
 
     if (error) {
       this.modal.error(error.message);
@@ -46,7 +58,12 @@ export class CampaignCreate {
       this.name = '';
       this.description = '';
       this.coverKey = CAMPAIGN_COVERS[0].key;
-      this.modal.success(this.localeService.t('saved_message'));
+      this.status = 'active';
+      this.nextSessionAtLocal = '';
+      this.maxPlayers = null;
+      this.startingLevel = 1;
+      this.isPublic = false;
+      this.modal.success(this.localeService.t('well_created_campaign'));
     }
 
     this.loading.set(false);
@@ -54,13 +71,23 @@ export class CampaignCreate {
 
   async deleteCampaign(campaignId: string, campaignName: string) {
     const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_campaign')} "${campaignName}"?`
+      `${this.localeService.t('confirm_delete_campaign')}` + `"${campaignName}"?`,
+      { 
+        confirmLabel: this.localeService.t('confirm_delete_button_confirm'),
+        cancelLabel: this.localeService.t('cancel_button'),
+      }
     );
     if (!confirmed) return;
 
     const { error } = await this.campaignStore.deleteCampaign(campaignId);
     if (error) {
       this.modal.error(error.message);
+    }
+    else{
+      let confirmed = await this.modal.success(
+        `${this.localeService.t('campaign_deleted_msg_1')} "${campaignName}" ${this.localeService.t('campaign_deleted_msg_2')}`
+      );
+      if(!confirmed) return;
     }
   }
 }

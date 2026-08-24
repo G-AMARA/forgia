@@ -57,7 +57,7 @@
               @if (!context.readOnly()) {
                 <input type="number" min="1" [max]="item.quantity" [ngModel]="inventory.removeQty(item.rowId)" (ngModelChange)="inventory.setRemoveQty(item.rowId, $event)"
                   class="w-14 px-1 py-0.5 rounded border border-gold bg-fantasy-black/60 text-xs text-center" />
-                <button (click)="inventory.removeItem(item.rowId, item.quantity, item.name)" [attr.aria-label]="localeService.t('remove_button')" class="p-1 rounded hover:bg-red-900/40 transition-colors">
+                <button (click)="inventory.openRemoveModal(item.rowId, item.quantity, item.name)" [attr.aria-label]="localeService.t('remove_button')" class="p-1 rounded hover:bg-red-900/40 transition-colors">
                   <svg viewBox="0 0 24 24" class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
                     <line x1="5" y1="5" x2="19" y2="19" />
                     <line x1="19" y1="5" x2="5" y2="19" />
@@ -70,4 +70,29 @@
       </ul>
     }
   </div>
+
+  <app-generic-modal
+    [isOpen]="inventory.isModalOpen()"
+    [title]="inventory.localModalTitle()"
+    [imageSrc]="inventory.localModalImageSrc()"
+    [imageAlt]="inventory.localModalImageAlt()"
+    [cancelLabel]="inventory.localModalCancelLabel()"
+    [confirmLabel]="inventory.localModalConfirmLabel()"
+    [variant]="inventory.localModalVariant()"
+    [modalCustomBody]="true"
+    (closeModal)="inventory.closeModal()"
+    (confirmModal)="inventory.confirmRemoveItem()">
+    <!-- Inietto il pattern del messaggio personalizzato nel body -->
+    <div modal-custom-body class="flex-1 text-left">
+      <p class="text-sm leading-6 text-fantasy-moonstone">
+        {{ localeService.t('remove_character_item_modal_message') }}
+      </p>
+      <p class="text-sm text-center py-2 leading-6 text-fantasy-moonstone">
+        <strong>{{ inventory.modalItemName }}</strong>
+      </p>
+      <p class="text-sm leading-6 text-fantasy-moonstone">
+        {{ localeService.t('remove_character_item_modal_message_2') }}
+      </p>
+    </div>
+  </app-generic-modal>
 }

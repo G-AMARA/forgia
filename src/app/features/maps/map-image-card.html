@@ -1,0 +1,22 @@
+<div class="border border-gold/50 rounded-lg overflow-hidden bg-fantasy-black/40">
+  <div class="h-32 bg-fantasy-black/60 flex items-center justify-center overflow-hidden">
+    <img [src]="image().imageUrl" alt="" class="w-full h-full object-cover" />
+  </div>
+  <div class="p-2 flex flex-col gap-1.5">
+    @if (canManage()) {
+      <input
+        type="text" #captionInput [value]="image().caption ?? ''" (change)="captionSave.emit(captionInput.value)"
+        [placeholder]="localeService.t('map_image_caption_placeholder')"
+        class="px-2 py-1 rounded border border-gold/60 bg-fantasy-black/60 text-xs focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+      />
+      <button
+        (click)="delete.emit()"
+        class="self-end text-[0.65rem] text-red-300/80 underline underline-offset-2 hover:text-red-300"
+      >
+        {{ localeService.t('delete_button') }}
+      </button>
+    } @else if (image().caption) {
+      <p class="text-xs italic text-slate-arcane">{{ image().caption }}</p>
+    }
+  </div>
+</div>
