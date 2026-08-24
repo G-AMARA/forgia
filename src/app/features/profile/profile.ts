@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Auth } from '../../core/auth';
+import { Auth, Role } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 
@@ -17,19 +17,14 @@ export class Profile {
 
   nickname = this.auth.nickname() ?? '';
 
-  // Diventare admin resta possibile solo via SQL (non c'è verso di scriverlo qui
-  // se non lo si è già). Ma chi lo È già, per tutta la sessione su questa pagina,
-  // deve poter passare liberamente tra i tre ruoli, Admin incluso, senza restare
-  // bloccato fuori: per questo la visibilità dell'opzione Admin è congelata allo
-  // stato d'ingresso (canBeAdmin) e non al signal live auth.isAdmin(), che
-  // cambierebbe (e farebbe sparire l'opzione) non appena si salva un altro ruolo.
-  protected readonly canBeAdmin = this.auth.isAdmin();
+  // Vero admin su DB: decide se mostrare l'opzione "Admin" nel selettore. Per un vero admin
+  // il ruolo qui è solo modalità di visualizzazione (Auth.setViewRole, non scrive mai
+  // profiles.is_admin), quindi a differenza di prima non serve più congelarla allo stato
+  // d'ingresso: può cambiare ruolo quante volte vuole, anche dopo un reload, senza mai
+  // perdere l'opzione Admin.
+  protected readonly canBeAdmin = this.auth.realIsAdmin();
 
-  role: 'player' | 'master' | 'admin' = this.auth.isAdmin()
-    ? 'admin'
-    : this.auth.isMaster()
-      ? 'master'
-      : 'player';
+  role: Role = this.auth.role();
 
   avatarUploading = signal(false);
 
@@ -69,11 +64,17 @@ export class Profile {
     }
 
     this.identitySaving.set(true);
-    const { error } = await this.auth.updateProfile(
-      this.nickname.trim(),
-      this.role !== 'player',
-      this.canBeAdmin && this.role === 'admin'
-    );
+
+    // Per un vero admin il selettore ruolo è solo "visualizza come" (locale, non tocca il
+    // DB): per chiunque altro resta un vero cambio di ruolo Master/Player su profiles.
+    let error: { message: string } | null;
+    if (this.canBeAdmin) {
+      this.auth.setViewRole(this.role);
+      ({ error } = await this.auth.updateNickname(this.nickname.trim()));
+    } else {
+      ({ error } = await this.auth.updateProfile(this.nickname.trim(), this.role !== 'player'));
+    }
+
     this.identitySaving.set(false);
 
     if (error) {

@@ -1,6 +1,20 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { Supabase } from './supabase';
 import type { User } from '@supabase/supabase-js';
+
+// Riga di profiles per la sezione Gestione > Utenti (solo admin): niente email, non è
+// leggibile via client (vive in auth.users, vedi emailExists sotto).
+export interface AdminProfile {
+  id: string;
+  nickname: string | null;
+  is_master: boolean;
+  is_admin: boolean;
+  avatar_url: string | null;
+}
+
+export type Role = 'player' | 'master' | 'admin';
+
+const VIEW_ROLE_KEY_PREFIX = 'fanta-view-role-';
 
 @Injectable({ providedIn: 'root' })
 export class Auth {
@@ -13,13 +27,32 @@ export class Auth {
   private _nickname = signal<string | null>(null);
   readonly nickname = this._nickname.asReadonly();
 
-  private _isMaster = signal<boolean>(false);
-  readonly isMaster = this._isMaster.asReadonly();
+  // Ruoli REALI da DB (profiles.is_master/is_admin): is_admin va assegnato a mano sul DB
+  // (o da un altro admin via Gestione > Utenti) la prima volta, e non cambia mai da solo
+  // per un self-service da Impostazioni (vedi setViewRole sotto per il perché).
+  private _isMasterDb = signal<boolean>(false);
+  private _isAdminDb = signal<boolean>(false);
+  // Esposto per Impostazioni: decide se mostrare l'opzione "Admin" nel selettore ruolo,
+  // indipendentemente dalla modalità di visualizzazione corrente.
+  readonly realIsAdmin = this._isAdminDb.asReadonly();
 
-  // Ruolo "super utente": non selezionabile in registrazione, va assegnato
-  // a mano sul DB (colonna profiles.is_admin) da chi già è admin.
-  private _isAdmin = signal<boolean>(false);
-  readonly isAdmin = this._isAdmin.asReadonly();
+  // Override locale di SOLA visualizzazione, persistito in localStorage (chiave per utente)
+  // così sopravvive a reload e cambi pagina. Permette a chi è VERAMENTE admin di "vedersi"
+  // come Player/Master/Admin senza mai scrivere su profiles.is_admin: prima, scegliere
+  // "Player" da Impostazioni scriveva is_admin=false sul DB, e se non c'era già un altro
+  // admin pronto a ripromuoverlo da Gestione > Utenti restava bloccato fuori per sempre.
+  // Per chi non è admin resta sempre null (vedi loadProfile).
+  private _viewRole = signal<Role | null>(null);
+
+  // Ruolo effettivo di tutta l'app (gating di Gestione, readOnly sulle schede altrui, ecc.):
+  // per un vero admin è l'ultima modalità scelta con setViewRole (default 'admin' al primo
+  // login), per tutti gli altri è semplicemente il ruolo reale da DB.
+  readonly role = computed<Role>(() =>
+    this._isAdminDb() ? this._viewRole() ?? 'admin' : this._isMasterDb() ? 'master' : 'player'
+  );
+
+  readonly isMaster = computed(() => this.role() !== 'player');
+  readonly isAdmin = computed(() => this.role() === 'admin');
 
   private _avatarUrl = signal<string | null>(null);
   readonly avatarUrl = this._avatarUrl.asReadonly();
@@ -43,8 +76,9 @@ export class Auth {
   private async loadProfile(userId: string | null) {
     if (!userId) {
       this._nickname.set(null);
-      this._isMaster.set(false);
-      this._isAdmin.set(false);
+      this._isMasterDb.set(false);
+      this._isAdminDb.set(false);
+      this._viewRole.set(null);
       this._avatarUrl.set(null);
       return;
     }
@@ -57,16 +91,36 @@ export class Auth {
 
     if (error) {
       this._nickname.set(null);
-      this._isMaster.set(false);
-      this._isAdmin.set(false);
+      this._isMasterDb.set(false);
+      this._isAdminDb.set(false);
+      this._viewRole.set(null);
       this._avatarUrl.set(null);
       return;
     }
 
     this._nickname.set(data?.nickname ?? null);
-    this._isMaster.set(data?.is_master ?? false);
-    this._isAdmin.set(data?.is_admin ?? false);
+    this._isMasterDb.set(data?.is_master ?? false);
+    this._isAdminDb.set(data?.is_admin ?? false);
     this._avatarUrl.set(data?.avatar_url ?? null);
+    // La modalità di visualizzazione ha senso solo per un vero admin: per chiunque altro
+    // resta null (= usa il ruolo reale), anche se in localStorage fosse rimasto un valore
+    // di quando l'account era admin (es. dopo una revoca da Gestione > Utenti).
+    this._viewRole.set(data?.is_admin ? this.readStoredViewRole(userId) : null);
+  }
+
+  private readStoredViewRole(userId: string): Role | null {
+    const stored = localStorage.getItem(VIEW_ROLE_KEY_PREFIX + userId);
+    return stored === 'admin' || stored === 'master' || stored === 'player' ? stored : null;
+  }
+
+  // Cambia SOLO la modalità di visualizzazione (mai profiles.is_admin): per questo è
+  // sicura da richiamare in qualunque momento, anche dopo un reload, senza rischio di
+  // restare bloccati fuori da Gestione. No-op se chi chiama non è davvero admin su DB.
+  setViewRole(role: Role) {
+    if (!this._isAdminDb()) return;
+    this._viewRole.set(role);
+    const userId = this._user()?.id;
+    if (userId) localStorage.setItem(VIEW_ROLE_KEY_PREFIX + userId, role);
   }
 
   async signUp(email: string, password: string, nickname: string, isMaster: boolean) {
@@ -164,11 +218,11 @@ export class Auth {
     return { error };
   }
 
-  // Diventare admin resta possibile solo a mano sul DB (nessun percorso qui porta
-  // isAdmin da false a true): il chiamante (Profile) passa isAdmin=true solo se
-  // l'utente lo era già all'apertura della pagina. La sicurezza reale però sta
-  // nella RLS su profiles.is_admin lato Supabase, non in questo controllo client.
-  async updateProfile(nickname: string, isMaster: boolean, isAdmin: boolean) {
+  // Aggiorna nickname e ruolo Master/Player REALE su DB. Non scrive mai is_admin: la
+  // diventi admin solo a mano sul DB la prima volta, o da un altro admin via Gestione >
+  // Utenti in seguito. Usata da Impostazioni solo per chi NON è già admin (per un vero
+  // admin il ruolo qui è solo visualizzazione, vedi setViewRole + updateNickname).
+  async updateProfile(nickname: string, isMaster: boolean) {
     const userId = this._user()?.id;
     if (!userId) {
       return { error: { message: 'Non autenticato' } };
@@ -176,7 +230,7 @@ export class Auth {
 
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .update({ nickname, is_master: isMaster, is_admin: isAdmin })
+      .update({ nickname, is_master: isMaster })
       .eq('id', userId)
       .select();
 
@@ -188,6 +242,63 @@ export class Auth {
 
     if (!error) {
       await this.loadProfile(userId);
+    }
+
+    return { error };
+  }
+
+  // Come updateProfile ma senza toccare is_master: usata da Impostazioni per un vero admin,
+  // dove il selettore ruolo passa da setViewRole (locale) invece che dal DB.
+  async updateNickname(nickname: string) {
+    const userId = this._user()?.id;
+    if (!userId) {
+      return { error: { message: 'Non autenticato' } };
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .update({ nickname })
+      .eq('id', userId)
+      .select();
+
+    if (!error && (!data || data.length === 0)) {
+      return {
+        error: { message: 'Profilo non aggiornato: controlla i permessi (RLS) su profiles.' },
+      };
+    }
+
+    if (!error) {
+      await this.loadProfile(userId);
+    }
+
+    return { error };
+  }
+
+  // Solo per admin (RLS "Lettura pubblica profili" è comunque qual: true): elenco di tutti
+  // i profili per la sezione Gestione > Utenti.
+  async listProfiles(): Promise<{ data: AdminProfile[]; error: { message: string } | null }> {
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .select('id, nickname, is_master, is_admin, avatar_url')
+      .order('nickname');
+
+    return { data: data ?? [], error };
+  }
+
+  // Cambia ruolo di UN ALTRO utente. Funziona solo se chi chiama è già admin: la RLS
+  // "profiles_update_admin" (sql/2026-08-25_profiles_admin_update.sql) è quello che lo
+  // permette davvero, questo metodo non fa altro che invocare l'update lato client.
+  async updateUserRole(targetId: string, isMaster: boolean, isAdmin: boolean) {
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .update({ is_master: isMaster, is_admin: isAdmin })
+      .eq('id', targetId)
+      .select();
+
+    if (!error && (!data || data.length === 0)) {
+      return {
+        error: { message: 'Ruolo non aggiornato: controlla i permessi (RLS) su profiles.' },
+      };
     }
 
     return { error };
