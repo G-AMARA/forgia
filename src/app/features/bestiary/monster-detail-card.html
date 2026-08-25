@@ -1,0 +1,81 @@
+<div class="border-2 border-gold rounded-lg p-4 bg-fantasy-black/60 space-y-3">
+  <div class="flex items-start justify-between gap-2 flex-wrap">
+    <div>
+      <h4 class="font-display text-xl text-fantasy-gold">{{ monster().name }}</h4>
+      <p class="text-xs italic text-slate-arcane">
+        {{ monster().size ? localeService.t('bestiary_size_' + monster().size) : '' }}
+        {{ monster().type }}{{ monster().alignment ? ', ' + monster().alignment : '' }}
+      </p>
+    </div>
+    @if (canPlaceOnMap()) {
+      <button
+        type="button"
+        (click)="placeOnMap.emit()"
+        class="text-xs px-3 py-1.5 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors shrink-0"
+      >
+        🗺️ {{ localeService.t('play_place_monster_button') }}
+      </button>
+    }
+  </div>
+
+  <!-- Difesa e movimento -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+    @if (monster().armor_class) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_armor_class_label') }}:</span> {{ monster().armor_class }}</p>
+    }
+    @if (monster().hit_points) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_hit_points_label') }}:</span> {{ monster().hit_points }}</p>
+    }
+    @if (monster().speed) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_speed_label') }}:</span> {{ monster().speed }}</p>
+    }
+  </div>
+
+  <!-- Caratteristiche -->
+  <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-sm border-y border-gold/30 py-2">
+    <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_str') }}</span>{{ monster().str ?? '—' }} ({{ abilityModifier(monster().str) }})</div>
+    <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_dex') }}</span>{{ monster().dex ?? '—' }} ({{ abilityModifier(monster().dex) }})</div>
+    <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_cos') }}</span>{{ monster().con ?? '—' }} ({{ abilityModifier(monster().con) }})</div>
+    <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_int') }}</span>{{ monster().intelligence ?? '—' }} ({{ abilityModifier(monster().intelligence) }})</div>
+    <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_wis') }}</span>{{ monster().wis ?? '—' }} ({{ abilityModifier(monster().wis) }})</div>
+    <div><span class="block text-xs text-slate-arcane uppercase">{{ localeService.t('ability_cha') }}</span>{{ monster().cha ?? '—' }} ({{ abilityModifier(monster().cha) }})</div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+    @if (monster().saving_throws) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_saving_throws_label') }}:</span> {{ monster().saving_throws }}</p>
+    }
+    @if (monster().skills) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_skills_label') }}:</span> {{ monster().skills }}</p>
+    }
+    @if (monster().damage_vulnerabilities) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_vulnerabilities_label') }}:</span> {{ monster().damage_vulnerabilities }}</p>
+    }
+    @if (monster().damage_resistances) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_resistances_label') }}:</span> {{ monster().damage_resistances }}</p>
+    }
+    @if (monster().damage_immunities) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_immunities_label') }}:</span> {{ monster().damage_immunities }}</p>
+    }
+    @if (monster().condition_immunities) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_condition_immunities_label') }}:</span> {{ monster().condition_immunities }}</p>
+    }
+    @if (monster().senses) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_senses_label') }}:</span> {{ monster().senses }}</p>
+    }
+    @if (monster().languages) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_languages_label') }}:</span> {{ monster().languages }}</p>
+    }
+    @if (monster().challenge_rating) {
+      <p><span class="font-semibold text-fantasy-gold">{{ localeService.t('bestiary_challenge_rating_label') }}:</span> {{ monster().challenge_rating }} @if (monster().experience_points) { ({{ monster().experience_points }} {{ localeService.t('bestiary_experience_points_label') }}) }</p>
+    }
+  </div>
+
+  <app-monster-trait-list [title]="localeService.t('bestiary_special_traits_title')" [items]="monster().special_traits" />
+  <app-monster-trait-list [title]="localeService.t('bestiary_actions_title')" [items]="monster().actions" />
+  <app-monster-trait-list [title]="localeService.t('bestiary_bonus_actions_title')" [items]="monster().bonus_actions" />
+  <app-monster-trait-list [title]="localeService.t('bestiary_reactions_title')" [items]="monster().reactions" />
+  <app-monster-trait-list [title]="localeService.t('bestiary_legendary_actions_title')" [items]="monster().legendary_actions" />
+  <app-monster-trait-list [title]="localeService.t('bestiary_lair_actions_title')" [items]="monster().lair_actions" />
+  <app-monster-trait-list [title]="localeService.t('bestiary_regional_effects_title')" [items]="monster().regional_effects" />
+</div>

@@ -23,6 +23,7 @@ export class PlayMasterPanel {
   readonly campaignId = input.required<string>();
   readonly activeImage = input<MapAlbumImage | null>(null);
   readonly selectImage = output<MapAlbumImage | null>();
+  readonly tokensChanged = output<void>();
 
   protected expandedSection = signal<MasterSection | null>(null);
 

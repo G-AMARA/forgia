@@ -1,0 +1,22 @@
+<!-- Backdrop: sfuocato e scuro, un click lo chiude. La card ferma la propagazione per non
+     chiudersi quando si clicca al suo interno. -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" (click)="closed.emit()">
+  <div
+    (click)="$event.stopPropagation()"
+    class="relative w-full max-w-md rounded-2xl border-4 border-gold bg-fantasy-black shadow-2xl overflow-hidden"
+  >
+    <button
+      type="button"
+      (click)="closed.emit()"
+      class="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded border border-gold bg-fantasy-black/80 text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors"
+    >
+      ✕
+    </button>
+
+    <img [src]="token().avatarUrl" [alt]="token().name" class="w-full aspect-square object-cover" />
+
+    <div class="px-4 py-3 bg-linear-to-t from-fantasy-black to-fantasy-black/90 border-t-2 border-gold text-center">
+      <h3 class="font-display text-2xl text-fantasy-gold">{{ token().name }}</h3>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,14 @@
 <div class="relative h-full w-full overflow-hidden bg-fantasy-black/40 flex items-center justify-center">
   @if (activeImage(); as image) {
-    <img [src]="image.imageUrl" [alt]="image.caption ?? ''" class="absolute inset-0 w-full h-full object-cover" />
+    <app-interactive-board
+      [image]="image"
+      [tokens]="tokens()"
+      [isMaster]="canManage()"
+      [myCharacterId]="myCharacterId()"
+      (tokenPositionChange)="tokenPositionChange.emit($event)"
+      (tokensChanged)="tokensChanged.emit()"
+      class="absolute inset-0"
+    />
   } @else {
     <p class="text-slate-arcane italic text-sm px-4 text-center">
       {{ localeService.t(canManage() ? 'play_choose_map_hint' : 'play_waiting_for_map') }}

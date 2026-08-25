@@ -13,7 +13,7 @@
     <p class="font-display text-sm text-fantasy-moonstone">🐲 {{ localeService.t('bestiary_title') }}</p>
   </button>
   @if (expandedSection() === 'bestiary') {
-    <app-bestiary [campaignId]="campaignId()"></app-bestiary>
+    <app-bestiary [campaignId]="campaignId()" (tokensChanged)="tokensChanged.emit()"></app-bestiary>
   }
 
   <button

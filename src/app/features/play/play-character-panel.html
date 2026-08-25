@@ -1,5 +1,15 @@
 @if (context.character()) {
   <div class="space-y-3">
+    @if (!hasTokenOnMap()) {
+      <button
+        type="button"
+        (click)="placeOnMap()"
+        class="w-full text-sm px-3 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+      >
+        🗺️ {{ localeService.t('play_place_character_button') }}
+      </button>
+    }
+
     <app-character-vital-stats [banner]="true" />
 
     <div class="space-y-2 mt-3">

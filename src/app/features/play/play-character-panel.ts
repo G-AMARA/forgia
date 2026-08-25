@@ -1,5 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { CampaignTokens, TOKEN_PLACEHOLDER_AVATAR } from '../../core/campaign-tokens';
 import { LocaleService } from '../../core/locale';
+import { BoardViewport } from './components/interactive-board/board-viewport';
 import { CharacterSheetContext } from '../character-sheet/character-sheet-context';
 import { CharacterIdentityService } from '../character-sheet/character-identity';
 import { CharacterPrivilegesService } from '../character-sheet/character-privileges';
@@ -59,8 +61,22 @@ type PlaySection = 'traits' | 'skills' | 'inventory' | 'spells' | 'weapons' | 'd
 export class PlayCharacterPanel implements OnInit {
   protected context = inject(CharacterSheetContext);
   protected localeService = inject(LocaleService);
+  private campaignTokens = inject(CampaignTokens);
+  // Sempre fornito dal Play padre (unico punto di montaggio di questo componente,
+  // vedi play.html), a differenza di Bestiary non serve renderlo opzionale qui.
+  private viewport = inject(BoardViewport);
+
+  readonly campaignId = input.required<string>();
+  readonly tokensChanged = output<void>();
 
   protected expandedSection = signal<PlaySection | null>(null);
+
+  // Il proprio personaggio ha già una pedina in plancia? Se sì, il pulsante di
+  // piazzamento resta nascosto (niente doppioni, niente re-inserimento accidentale).
+  protected hasTokenOnMap = computed(() => {
+    const characterId = this.context.character()?.id;
+    return !!characterId && this.campaignTokens.tokens().some((t) => t.characterId === characterId);
+  });
 
   ngOnInit() {
     this.context.load(undefined);
@@ -68,5 +84,32 @@ export class PlayCharacterPanel implements OnInit {
 
   toggleSection(section: PlaySection) {
     this.expandedSection.set(this.expandedSection() === section ? null : section);
+  }
+
+  async placeOnMap() {
+    const character = this.context.character();
+    if (!character) return;
+
+    try {
+      // getViewportCenter() ha già un fallback interno (centro dell'immagine mondo) se il
+      // viewport non è ancora stato misurato: non può restituire null/undefined.
+      const center = this.viewport.getViewportCenter();
+      const token = await this.campaignTokens.insert({
+        campaignId: this.campaignId(),
+        characterId: character.id,
+        name: character.name,
+        avatarUrl: character.avatar_url || TOKEN_PLACEHOLDER_AVATAR,
+        x: center.x,
+        y: center.y,
+      });
+
+      // insert() ritorna null se l'INSERT è stato respinto (es. RLS): l'errore è già
+      // loggato dal servizio, qui evitiamo solo di annunciare agli altri client una
+      // modifica che non è mai avvenuta.
+      if (!token) return;
+      this.tokensChanged.emit();
+    } catch (err) {
+      console.error('[Self-Spawn Error]', err);
+    }
   }
 }

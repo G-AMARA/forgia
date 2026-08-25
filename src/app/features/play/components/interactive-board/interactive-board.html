@@ -1,0 +1,93 @@
+<!-- viewport: area visibile, fissa; il pan/zoom (BoardViewport) si applica solo al wrapper
+     .board dentro, che ha le dimensioni naturali dell'immagine ed è lo spazio "mondo" in
+     cui vivono le coordinate dei token. -->
+<div
+  #viewportEl
+  class="relative h-full w-full overflow-hidden select-none"
+  [class]="viewport.cursorClass()"
+  (wheel)="viewport.onWheel($event)"
+  (pointerdown)="viewport.onPointerDown($event)"
+>
+  <div
+    class="absolute top-0 left-0 origin-top-left"
+    [style.width.px]="viewport.naturalSize().width"
+    [style.height.px]="viewport.naturalSize().height"
+    [style.transform]="
+      'translate(' + viewport.transform().x + 'px, ' + viewport.transform().y + 'px) scale(' + viewport.transform().scale + ')'
+    "
+  >
+    @if (image(); as img) {
+      <img
+        [src]="img.imageUrl"
+        [alt]="img.caption ?? ''"
+        (dragstart)="onImageDragStart($event)"
+        class="absolute inset-0 w-full h-full object-cover pointer-events-none"
+      />
+    }
+
+    @if (showGrid()) {
+      <svg class="absolute inset-0 w-full h-full pointer-events-none">
+        <defs>
+          <pattern [id]="gridPatternId" [attr.width]="gridSize()" [attr.height]="gridSize()" patternUnits="userSpaceOnUse">
+            <path
+              [attr.d]="'M ' + gridSize() + ' 0 L 0 0 0 ' + gridSize()"
+              fill="none"
+              stroke="rgba(255,255,255,0.15)"
+              stroke-width="1"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" [attr.fill]="'url(#' + gridPatternId + ')'" />
+      </svg>
+    }
+
+    @for (token of tokens(); track token.id) {
+      @if (isMaster() || token.isVisible) {
+        <div
+          (pointerdown)="onTokenPointerDown($event, token)"
+          (contextmenu)="onTokenContextMenu($event, token)"
+          (dragstart)="onImageDragStart($event)"
+          [class.cursor-grab]="canDrag(token)"
+          [class.opacity-50]="isMaster() && !token.isVisible"
+          [class]="'group absolute rounded-full border-2 shadow-lg ' + tokenBorderClass(token)"
+          [style.width.px]="token.size * gridSize()"
+          [style.height.px]="token.size * gridSize()"
+          [style.left.px]="tokenPosition(token).x"
+          [style.top.px]="tokenPosition(token).y"
+          [style.transform]="'translate(-50%, -50%)'"
+        >
+          <img [src]="token.avatarUrl" [alt]="token.name" class="w-full h-full rounded-full object-cover pointer-events-none" />
+          <span
+            class="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-fantasy-black/90 px-2 py-0.5 text-xs text-gold opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            {{ token.name }}
+          </span>
+        </div>
+      }
+    }
+  </div>
+
+  <button
+    (click)="viewport.resetView()"
+    [title]="localeService.t('play_reset_view')"
+    class="absolute bottom-4 right-4 z-10 text-sm px-3 py-1 bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    ⤾ {{ localeService.t('play_reset_view') }}
+  </button>
+
+  @if (contextMenuToken(); as menu) {
+    <app-token-context-menu
+      [token]="menu.token"
+      [isMaster]="isMaster()"
+      [canRemove]="canRemoveToken(menu.token)"
+      [position]="menu.position"
+      (mutated)="tokensChanged.emit()"
+      (closed)="contextMenuToken.set(null)"
+      (inspectToken)="onInspectToken($event)"
+    />
+  }
+
+  @if (inspectedToken(); as inspected) {
+    <app-monster-card-modal [token]="inspected" (closed)="inspectedToken.set(null)" />
+  }
+</div>

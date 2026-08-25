@@ -5,7 +5,15 @@
   <!-- Mappa: sempre a tutto schermo, dimensione fissa indipendente dal pannello (il
        pannello ci sta sopra come overlay, non condivide lo spazio in un flex row: aprirlo/
        chiuderlo non deve mai restringere o allungare l'immagine). -->
-  <app-play-map-panel class="absolute inset-0" [canManage]="isMaster()" [activeImage]="activeImage()" />
+  <app-play-map-panel
+    class="absolute inset-0"
+    [canManage]="isMaster()"
+    [activeImage]="activeImage()"
+    [tokens]="tokens()"
+    [myCharacterId]="myCharacterId()"
+    (tokenPositionChange)="onTokenPositionChange($event)"
+    (tokensChanged)="onTokensChanged()"
+  />
 
   @if (panelOpen()) {
     <div class="absolute inset-y-0 left-0 z-10 w-1/4 h-full overflow-y-auto border-r-2 border-gold bg-fantasy-black p-4 space-y-4 shadow-2xl">
@@ -30,9 +38,10 @@
           [campaignId]="campaignId"
           [activeImage]="activeImage()"
           (selectImage)="activeImage.set($event)"
+          (tokensChanged)="onTokensChanged()"
         />
       } @else {
-        <app-play-character-panel />
+        <app-play-character-panel [campaignId]="campaignId" (tokensChanged)="onTokensChanged()" />
       }
     </div>
   } @else {

@@ -1,0 +1,35 @@
+<!-- Backdrop invisibile a piena pagina: un click fuori dal menu lo chiude. -->
+<div class="fixed inset-0 z-40" (click)="closed.emit()"></div>
+
+<div
+  class="fixed z-50 min-w-44 rounded-lg border border-gold bg-fantasy-black/95 p-1 shadow-2xl"
+  [style.left.px]="position().x"
+  [style.top.px]="position().y"
+>
+  <p class="px-3 py-1 text-xs text-slate-arcane truncate border-b border-gold/30 mb-1">{{ token().name }}</p>
+
+  @if (token().characterId === null) {
+    <button type="button" (click)="inspect()" class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-fantasy-black/80">
+      👁️ {{ localeService.t('token_menu_inspect') }}
+    </button>
+  }
+
+  @if (canRemove()) {
+    <button
+      type="button"
+      (click)="remove()"
+      class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-fantasy-black/80 text-red-400"
+    >
+      🗑️ {{ localeService.t('token_menu_remove') }}
+    </button>
+  }
+
+  @if (isMaster()) {
+    <button type="button" (click)="toggleLock()" class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-fantasy-black/80">
+      {{ token().isLocked ? '🔓' : '🔒' }} {{ localeService.t(token().isLocked ? 'token_menu_unlock' : 'token_menu_lock') }}
+    </button>
+    <button type="button" (click)="toggleVisible()" class="w-full text-left text-sm px-3 py-1.5 rounded hover:bg-fantasy-black/80">
+      {{ token().isVisible ? '🙈' : '👁️' }} {{ localeService.t(token().isVisible ? 'token_menu_hide' : 'token_menu_show') }}
+    </button>
+  }
+</div>
