@@ -1,10 +1,9 @@
-<!-- A tutto schermo, fuori dall'app shell (niente header/navbar/footer, vedi app.html).
-     Layout desktop-only per ora: la versione mobile (colonne impilate, scheda personaggio
-     adattata via container query) si affronta in un passaggio successivo. -->
+<!-- A tutto schermo, fuori dall'app shell (niente header/navbar/footer, vedi app.html). -->
 <div class="relative h-screen w-full overflow-hidden bg-fantasy-black">
-  <!-- Mappa: sempre a tutto schermo, dimensione fissa indipendente dal pannello (il
-       pannello ci sta sopra come overlay, non condivide lo spazio in un flex row: aprirlo/
-       chiuderlo non deve mai restringere o allungare l'immagine). -->
+  <!-- Mappa: sempre a tutto schermo, dimensione fissa indipendente dal drawer (il drawer
+       ci sta sopra come overlay, non condivide lo spazio in un flex row: aprirlo/chiuderlo
+       non deve mai restringere o allungare l'immagine — vero su desktop quanto su mobile,
+       dove il drawer arriva a coprire l'intero schermo). -->
   <app-play-map-panel
     class="absolute inset-0"
     [canManage]="isMaster()"
@@ -15,8 +14,22 @@
     (tokensChanged)="onTokensChanged()"
   />
 
-  @if (panelOpen()) {
-    <div class="absolute inset-y-0 left-0 z-10 w-1/4 h-full overflow-y-auto border-r-2 border-gold bg-fantasy-black p-4 space-y-4 shadow-2xl">
+  <!-- Fullscreen: sempre visibile (anche a drawer aperto, vedi z-20 > z-10 del drawer),
+       utile soprattutto su mobile per nascondere le barre del browser. -->
+  <button
+    (click)="toggleFullscreen()"
+    [title]="localeService.t(isFullscreen() ? 'play_exit_fullscreen_button' : 'play_fullscreen_button')"
+    class="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    {{ isFullscreen() ? '🗗' : '⛶' }}
+  </button>
+
+  @if (isDrawerOpen()) {
+    <!-- Larghezza responsive: overlay a piena larghezza su mobile (leggibile, un dito per
+         chiuderlo), colonna stretta fissa da lg: in su (comportamento desktop invariato). -->
+    <div
+      class="absolute inset-y-0 left-0 z-10 w-full sm:w-96 lg:w-1/4 h-full overflow-y-auto border-r-2 border-gold bg-fantasy-black p-4 space-y-4 shadow-2xl"
+    >
       <div class="flex items-center justify-between gap-2">
         <button
           (click)="goBackToHub()"
@@ -25,9 +38,9 @@
           ← {{ localeService.t('back_to_hub_button') }}
         </button>
         <button
-          (click)="togglePanel()"
+          (click)="toggleDrawer()"
           [title]="localeService.t('play_collapse_panel')"
-          class="text-sm px-2 py-1 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+          class="text-sm px-3 py-1.5 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
         >
           ‹
         </button>
@@ -45,12 +58,33 @@
       }
     </div>
   } @else {
+    <!-- Pulsante galleggiante: tap target allargato (p-2) rispetto alla versione desktop
+         originale, più comodo su touch. -->
     <button
-      (click)="togglePanel()"
+      (click)="toggleDrawer()"
       [title]="localeService.t('play_expand_panel')"
-      class="absolute top-4 left-4 z-10 text-sm px-2 py-1 bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+      class="absolute top-4 left-4 z-10 w-10 h-10 flex items-center justify-center bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
     >
       ›
     </button>
+  }
+
+  <!-- Avviso di rotazione: solo mobile (<768px) e solo in verticale, puro CSS
+       (@media orientation) così si aggiorna da sé alla rotazione del dispositivo senza
+       bisogno di un listener JS. "Continua comunque" lo chiude per il resto della sessione
+       (vedi portraitHintDismissed). -->
+  @if (!portraitHintDismissed()) {
+    <div
+      class="hidden max-md:portrait:flex fixed inset-0 z-60 flex-col items-center justify-center gap-4 bg-fantasy-black/95 backdrop-blur-sm p-6 text-center"
+    >
+      <span class="text-6xl">📱</span>
+      <p class="font-display text-lg text-fantasy-gold max-w-xs">{{ localeService.t('play_rotate_device_hint') }}</p>
+      <button
+        (click)="portraitHintDismissed.set(true)"
+        class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+      >
+        {{ localeService.t('play_continue_anyway_button') }}
+      </button>
+    </div>
   }
 </div>
