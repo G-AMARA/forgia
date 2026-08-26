@@ -60,6 +60,33 @@ export class MapAlbumsStore {
     this.loading.set(false);
   }
 
+  // Fetch mirato di una singola immagine per id, senza passare dall'albero completo degli
+  // album (che un giocatore non carica mai: solo il Master apre "Mappe e luoghi"). Usato da
+  // Play per idratare la mappa attiva persistita (campaigns.active_map_id) all'ingresso in
+  // sessione. Nessun filtro implicito oltre l'id: è la RLS (vedi
+  // sql/2026-08-26_map_albums_member_select.sql) a decidere chi vede cosa.
+  async loadImageById(imageId: string): Promise<MapAlbumImage | null> {
+    const { data, error } = await this.supabase.client
+      .from('map_album_images')
+      .select('id, image_url, caption, position')
+      .eq('id', imageId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Errore caricamento immagine mappa', { imageId, message: error.message, code: error.code });
+      return null;
+    }
+
+    if (!data) {
+      // PostgREST non segnala un errore quando la RLS filtra la riga a 0 risultati: da qui
+      // non si distingue "id inesistente" da "permessi insufficienti", va verificato lato DB.
+      console.error('Immagine mappa non trovata (id inesistente o RLS che filtra la riga)', { imageId });
+      return null;
+    }
+
+    return { id: data.id, imageUrl: data.image_url, caption: data.caption, position: data.position };
+  }
+
   async createAlbum(campaignId: string, name: string) {
     const { data, error } = await this.supabase.client
       .from('map_albums')

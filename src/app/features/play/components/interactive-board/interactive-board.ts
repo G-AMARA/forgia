@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, ElementRef, effect, HostListener, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, HostListener, inject, input, output, signal, viewChild } from '@angular/core';
 import { MapAlbumImage } from '../../../../core/map-albums';
 import { LocaleService } from '../../../../core/locale';
 import { CampaignToken, TokenPositionEvent } from '../../../../core/campaign-tokens';
@@ -7,27 +7,40 @@ import { ScreenPoint, TokenContextMenuComponent } from './token-context-menu';
 import { MonsterCardModalComponent } from '../monster-card-modal/monster-card-modal';
 import { TokenDpadComponent } from './token-dpad';
 import { BoardTokenComponent } from './board-token';
-import { borderClassFor, canDragToken, canRemoveFromBoard } from './token-permissions';
+import { borderClassFor, canDragToken, canRemoveFromBoard, isOwnCharacterToken } from './token-permissions';
+import { TokenDrag } from './token-drag';
+import { FogDrawing } from './fog-drawing';
+import { FogOfWarComponent } from './fog-of-war';
+import { FogToolbarComponent } from './fog-toolbar';
+import { FogOfWarStore, FogState } from '../../fog-of-war-store';
 
 let nextBoardId = 0;
 
-// Sotto questa distanza schermo, pointerdown->pointerup su una pedina è un tap (seleziona per il D-Pad) non un drag.
-const TAP_THRESHOLD_PX = 8;
-
-// Tabellone interattivo: pan/zoom delegato a BoardViewport (condivisa da Play, serve anche
-// a Bestiary/PlayCharacterPanel per piazzare pedine al centro del viewport) e pedine
-// sincronizzate via TokenPositionEvent (broadcast + DB, gestiti dal Play padre). Griglia,
-// immagine e pedine condividono lo stesso wrapper .board, restano sempre agganciate.
+// Tabellone interattivo: pan/zoom (BoardViewport, condivisa anche con Bestiary/
+// PlayCharacterPanel), drag/tap token (TokenDrag) e disegno nebbia (FogDrawing) sono
+// servizi dedicati, gli ultimi due locali a questo componente. Griglia, immagine, nebbia e
+// pedine condividono lo stesso wrapper .board, restano sempre agganciate.
 @Component({
   selector: 'app-interactive-board',
   standalone: true,
-  imports: [TokenContextMenuComponent, MonsterCardModalComponent, TokenDpadComponent, BoardTokenComponent],
+  imports: [
+    TokenContextMenuComponent,
+    MonsterCardModalComponent,
+    TokenDpadComponent,
+    BoardTokenComponent,
+    FogOfWarComponent,
+    FogToolbarComponent,
+  ],
+  providers: [TokenDrag, FogDrawing],
   templateUrl: './interactive-board.html',
 })
 export class InteractiveBoardComponent {
   private destroyRef = inject(DestroyRef);
   protected localeService = inject(LocaleService);
   protected viewport = inject(BoardViewport);
+  protected tokenDrag = inject(TokenDrag);
+  protected fogStore = inject(FogOfWarStore);
+  protected fogDrawing = inject(FogDrawing);
 
   readonly image = input.required<MapAlbumImage | null>();
   readonly gridSize = input<number>(50);
@@ -39,27 +52,20 @@ export class InteractiveBoardComponent {
   readonly tokenPositionChange = output<TokenPositionEvent>();
   // Menu contestuale (rimozione/lock/visibilità): Play la riceve e broadcasta agli altri client.
   readonly tokensChanged = output<void>();
+  // Nebbia: reveal/cover/reset locali (Master). Play la riceve, persiste e broadcasta.
+  readonly fogChanged = output<FogState>();
 
-  // Override locale della posizione durante il drag: usato invece di token.x/y finché non si conclude.
-  protected draggingToken = signal<{ id: string; x: number; y: number } | null>(null);
   protected contextMenuToken = signal<{ token: CampaignToken; position: ScreenPoint } | null>(null);
-  // "Carta del Mostro" (vedi MonsterCardModalComponent): puramente locale/presentazionale,
-  // nessuna mutazione o sync realtime coinvolta, quindi non risale fino a Play.
+  // "Carta del Mostro": puramente locale/presentazionale, non risale mai fino a Play.
   protected inspectedToken = signal<CampaignToken | null>(null);
-  // D-Pad mobile (FIX 2): pedina scelta con un tap (vedi dropToken). Un id, non l'intero
-  // token, così selectedToken ricade da sé a null se il token sparisce (rimosso altrove).
+  // D-Pad mobile: pedina scelta con un tap. Un id, non l'intero token, così selectedToken
+  // ricade da sé a null se il token sparisce.
   protected selectedTokenId = signal<string | null>(null);
   protected selectedToken = computed(() => this.tokens().find((t) => t.id === this.selectedTokenId()) ?? null);
 
   private viewportEl = viewChild<ElementRef<HTMLDivElement>>('viewportEl');
 
   protected readonly gridPatternId = `board-grid-${nextBoardId++}`;
-
-  private readonly onTokenPointerMove = (event: PointerEvent) => this.dragToken(event);
-  private readonly onTokenPointerUp = () => this.dropToken();
-  // Screen point a inizio drag e all'ultimo pointermove: la distanza decide tap vs drag.
-  private dragStartScreen: ScreenPoint | null = null;
-  private lastScreen: ScreenPoint | null = null;
 
   constructor() {
     effect(() => {
@@ -72,7 +78,39 @@ export class InteractiveBoardComponent {
       if (image) this.viewport.loadImage(image.imageUrl);
     });
 
-    this.destroyRef.onDestroy(() => this.detachTokenDragListeners());
+    // Drag vero confermato: niente più anello/pulsazione da selezione D-Pad durante il drag.
+    effect(() => {
+      if (this.tokenDrag.dragConfirmed()) this.selectedTokenId.set(null);
+    });
+
+    // TokenDrag.result: 'tap' seleziona per il D-Pad, 'move'/'commit' emettono verso Play.
+    effect(() => {
+      const result = this.tokenDrag.result();
+      if (!result) return;
+      this.tokenDrag.result.set(null);
+      if (result.type === 'tap') {
+        this.selectedTokenId.set(result.tokenId);
+      } else {
+        this.tokenPositionChange.emit({
+          tokenId: result.tokenId,
+          x: result.x,
+          y: result.y,
+          committed: result.type === 'commit',
+        });
+      }
+    });
+
+    // Solo la modifica LOCALE (FogDrawing.justEdited) risale a Play: un update remoto arriva
+    // via FogOfWarStore.setLocal() senza toccare justEdited, niente eco tra i client.
+    effect(() => {
+      const state = this.fogDrawing.justEdited();
+      if (state) {
+        this.fogChanged.emit(state);
+        this.fogDrawing.justEdited.set(null);
+      }
+    });
+
+    this.destroyRef.onDestroy(() => this.tokenDrag.draggingToken.set(null));
   }
 
   protected onImageDragStart(event: DragEvent) {
@@ -85,6 +123,34 @@ export class InteractiveBoardComponent {
     this.selectedTokenId.set(null);
   }
 
+  // In "Modalità Nebbia" il tasto sinistro disegna un rettangolo invece di fare pan (che con
+  // tasto sinistro avviene comunque solo con Spazio premuto, vedi BoardViewport.onPointerDown).
+  protected onBoardPointerDown(event: PointerEvent) {
+    if (this.isMaster() && this.fogDrawing.mode() && event.button === 0) {
+      event.preventDefault();
+      this.fogDrawing.begin(event);
+      return;
+    }
+    this.viewport.onPointerDown(event);
+  }
+
+  protected onResetFog() {
+    this.fogChanged.emit(this.fogStore.reset());
+  }
+
+  protected isMyCharacter = (token: CampaignToken) => isOwnCharacterToken(token, this.myCharacterId());
+  // Giocatore: il PROPRIO personaggio resta sempre visibile anche nel buio (bugfix: prima
+  // spariva e non era più recuperabile, vedi isTokenInFog), gli altri token no.
+  protected shouldRenderToken(token: CampaignToken): boolean {
+    if (this.isMaster()) return true;
+    if (!token.isVisible) return false;
+    return this.isMyCharacter(token) || this.fogStore.isRevealedAt(token.x, token.y);
+  }
+
+  protected isTokenInFog(token: CampaignToken): boolean {
+    return !this.isMaster() && this.isMyCharacter(token) && !this.fogStore.isRevealedAt(token.x, token.y);
+  }
+
   @HostListener('window:keydown.escape')
   protected onEscape() {
     this.selectedTokenId.set(null);
@@ -92,7 +158,7 @@ export class InteractiveBoardComponent {
 
   // Posizione da renderizzare: quella del drag in corso per questa pedina, altrimenti quella nota.
   protected tokenPosition(token: CampaignToken): WorldPoint {
-    const dragging = this.draggingToken();
+    const dragging = this.tokenDrag.draggingToken();
     return dragging && dragging.id === token.id ? { x: dragging.x, y: dragging.y } : { x: token.x, y: token.y };
   }
 
@@ -117,15 +183,7 @@ export class InteractiveBoardComponent {
     // stopPropagation: muovere una pedina non deve mai muovere anche la mappa sotto.
     event.stopPropagation();
     event.preventDefault();
-
-    const world = this.viewport.screenToWorld(event.clientX, event.clientY);
-    this.dragStartScreen = { x: event.clientX, y: event.clientY };
-    this.lastScreen = this.dragStartScreen;
-    this.draggingToken.set({ id: token.id, x: world.x, y: world.y });
-    window.addEventListener('pointermove', this.onTokenPointerMove);
-    window.addEventListener('pointerup', this.onTokenPointerUp);
-    // pointercancel (gesture di sistema interrotta): stesso cleanup, altrimenti resta bloccato.
-    window.addEventListener('pointercancel', this.onTokenPointerUp);
+    this.tokenDrag.begin(event, token.id, this.gridSize());
   }
 
   // D-Pad mobile: sposta la selezione di una cella, riusando la pipeline del drag.
@@ -138,62 +196,5 @@ export class InteractiveBoardComponent {
 
   protected deselectToken() {
     this.selectedTokenId.set(null);
-  }
-
-  private dragToken(event: PointerEvent) {
-    const dragging = this.draggingToken();
-    if (!dragging) return;
-    this.lastScreen = { x: event.clientX, y: event.clientY };
-    // Niente broadcast finché non è chiaro che è un drag e non un tap (vedi dropToken).
-    if (!this.dragThresholdExceeded()) return;
-
-    // Drag vero confermato: niente più anello/pulsazione da selezione D-Pad durante il drag.
-    this.selectedTokenId.set(null);
-
-    const world = this.viewport.screenToWorld(event.clientX, event.clientY);
-    this.draggingToken.set({ id: dragging.id, x: world.x, y: world.y });
-    this.tokenPositionChange.emit({ tokenId: dragging.id, x: world.x, y: world.y, committed: false });
-  }
-
-  private dropToken() {
-    const dragging = this.draggingToken();
-    this.detachTokenDragListeners();
-
-    if (!dragging) {
-      this.draggingToken.set(null);
-      return;
-    }
-
-    if (!this.dragThresholdExceeded()) {
-      // Tap: nessun broadcast è mai partito (vedi dragToken), seleziona per il D-Pad.
-      this.selectedTokenId.set(dragging.id);
-      this.draggingToken.set(null);
-      return;
-    }
-
-    // Emit PRIMA di svuotare draggingToken: Play applica subito la posizione a
-    // livePositions in modo sincrono, quindi il rendering non ricade sul vecchio token.x/y.
-    const snapped = { x: this.snapToGrid(dragging.x), y: this.snapToGrid(dragging.y) };
-    this.tokenPositionChange.emit({ tokenId: dragging.id, x: snapped.x, y: snapped.y, committed: true });
-    this.draggingToken.set(null);
-  }
-
-  private dragThresholdExceeded(): boolean {
-    const start = this.dragStartScreen;
-    const last = this.lastScreen;
-    return !!start && !!last && Math.hypot(last.x - start.x, last.y - start.y) > TAP_THRESHOLD_PX;
-  }
-
-  private detachTokenDragListeners() {
-    window.removeEventListener('pointermove', this.onTokenPointerMove);
-    window.removeEventListener('pointerup', this.onTokenPointerUp);
-    window.removeEventListener('pointercancel', this.onTokenPointerUp);
-  }
-
-  // Aggancia al centro del quadretto più vicino, indipendentemente dalla taglia del token
-  // (semplificazione voluta: lo snap "perfetto" per pedine 2x2+ è fuori scope per ora).
-  private snapToGrid(value: number): number {
-    const size = this.gridSize();
-    return Math.round((value - size / 2) / size) * size + size / 2;
   }
 }

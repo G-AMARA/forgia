@@ -2,6 +2,7 @@ import { Component, inject, input, output } from '@angular/core';
 import { MapAlbumImage } from '../../core/map-albums';
 import { LocaleService } from '../../core/locale';
 import { CampaignToken, TokenPositionEvent } from '../../core/campaign-tokens';
+import { FogState } from './fog-of-war-store';
 import { InteractiveBoardComponent } from './components/interactive-board/interactive-board';
 
 // Colonna destra della pagina "Gioca": mostra a piena colonna la mappa scelta dal Master
@@ -25,4 +26,5 @@ export class PlayMapPanel {
 
   readonly tokenPositionChange = output<TokenPositionEvent>();
   readonly tokensChanged = output<void>();
+  readonly fogChanged = output<FogState>();
 }

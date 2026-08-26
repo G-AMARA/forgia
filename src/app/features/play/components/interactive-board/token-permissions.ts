@@ -15,6 +15,10 @@ export function canRemoveFromBoard(token: CampaignToken, isMaster: boolean, myCh
   return myCharacterId !== null && token.characterId === myCharacterId;
 }
 
+export function isOwnCharacterToken(token: CampaignToken, myCharacterId: string | null): boolean {
+  return myCharacterId !== null && token.characterId === myCharacterId;
+}
+
 export function borderClassFor(token: CampaignToken, myCharacterId: string | null): string {
   if (token.characterId && token.characterId === myCharacterId) return 'border-amber-400';
   if (token.characterId === null) return 'border-red-500';

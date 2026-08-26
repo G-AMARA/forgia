@@ -19,6 +19,11 @@ export class BoardTokenComponent {
   readonly canDrag = input(false);
   readonly isSelected = input(false);
   readonly dimmed = input(false);
+  // true solo per il proprio personaggio quando si trova in un'area di nebbia non rivelata:
+  // resta visibile/selezionabile (bugfix: prima il giocatore perdeva il proprio token
+  // finendo nel buio), ma con un indicatore visivo distinto da `dimmed` (quello è per i
+  // token nascosti dal Master, un concetto diverso).
+  readonly inFog = input(false);
 
   readonly pointerDown = output<PointerEvent>();
   readonly contextMenu = output<MouseEvent>();

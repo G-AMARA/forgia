@@ -1,0 +1,27 @@
+<div class="flex items-center gap-2">
+  <button
+    type="button"
+    (click)="toggle('reveal')"
+    [class.bg-gold]="mode() === 'reveal'"
+    [class.text-fantasy-black]="mode() === 'reveal'"
+    class="text-sm px-3 py-1 bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    🔆 {{ localeService.t('fog_reveal_button') }}
+  </button>
+  <button
+    type="button"
+    (click)="toggle('cover')"
+    [class.bg-gold]="mode() === 'cover'"
+    [class.text-fantasy-black]="mode() === 'cover'"
+    class="text-sm px-3 py-1 bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    🌫️ {{ localeService.t('fog_cover_button') }}
+  </button>
+  <button
+    type="button"
+    (click)="resetFog.emit()"
+    class="text-sm px-3 py-1 bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    ♻️ {{ localeService.t('fog_reset_button') }}
+  </button>
+</div>

@@ -1,11 +1,10 @@
-<!-- viewport: area visibile, fissa; il pan/zoom si applica solo al wrapper .board dentro
-     (dimensioni naturali dell'immagine, spazio "mondo" dei token). Click qui = sfondo, deseleziona. -->
+<!-- viewport fisso; pan/zoom solo su .board dentro. Click qui = sfondo, deseleziona. -->
 <div
   #viewportEl
   class="relative h-full w-full overflow-hidden select-none touch-none"
   [class]="viewport.cursorClass()"
   (wheel)="viewport.onWheel($event)"
-  (pointerdown)="viewport.onPointerDown($event)"
+  (pointerdown)="onBoardPointerDown($event)"
   (click)="onBoardClick()"
 >
   <div
@@ -22,7 +21,6 @@
         class="absolute inset-0 w-full h-full object-cover pointer-events-none"
       />
     }
-
     @if (showGrid()) {
       <svg class="absolute inset-0 w-full h-full pointer-events-none">
         <defs>
@@ -38,9 +36,13 @@
         <rect width="100%" height="100%" [attr.fill]="'url(#' + gridPatternId + ')'" />
       </svg>
     }
-
+    <app-fog-of-war
+      [revealedAreas]="fogStore.revealedAreas()"
+      [coveredAreas]="fogStore.coveredAreas()"
+      [isMaster]="isMaster()"
+      [drawingRect]="fogDrawing.drawingRect()" />
     @for (token of tokens(); track token.id) {
-      @if (isMaster() || token.isVisible) {
+      @if (shouldRenderToken(token)) {
         <app-board-token
           [token]="token"
           [position]="tokenPosition(token)"
@@ -49,13 +51,16 @@
           [canDrag]="canDrag(token)"
           [isSelected]="token.id === selectedTokenId()"
           [dimmed]="isMaster() && !token.isVisible"
+          [inFog]="isTokenInFog(token)"
           (pointerDown)="onTokenPointerDown($event, token)"
           (contextMenu)="onTokenContextMenu($event, token)"
         />
       }
     }
   </div>
-
+  @if (isMaster()) {
+    <app-fog-toolbar class="fixed top-4 right-4 z-30" [mode]="fogDrawing.mode()" (setMode)="fogDrawing.setMode($event)" (resetFog)="onResetFog()" />
+  }
   <div class="fixed right-4 z-40 flex items-center gap-2 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-4">
     <button
       (click)="viewport.resetView()"
@@ -72,16 +77,12 @@
       {{ viewport.isFullscreen() ? '🗗' : '⛶' }}
     </button>
   </div>
-
-  <!-- D-Pad: solo sotto lg, solo con una pedina selezionata (tap, vedi dropToken). -->
   @if (selectedToken(); as token) {
     <app-token-dpad
       class="lg:hidden fixed left-4 z-40 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-4"
       (move)="moveSelectedToken($event.dx, $event.dy)"
-      (confirm)="deselectToken()"
-    />
+      (confirm)="deselectToken()" />
   }
-
   @if (contextMenuToken(); as menu) {
     <app-token-context-menu
       [token]="menu.token"
@@ -93,7 +94,6 @@
       (inspectToken)="onInspectToken($event)"
     />
   }
-
   @if (inspectedToken(); as inspected) {
     <app-monster-card-modal [token]="inspected" (closed)="inspectedToken.set(null)" />
   }

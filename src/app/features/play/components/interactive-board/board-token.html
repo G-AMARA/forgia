@@ -5,6 +5,8 @@
   (click)="onClick($event)"
   [class.cursor-grab]="canDrag()"
   [class.opacity-50]="dimmed()"
+  [class.opacity-60]="inFog()"
+  [class.border-dashed]="inFog()"
   [class.ring-4]="isSelected()"
   [class.ring-gold-glow]="isSelected()"
   [class.animate-pulse]="isSelected()"

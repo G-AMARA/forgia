@@ -1,12 +1,14 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal } from '@angular/core';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CampaignTokens, TokenPositionEvent } from '../../core/campaign-tokens';
+import { FogOfWarStore, FogState } from './fog-of-war-store';
 import { MapAlbumImage } from '../../core/map-albums';
 import { Supabase } from '../../core/supabase';
 
 const MAP_CHANGED_EVENT = 'map-changed';
 const TOKEN_MOVED_EVENT = 'token-moved';
 const TOKENS_CHANGED_EVENT = 'tokens-changed';
+const FOG_CHANGED_EVENT = 'fog-changed';
 
 interface MapChangedPayload {
   image: MapAlbumImage;
@@ -31,6 +33,7 @@ interface TokenMovedPayload {
 export class PlaySessionChannel {
   private supabase = inject(Supabase);
   private campaignTokens = inject(CampaignTokens);
+  private fogStore = inject(FogOfWarStore);
   private destroyRef = inject(DestroyRef);
 
   private channel: RealtimeChannel | null = null;
@@ -97,6 +100,11 @@ export class PlaySessionChannel {
         // CampaignTokens.tokens(): qui ricarichiamo solo per allineare gli altri client.
         this.campaignTokens.load(campaignId);
       })
+      .on('broadcast', { event: FOG_CHANGED_EVENT }, ({ payload }) => {
+        // Chi ha disegnato ha già persistito su DB (vedi Play.onFogChanged): qui si applica
+        // solo in locale, niente reload — il payload porta già lo stato completo.
+        this.fogStore.setLocal(payload as FogState);
+      })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') onSubscribed();
       });
@@ -144,6 +152,13 @@ export class PlaySessionChannel {
   // in locale da CampaignTokens, qui serve solo avvisare gli altri client di ricaricare.
   notifyTokensChanged() {
     this.channel?.send({ type: 'broadcast', event: TOKENS_CHANGED_EVENT, payload: {} });
+  }
+
+  // Chiamato da Play dopo una modifica locale del Master (reveal/cover/reset, vedi
+  // InteractiveBoardComponent.fogChanged): il chiamante persiste su DB, qui si trasmette
+  // solo lo stato completo agli altri client.
+  broadcastFog(state: FogState) {
+    this.channel?.send({ type: 'broadcast', event: FOG_CHANGED_EVENT, payload: state });
   }
 
   private clearLivePosition(tokenId: string) {

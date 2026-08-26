@@ -18,10 +18,14 @@ export interface Campaign {
   starting_level: number;
   // Solo etichetta informativa per ora: non filtra quali campagne un utente può vedere.
   is_public: boolean;
+  // Mappa scelta dal Master per la sessione di gioco corrente (id di map_album_images),
+  // null se nessuna. Persistita (non solo trasmessa via broadcast, vedi PlaySessionChannel)
+  // così un giocatore che entra dopo o ricarica la pagina la ritrova subito.
+  active_map_id?: string | null;
 }
 
 const CAMPAIGN_COLUMNS =
-  'id, name, description, edition_code, cover_key, owner_id, status, next_session_at, max_players, starting_level, is_public';
+  'id, name, description, edition_code, cover_key, owner_id, status, next_session_at, max_players, starting_level, is_public, active_map_id';
 
 @Injectable({ providedIn: 'root' })
 export class ActiveCampaign {
@@ -111,6 +115,47 @@ export class ActiveCampaign {
 
   selectCampaign(campaign: Campaign) {
     this.current.set(campaign);
+  }
+
+  // Usato da Play quando si entra in /gioca/:campaignId senza che `current` sia già quella
+  // campagna (link diretto, o un reload: la rotta non ha un resolver, current() resta quella
+  // di un'eventuale navigazione precedente o null). Funziona sia per l'owner sia per un
+  // giocatore con un personaggio in quella campagna: la RLS di select su campaigns copre già
+  // entrambi i casi (usata così anche dalla Dashboard).
+  async loadCampaignById(campaignId: string) {
+    const { data, error } = await this.supabase.client
+      .from('campaigns')
+      .select(CAMPAIGN_COLUMNS)
+      .eq('id', campaignId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Errore caricamento campagna', error.message);
+      return;
+    }
+    if (data) {
+      this.current.set(data);
+    }
+  }
+
+  // Persiste la mappa attiva scelta dal Master (vedi Play.onSelectImage): solo owner/admin
+  // possono scrivere su campaigns, coerente con la RLS esistente.
+  async setActiveMap(campaignId: string, mapImageId: string | null) {
+    const { data, error } = await this.supabase.client
+      .from('campaigns')
+      .update({ active_map_id: mapImageId })
+      .eq('id', campaignId)
+      .select(CAMPAIGN_COLUMNS)
+      .single();
+
+    if (error) {
+      console.error('Errore salvataggio mappa attiva', error.message);
+      return;
+    }
+    if (data) {
+      this.campaigns.update((list) => list.map((c) => (c.id === campaignId ? data : c)));
+      if (this.current()?.id === campaignId) this.current.set(data);
+    }
   }
 
   async updateCampaign(

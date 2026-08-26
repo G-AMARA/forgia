@@ -18,6 +18,7 @@
     [myCharacterId]="myCharacterId()"
     (tokenPositionChange)="onTokenPositionChange($event)"
     (tokensChanged)="onTokensChanged()"
+    (fogChanged)="onFogChanged($event)"
   />
 
   @if (isDrawerOpen()) {
@@ -51,7 +52,7 @@
         <app-play-master-panel
           [campaignId]="campaignId"
           [activeImage]="activeImage()"
-          (selectImage)="activeImage.set($event)"
+          (selectImage)="onSelectImage($event)"
           (tokensChanged)="onTokensChanged()"
         />
       } @else {

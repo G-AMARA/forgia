@@ -1,0 +1,30 @@
+<svg class="absolute inset-0 w-full h-full pointer-events-none">
+  <defs>
+    <mask [id]="maskId">
+      <!-- Bianco = nebbia visibile ovunque di default; i rettangoli rivelati la bucano in
+           nero (mappa visibile lì); i rettangoli coperti ridisegnano bianco SOPRA (ultimo
+           vince), ripristinando la nebbia solo nella porzione toccata. -->
+      <rect width="100%" height="100%" fill="white" />
+      @for (area of revealedAreas(); track $index) {
+        <rect [attr.x]="area.x" [attr.y]="area.y" [attr.width]="area.w" [attr.height]="area.h" fill="black" />
+      }
+      @for (area of coveredAreas(); track $index) {
+        <rect [attr.x]="area.x" [attr.y]="area.y" [attr.width]="area.w" [attr.height]="area.h" fill="white" />
+      }
+    </mask>
+  </defs>
+
+  <rect width="100%" height="100%" [attr.fill]="fogColor()" [attr.mask]="'url(#' + maskId + ')'" />
+
+  @if (isMaster() && drawingRect(); as r) {
+    <rect
+      [attr.x]="r.x"
+      [attr.y]="r.y"
+      [attr.width]="r.w"
+      [attr.height]="r.h"
+      fill="rgba(199,164,94,0.25)"
+      stroke="rgb(199,164,94)"
+      stroke-width="2"
+    />
+  }
+</svg>
