@@ -56,7 +56,7 @@
     }
   </div>
 
-  <div class="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+  <div class="fixed right-4 z-40 flex items-center gap-2 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-4">
     <button
       (click)="viewport.resetView()"
       [title]="localeService.t('play_reset_view')"
@@ -76,7 +76,7 @@
   <!-- D-Pad: solo sotto lg, solo con una pedina selezionata (tap, vedi dropToken). -->
   @if (selectedToken(); as token) {
     <app-token-dpad
-      class="lg:hidden absolute bottom-4 left-4 z-20"
+      class="lg:hidden fixed left-4 z-40 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] md:bottom-4"
       (move)="moveSelectedToken($event.dx, $event.dy)"
       (confirm)="deselectToken()"
     />

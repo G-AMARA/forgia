@@ -4,7 +4,10 @@
     <meta charset="utf-8" />
     <title>Forgia</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover: senza, env(safe-area-inset-*) (vedi play.html / interactive-board.html)
+         restituisce sempre 0 su iOS Safari — necessario per i controlli flottanti della
+         pagina "Gioca" che non devono mai finire sotto la home indicator bar. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="themes/logo.png" />
   
     <link rel="preconnect" href="https://fonts.googleapis.com">

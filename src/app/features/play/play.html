@@ -1,5 +1,11 @@
-<!-- A tutto schermo, fuori dall'app shell (niente header/navbar/footer, vedi app.html). -->
-<div class="relative h-screen w-full overflow-hidden bg-fantasy-black">
+<!-- A tutto schermo, fuori dall'app shell (niente header/navbar/footer, vedi app.html).
+     h-dvh (dynamic viewport height) invece di h-screen (100vh fisso): su mobile 100vh
+     include l'area dietro la barra del browser anche quando questa è visibile, spingendo
+     i controlli ancorati "bottom-*" fuori dalla porzione realmente visibile. h-dvh segue
+     la viewport reale, si aggiorna da sé quando la barra del browser appare/scompare. Gli
+     h-full annidati (PlayMapPanel, InteractiveBoard) non vanno toccati: sono percentuali
+     del genitore (già inset-0 su questo elemento), non un'altra unità di viewport. -->
+<div class="relative h-dvh w-full overflow-hidden bg-fantasy-black">
   <!-- Mappa: sempre a tutto schermo, dimensione fissa indipendente dal drawer (il drawer
        ci sta sopra come overlay, non condivide lo spazio in un flex row: aprirlo/chiuderlo
        non deve mai restringere o allungare l'immagine — vero su desktop quanto su mobile,
