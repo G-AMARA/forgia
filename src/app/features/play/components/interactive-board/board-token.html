@@ -1,0 +1,24 @@
+<div
+  (pointerdown)="pointerDown.emit($event)"
+  (contextmenu)="contextMenu.emit($event)"
+  (dragstart)="onDragStart($event)"
+  (click)="onClick($event)"
+  [class.cursor-grab]="canDrag()"
+  [class.opacity-50]="dimmed()"
+  [class.ring-4]="isSelected()"
+  [class.ring-gold-glow]="isSelected()"
+  [class.animate-pulse]="isSelected()"
+  [class]="'group absolute rounded-full border-2 shadow-lg ' + borderClass()"
+  [style.width.px]="size()"
+  [style.height.px]="size()"
+  [style.left.px]="position().x"
+  [style.top.px]="position().y"
+  [style.transform]="'translate(-50%, -50%)'"
+>
+  <img [src]="token().avatarUrl" [alt]="token().name" class="w-full h-full rounded-full object-cover pointer-events-none" />
+  <span
+    class="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-fantasy-black/90 px-2 py-0.5 text-xs text-gold opacity-0 transition-opacity group-hover:opacity-100"
+  >
+    {{ token().name }}
+  </span>
+</div>

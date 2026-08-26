@@ -1,0 +1,43 @@
+<div class="grid grid-cols-3 grid-rows-3 gap-1 w-36 h-36 select-none">
+  <div></div>
+  <button
+    type="button"
+    (click)="move.emit({ dx: 0, dy: -1 })"
+    class="touch-manipulation flex items-center justify-center rounded bg-fantasy-black/80 border border-gold text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    ▲
+  </button>
+  <div></div>
+
+  <button
+    type="button"
+    (click)="move.emit({ dx: -1, dy: 0 })"
+    class="touch-manipulation flex items-center justify-center rounded bg-fantasy-black/80 border border-gold text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    ◀
+  </button>
+  <button
+    type="button"
+    (click)="confirm.emit()"
+    class="touch-manipulation flex items-center justify-center rounded-full bg-fantasy-black/80 border border-gold text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors text-sm"
+  >
+    ✕
+  </button>
+  <button
+    type="button"
+    (click)="move.emit({ dx: 1, dy: 0 })"
+    class="touch-manipulation flex items-center justify-center rounded bg-fantasy-black/80 border border-gold text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    ▶
+  </button>
+
+  <div></div>
+  <button
+    type="button"
+    (click)="move.emit({ dx: 0, dy: 1 })"
+    class="touch-manipulation flex items-center justify-center rounded bg-fantasy-black/80 border border-gold text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    ▼
+  </button>
+  <div></div>
+</div>

@@ -29,15 +29,17 @@ export class BoardViewport {
   readonly transform = signal<BoardTransform>({ x: 0, y: 0, scale: 1 });
   readonly isPanning = signal(false);
   readonly spacePressed = signal(false);
-  // Risoluzione naturale dell'immagine corrente: è lo spazio "mondo" del tabellone,
-  // stabile indipendentemente dalla dimensione del viewport (che cambia, ad es., aprendo/
-  // chiudendo il pannello laterale) — le coordinate dei token vivono in questo spazio.
+  // Risoluzione naturale dell'immagine: lo spazio "mondo" stabile in cui vivono le
+  // coordinate dei token, indipendente dalla dimensione (variabile) del viewport.
   readonly naturalSize = signal(FALLBACK_IMAGE_SIZE);
 
   readonly cursorClass = computed(() => {
     if (this.isPanning()) return 'cursor-grabbing';
     return this.spacePressed() ? 'cursor-grab' : 'cursor-default';
   });
+
+  // Vive qui (non in Play): in UI sta affiancato al pulsante di reset vista.
+  readonly isFullscreen = signal(!!document.fullscreenElement);
 
   private element: HTMLDivElement | null = null;
   private panStart = { pointerX: 0, pointerY: 0, originX: 0, originY: 0 };
@@ -53,18 +55,33 @@ export class BoardViewport {
     this.spacePressed.set(false);
   };
 
+  private readonly onFullscreenChange = () => this.isFullscreen.set(!!document.fullscreenElement);
+
   constructor() {
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
+    // Coerenza anche se il fullscreen cambia per vie diverse dal pulsante (ESC nativo, gesture).
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
     this.destroyRef.onDestroy(() => {
       window.removeEventListener('keydown', this.onKeyDown);
       window.removeEventListener('keyup', this.onKeyUp);
+      document.removeEventListener('fullscreenchange', this.onFullscreenChange);
       this.detachPanListeners();
     });
   }
 
   attach(element: HTMLDivElement) {
     this.element = element;
+  }
+
+  async toggleFullscreen() {
+    // Sull'elemento radice, non solo sul tabellone: così drawer e pulsanti restano
+    // utilizzabili in fullscreen, non solo la mappa.
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await document.documentElement.requestFullscreen();
+    }
   }
 
   // Precarica l'immagine per conoscerne la risoluzione naturale e ricentra la vista.
@@ -133,9 +150,8 @@ export class BoardViewport {
     });
   }
 
-  // Centro, in coordinate mondo, dell'area di mappa attualmente visibile: usato per
-  // piazzare una nuova pedina (evocazione mostro, "piazza il tuo personaggio") dove il
-  // Master/giocatore sta effettivamente guardando, non al centro fisso della mappa.
+  // Centro, in coordinate mondo, dell'area visibile: usato per piazzare una nuova pedina
+  // dove si sta guardando, non al centro fisso della mappa.
   getViewportCenter(): WorldPoint {
     const rect = this.element?.getBoundingClientRect();
     if (!rect) {
@@ -145,8 +161,8 @@ export class BoardViewport {
     return this.screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
   }
 
-  // Converte coordinate schermo (event.clientX/Y) in coordinate mondo (spazio della mappa
-  // originale, quello di token.x/y), invertendo l'attuale transform del board.
+  // Converte coordinate schermo in coordinate mondo (spazio di token.x/y), invertendo
+  // l'attuale transform del board.
   screenToWorld(clientX: number, clientY: number): WorldPoint {
     const rect = this.element?.getBoundingClientRect();
     const current = this.transform();

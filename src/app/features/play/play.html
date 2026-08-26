@@ -14,21 +14,16 @@
     (tokensChanged)="onTokensChanged()"
   />
 
-  <!-- Fullscreen: sempre visibile (anche a drawer aperto, vedi z-20 > z-10 del drawer),
-       utile soprattutto su mobile per nascondere le barre del browser. -->
-  <button
-    (click)="toggleFullscreen()"
-    [title]="localeService.t(isFullscreen() ? 'play_exit_fullscreen_button' : 'play_fullscreen_button')"
-    class="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
-  >
-    {{ isFullscreen() ? '🗗' : '⛶' }}
-  </button>
-
   @if (isDrawerOpen()) {
+    <!-- Backdrop: solo sotto lg (su desktop il drawer è stretto e la mappa resta visibile
+         accanto, niente da oscurare). Un tap fuori dal pannello lo chiude. -->
+    <div class="lg:hidden fixed inset-0 z-40 bg-black/50" (click)="closeDrawer()"></div>
+
     <!-- Larghezza responsive: overlay a piena larghezza su mobile (leggibile, un dito per
-         chiuderlo), colonna stretta fissa da lg: in su (comportamento desktop invariato). -->
+         chiuderlo), colonna stretta fissa da lg: in su (comportamento desktop invariato).
+         z-50: deve stare sopra il backdrop appena sopra. -->
     <div
-      class="absolute inset-y-0 left-0 z-10 w-full sm:w-96 lg:w-1/4 h-full overflow-y-auto border-r-2 border-gold bg-fantasy-black p-4 space-y-4 shadow-2xl"
+      class="absolute inset-y-0 left-0 z-50 w-full sm:w-96 lg:w-1/4 h-full overflow-y-auto border-r-2 border-gold bg-fantasy-black p-4 space-y-4 shadow-2xl"
     >
       <div class="flex items-center justify-between gap-2">
         <button

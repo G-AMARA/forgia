@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { Auth } from '../../core/auth';
@@ -42,7 +42,6 @@ export class Play implements OnInit {
   private auth = inject(Auth);
   private characterStore = inject(CharacterStore);
   private session = inject(PlaySessionChannel);
-  private destroyRef = inject(DestroyRef);
   protected appNav = inject(AppNav);
   protected localeService = inject(LocaleService);
 
@@ -75,17 +74,9 @@ export class Play implements OnInit {
   // in verticale — non deve ripresentarsi a ogni ridisegno.
   protected portraitHintDismissed = signal(false);
 
-  protected isFullscreen = signal(!!document.fullscreenElement);
-
   protected tokens = this.session.tokens;
 
   constructor() {
-    // Tiene isFullscreen coerente anche quando il fullscreen cambia per vie diverse dal
-    // pulsante (tasto ESC nativo, F11, gesture del browser mobile).
-    const onFullscreenChange = () => this.isFullscreen.set(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    this.destroyRef.onDestroy(() => document.removeEventListener('fullscreenchange', onFullscreenChange));
-
     // Master -> Giocatori: ogni cambio mappa lato Master viene ribroadcastato.
     effect(() => {
       const image = this.activeImage();
@@ -123,16 +114,10 @@ export class Play implements OnInit {
     this.isDrawerOpen.update((open) => !open);
   }
 
-  async toggleFullscreen() {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    } else {
-      // Sull'elemento radice della pagina: nasconde le barre del browser su mobile, non
-      // solo la mappa (così il drawer/i pulsanti restano utilizzabili in fullscreen).
-      await document.documentElement.requestFullscreen();
-    }
-    // Non serve leggere/impostare isFullscreen qui: lo fa già il listener 'fullscreenchange'
-    // nel costruttore, in modo coerente anche per i cambi non originati da questo pulsante.
+  // Chiamata dal backdrop mobile (FIX 1): a differenza di toggleDrawer(), un tap fuori dal
+  // pannello deve solo chiuderlo, mai riaprirlo.
+  closeDrawer() {
+    this.isDrawerOpen.set(false);
   }
 
   protected onTokenPositionChange(event: TokenPositionEvent) {

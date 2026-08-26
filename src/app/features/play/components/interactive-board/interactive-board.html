@@ -1,20 +1,18 @@
-<!-- viewport: area visibile, fissa; il pan/zoom (BoardViewport) si applica solo al wrapper
-     .board dentro, che ha le dimensioni naturali dell'immagine ed è lo spazio "mondo" in
-     cui vivono le coordinate dei token. -->
+<!-- viewport: area visibile, fissa; il pan/zoom si applica solo al wrapper .board dentro
+     (dimensioni naturali dell'immagine, spazio "mondo" dei token). Click qui = sfondo, deseleziona. -->
 <div
   #viewportEl
-  class="relative h-full w-full overflow-hidden select-none"
+  class="relative h-full w-full overflow-hidden select-none touch-none"
   [class]="viewport.cursorClass()"
   (wheel)="viewport.onWheel($event)"
   (pointerdown)="viewport.onPointerDown($event)"
+  (click)="onBoardClick()"
 >
   <div
     class="absolute top-0 left-0 origin-top-left"
     [style.width.px]="viewport.naturalSize().width"
     [style.height.px]="viewport.naturalSize().height"
-    [style.transform]="
-      'translate(' + viewport.transform().x + 'px, ' + viewport.transform().y + 'px) scale(' + viewport.transform().scale + ')'
-    "
+    [style.transform]="'translate(' + viewport.transform().x + 'px, ' + viewport.transform().y + 'px) scale(' + viewport.transform().scale + ')'"
   >
     @if (image(); as img) {
       <img
@@ -43,37 +41,46 @@
 
     @for (token of tokens(); track token.id) {
       @if (isMaster() || token.isVisible) {
-        <div
-          (pointerdown)="onTokenPointerDown($event, token)"
-          (contextmenu)="onTokenContextMenu($event, token)"
-          (dragstart)="onImageDragStart($event)"
-          [class.cursor-grab]="canDrag(token)"
-          [class.opacity-50]="isMaster() && !token.isVisible"
-          [class]="'group absolute rounded-full border-2 shadow-lg ' + tokenBorderClass(token)"
-          [style.width.px]="token.size * gridSize()"
-          [style.height.px]="token.size * gridSize()"
-          [style.left.px]="tokenPosition(token).x"
-          [style.top.px]="tokenPosition(token).y"
-          [style.transform]="'translate(-50%, -50%)'"
-        >
-          <img [src]="token.avatarUrl" [alt]="token.name" class="w-full h-full rounded-full object-cover pointer-events-none" />
-          <span
-            class="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-fantasy-black/90 px-2 py-0.5 text-xs text-gold opacity-0 transition-opacity group-hover:opacity-100"
-          >
-            {{ token.name }}
-          </span>
-        </div>
+        <app-board-token
+          [token]="token"
+          [position]="tokenPosition(token)"
+          [size]="token.size * gridSize()"
+          [borderClass]="tokenBorderClass(token)"
+          [canDrag]="canDrag(token)"
+          [isSelected]="token.id === selectedTokenId()"
+          [dimmed]="isMaster() && !token.isVisible"
+          (pointerDown)="onTokenPointerDown($event, token)"
+          (contextMenu)="onTokenContextMenu($event, token)"
+        />
       }
     }
   </div>
 
-  <button
-    (click)="viewport.resetView()"
-    [title]="localeService.t('play_reset_view')"
-    class="absolute bottom-4 right-4 z-10 text-sm px-3 py-1 bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
-  >
-    ⤾ {{ localeService.t('play_reset_view') }}
-  </button>
+  <div class="absolute bottom-4 right-4 z-10 flex items-center gap-2">
+    <button
+      (click)="viewport.resetView()"
+      [title]="localeService.t('play_reset_view')"
+      class="text-sm px-3 py-1 bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+    >
+      ⤾ {{ localeService.t('play_reset_view') }}
+    </button>
+    <button
+      (click)="viewport.toggleFullscreen()"
+      [title]="localeService.t(viewport.isFullscreen() ? 'play_exit_fullscreen_button' : 'play_fullscreen_button')"
+      class="w-9 h-9 flex items-center justify-center bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+    >
+      {{ viewport.isFullscreen() ? '🗗' : '⛶' }}
+    </button>
+  </div>
+
+  <!-- D-Pad: solo sotto lg, solo con una pedina selezionata (tap, vedi dropToken). -->
+  @if (selectedToken(); as token) {
+    <app-token-dpad
+      class="lg:hidden absolute bottom-4 left-4 z-20"
+      (move)="moveSelectedToken($event.dx, $event.dy)"
+      (confirm)="deselectToken()"
+    />
+  }
 
   @if (contextMenuToken(); as menu) {
     <app-token-context-menu
