@@ -61,11 +61,13 @@
     </div>
   } @else {
     <!-- Pulsante galleggiante: tap target allargato (p-2) rispetto alla versione desktop
-         originale, più comodo su touch. -->
+         originale, più comodo su touch. z-40, sopra la fog-toolbar (z-30, top-4 right-4 in
+         interactive-board.html): resta sempre cliccabile anche nell'eventualità di un
+         overlap residuo su schermi molto stretti. -->
     <button
       (click)="toggleDrawer()"
       [title]="localeService.t('play_expand_panel')"
-      class="absolute top-4 left-4 z-10 w-10 h-10 flex items-center justify-center bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+      class="absolute top-4 left-4 z-40 w-10 h-10 flex items-center justify-center bg-fantasy-black/80 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
     >
       ›
     </button>
