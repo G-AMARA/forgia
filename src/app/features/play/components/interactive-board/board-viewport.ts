@@ -43,8 +43,33 @@ export class BoardViewport {
 
   private element: HTMLDivElement | null = null;
   private panStart = { pointerX: 0, pointerY: 0, originX: 0, originY: 0 };
-  private readonly onPointerMove = (event: PointerEvent) => this.pan(event);
-  private readonly onPointerUp = () => this.endPan();
+  // Dita attive sul touch: 1 dito = pan, 2 dita = pinch-to-zoom (vedi onPointerDown).
+  private activeTouches = new Map<number, { x: number; y: number }>();
+  private pinchStart: { distance: number; scale: number; midWorld: WorldPoint } | null = null;
+  private readonly onPointerMove = (event: PointerEvent) => {
+    if (this.activeTouches.has(event.pointerId)) {
+      this.activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    if (this.activeTouches.size >= 2) {
+      this.updatePinch();
+      return;
+    }
+    this.pan(event);
+  };
+  private readonly onPointerUp = (event: PointerEvent) => {
+    if (!this.activeTouches.has(event.pointerId)) {
+      this.endPan();
+      return;
+    }
+    this.activeTouches.delete(event.pointerId);
+    this.pinchStart = null;
+    if (this.activeTouches.size === 1) {
+      const [remaining] = [...this.activeTouches.values()];
+      this.beginPan(remaining.x, remaining.y);
+    } else if (this.activeTouches.size === 0) {
+      this.endPan();
+    }
+  };
   private readonly onKeyDown = (event: KeyboardEvent) => {
     if (event.code !== 'Space' || this.isTypingTarget(event.target) || event.repeat) return;
     event.preventDefault();
@@ -116,19 +141,26 @@ export class BoardViewport {
   }
 
   onPointerDown(event: PointerEvent) {
+    if (event.pointerType === 'touch') {
+      this.activeTouches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      window.addEventListener('pointermove', this.onPointerMove);
+      window.addEventListener('pointerup', this.onPointerUp);
+      window.addEventListener('pointercancel', this.onPointerUp);
+      if (this.activeTouches.size === 2) {
+        event.preventDefault();
+        this.beginPinch();
+      } else if (this.activeTouches.size === 1) {
+        this.beginPan(event.clientX, event.clientY);
+      }
+      return;
+    }
+
     const isMiddleButton = event.button === 1;
     const isSpaceDrag = event.button === 0 && this.spacePressed();
     if (!isMiddleButton && !isSpaceDrag) return;
 
     event.preventDefault();
-    this.isPanning.set(true);
-    const current = this.transform();
-    this.panStart = {
-      pointerX: event.clientX,
-      pointerY: event.clientY,
-      originX: current.x,
-      originY: current.y,
-    };
+    this.beginPan(event.clientX, event.clientY);
     window.addEventListener('pointermove', this.onPointerMove);
     window.addEventListener('pointerup', this.onPointerUp);
   }
@@ -173,6 +205,50 @@ export class BoardViewport {
     };
   }
 
+  private beginPan(x: number, y: number) {
+    this.isPanning.set(true);
+    const current = this.transform();
+    this.panStart = { pointerX: x, pointerY: y, originX: current.x, originY: current.y };
+  }
+
+  private beginPinch() {
+    const points = [...this.activeTouches.values()];
+    const midpoint = this.midpoint(points[0], points[1]);
+    this.pinchStart = {
+      distance: this.distanceBetween(points[0], points[1]),
+      scale: this.transform().scale,
+      midWorld: this.screenToWorld(midpoint.x, midpoint.y),
+    };
+    this.isPanning.set(false);
+  }
+
+  // Ancora al mondo il punto centrale iniziale del pinch: resta sotto le dita mentre
+  // la distanza tra le dita (quindi la scala) cambia, esattamente come onWheel col cursore.
+  private updatePinch() {
+    if (!this.pinchStart) return;
+    const points = [...this.activeTouches.values()];
+    const distance = this.distanceBetween(points[0], points[1]);
+    const midpoint = this.midpoint(points[0], points[1]);
+    const rect = this.element?.getBoundingClientRect();
+    if (!rect) return;
+
+    const factor = distance / this.pinchStart.distance;
+    const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, this.pinchStart.scale * factor));
+    this.transform.set({
+      scale: nextScale,
+      x: midpoint.x - rect.left - this.pinchStart.midWorld.x * nextScale,
+      y: midpoint.y - rect.top - this.pinchStart.midWorld.y * nextScale,
+    });
+  }
+
+  private distanceBetween(a: { x: number; y: number }, b: { x: number; y: number }): number {
+    return Math.max(Math.hypot(a.x - b.x, a.y - b.y), 1);
+  }
+
+  private midpoint(a: { x: number; y: number }, b: { x: number; y: number }): { x: number; y: number } {
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  }
+
   private pan(event: PointerEvent) {
     if (!this.isPanning()) return;
     const current = this.transform();
@@ -191,6 +267,7 @@ export class BoardViewport {
   private detachPanListeners() {
     window.removeEventListener('pointermove', this.onPointerMove);
     window.removeEventListener('pointerup', this.onPointerUp);
+    window.removeEventListener('pointercancel', this.onPointerUp);
   }
 
   private isTypingTarget(target: EventTarget | null): boolean {
