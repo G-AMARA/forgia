@@ -35,8 +35,8 @@
       @if (expandedSection() === 'skills') {
         <div class="space-y-4">
           <app-character-saving-throws-panel />
-          <app-character-skills-table />
-          <app-character-resistances-table />
+          <app-character-skills-table [compact]="true" />
+          <app-character-resistances-table [compact]="true" />
         </div>
       }
 
@@ -52,14 +52,14 @@
         [class.border-gold-bright]="expandedSection() === 'spells'">
         <p class="font-display text-sm text-fantasy-moonstone">✨ {{ localeService.t('subtab_spells') }}</p>
       </button>
-      @if (expandedSection() === 'spells') { <app-character-spells-tab /> }
+      @if (expandedSection() === 'spells') { <app-character-spells-tab [compact]="true" /> }
 
       <button type="button" (click)="toggleSection('weapons')"
         class="w-full border border-gold/50 rounded-lg p-3 text-center hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
         [class.border-gold-bright]="expandedSection() === 'weapons'">
         <p class="font-display text-sm text-fantasy-moonstone">⚔️ {{ localeService.t('subtab_weapons') }}</p>
       </button>
-      @if (expandedSection() === 'weapons') { <app-character-weapons-tab /> }
+      @if (expandedSection() === 'weapons') { <app-character-weapons-tab [compact]="true" /> }
 
       <button type="button" (click)="toggleSection('diary')"
         class="w-full border border-gold/50 rounded-lg p-3 text-center hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"

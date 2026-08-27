@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { LocaleService } from '../../core/locale';
 import { SKILLS } from '../../core/skills';
 import { CharacterSheetContext } from './character-sheet-context';
@@ -20,6 +20,12 @@ export class CharacterSkillsTable {
   protected privileges = inject(CharacterPrivilegesService);
   protected localeService = inject(LocaleService);
 
+  // Vista sola lettura senza checkbox/stella Maestria, riga evidenziata in oro se la
+  // competenza è posseduta: usata dal pannello compatto della pagina "Gioca"
+  // (PlayCharacterPanel).
+  readonly compact = input(false);
+
+  protected allSkills = SKILLS;
   protected skillColumns = chunkIntoColumns(SKILLS, 3);
   protected formatModifier = formatModifier;
 }

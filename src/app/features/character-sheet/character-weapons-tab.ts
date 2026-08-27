@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Card } from '../../shared/card/card';
 import { LocaleService } from '../../core/locale';
@@ -18,6 +18,10 @@ export class CharacterWeaponsTab {
   protected context = inject(CharacterSheetContext);
   protected weapons = inject(CharacterWeaponsService);
   protected localeService = inject(LocaleService);
+
+  // Nasconde il form di aggiunta arma e riduce la tabella a nome + azione elimina: usato
+  // dal pannello compatto della pagina "Gioca" (PlayCharacterPanel).
+  readonly compact = input(false);
 
   // Illustrazione di sfondo del "libro" dettagli arma: cornice dorata + doppia pagina,
   // vedi .book-container in tailwind.css.

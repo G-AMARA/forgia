@@ -1,6 +1,6 @@
 @if (context.character()) {
   <app-card contentClass="space-y-4">
-    @if (spells.spellcastingInfo(); as info) {
+    @if (!compact() && spells.spellcastingInfo(); as info) {
       <div class="bg-fantasy-black/60 border border-gold rounded-lg p-3 text-sm space-y-1">
         <p>
           <strong>{{ localeService.t('cantrips_known_label') }}:</strong>
@@ -28,7 +28,7 @@
       </div>
     }
 
-    @if (!context.readOnly()) {
+    @if (!context.readOnly() && !compact()) {
       <app-character-spell-add-form />
     }
 

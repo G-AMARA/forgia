@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { LocaleService } from '../../core/locale';
 import { DAMAGE_TYPES } from '../../core/damage-types';
 import { DamageTypeIcon } from '../../shared/damage-type-icon/damage-type-icon';
@@ -17,5 +17,11 @@ export class CharacterResistancesTable {
   protected combat = inject(CharacterCombatService);
   protected localeService = inject(LocaleService);
 
+  // Mostra solo le resistenze già spuntate, senza checkbox: usato dal pannello compatto
+  // della pagina "Gioca" (PlayCharacterPanel), dove la gestione resta nella scheda
+  // personaggio completa.
+  readonly compact = input(false);
+
+  protected allDamageTypes = DAMAGE_TYPES;
   protected resistanceColumns = chunkIntoColumns(DAMAGE_TYPES, 3);
 }

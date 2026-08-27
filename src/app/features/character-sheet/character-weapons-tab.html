@@ -1,6 +1,6 @@
 @if (context.character(); as c) {
   <app-card contentClass="space-y-4">
-    @if (!context.readOnly()) {
+    @if (!context.readOnly() && !compact()) {
       <div class="grid grid-cols-1 @2xl:grid-cols-2 @4xl:grid-cols-3 gap-2">
         <select [ngModel]="weapons.selectedWeaponId()" (ngModelChange)="weapons.selectedWeaponId.set($event)" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 @2xl:col-span-2">
           <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
@@ -17,7 +17,7 @@
     @if (c.weapons.length === 0) {
       <p class="text-slate-arcane italic text-sm">{{ localeService.t('no_weapons_yet') }}</p>
     } @else {
-      <app-character-weapons-table />
+      <app-character-weapons-table [compact]="compact()" />
 
       <!-- "Libro" dei dettagli arma: sempre visibile, si popola al click su una riga. Solo
            da @2xl in su (container query, non viewport: qui sotto per "abbastanza largo"

@@ -4,12 +4,14 @@
       <thead>
         <tr class="bg-fantasy-gold text-fantasy-blue text-xs uppercase tracking-wide [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
           <th class="py-2 px-2">{{ localeService.t('weapon_col_weapon') }}</th>
-          <th class="py-2 px-2">{{ localeService.t('weapon_col_attack') }}</th>
-          <th class="py-2 px-2">{{ localeService.t('weapon_col_damage') }}</th>
-          <th class="py-2 px-2">{{ localeService.t('weapon_col_range') }}</th>
-          <th class="py-2 px-2">{{ localeService.t('weapon_col_weight') }}</th>
-          <th class="py-2 px-2">{{ localeService.t('weapon_col_cost') }}</th>
-          @if (!context.readOnly()) { <th class="py-2 px-2"></th> }
+          @if (!compact()) {
+            <th class="py-2 px-2">{{ localeService.t('weapon_col_attack') }}</th>
+            <th class="py-2 px-2">{{ localeService.t('weapon_col_damage') }}</th>
+            <th class="py-2 px-2">{{ localeService.t('weapon_col_range') }}</th>
+            <th class="py-2 px-2">{{ localeService.t('weapon_col_weight') }}</th>
+            <th class="py-2 px-2">{{ localeService.t('weapon_col_cost') }}</th>
+          }
+          @if (!context.readOnly()) { <th class="py-2 px-2">{{ localeService.t('delete_button') }}</th> }
         </tr>
       </thead>
       <tbody>
@@ -17,18 +19,20 @@
           <tr (click)="weapons.toggleWeaponSelection(w.rowId)" class="cursor-pointer transition-colors hover:bg-fantasy-gold/20"
             [class]="weapons.selectedWeaponRowId() === w.rowId ? 'bg-fantasy-gold/30' : (odd ? 'bg-fantasy-black/20' : 'bg-fantasy-black/50')">
             <td class="py-2 px-2">{{ w.name }} × {{ w.quantity }}</td>
-            <td class="py-2 px-2">{{ weapons.attackAbilityNames(w.attackAbilities) }}</td>
-            <td class="py-2 px-2">
-              {{ w.damageDice }} {{ w.damageType }}
-              @if (w.versatileDamage) { ({{ w.versatileDamage }} {{ localeService.t('weapon_versatile_label') }}) }
-            </td>
-            <td class="py-2 px-2">
-              @if (w.rangeCategory === 'ranged') { {{ w.normalRange }}/{{ w.longRange }} } @else { {{ localeService.t('weapon_range_melee') }} }
-            </td>
-            <td class="py-2 px-2">{{ w.weight }} kg</td>
-            <td class="py-2 px-2">
-              @if (w.costValue != null) { {{ w.costValue }} {{ localeService.t('coin_unit_' + w.costUnit) }} } @else { <span class="text-slate-arcane">—</span> }
-            </td>
+            @if (!compact()) {
+              <td class="py-2 px-2">{{ weapons.attackAbilityNames(w.attackAbilities) }}</td>
+              <td class="py-2 px-2">
+                {{ w.damageDice }} {{ w.damageType }}
+                @if (w.versatileDamage) { ({{ w.versatileDamage }} {{ localeService.t('weapon_versatile_label') }}) }
+              </td>
+              <td class="py-2 px-2">
+                @if (w.rangeCategory === 'ranged') { {{ w.normalRange }}/{{ w.longRange }} } @else { {{ localeService.t('weapon_range_melee') }} }
+              </td>
+              <td class="py-2 px-2">{{ w.weight }} kg</td>
+              <td class="py-2 px-2">
+                @if (w.costValue != null) { {{ w.costValue }} {{ localeService.t('coin_unit_' + w.costUnit) }} } @else { <span class="text-slate-arcane">—</span> }
+              </td>
+            }
             @if (!context.readOnly()) {
               <td class="py-2 px-2" (click)="$event.stopPropagation()">
                 <div class="flex items-center gap-1.5">

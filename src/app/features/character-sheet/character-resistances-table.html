@@ -1,22 +1,36 @@
 <div class="border-t border-gold/20 pt-5">
   <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('resistances_label') }}</h3>
-  <div class="grid grid-cols-1 @2xl:grid-cols-3 @2xl:gap-x-6">
-    @for (column of resistanceColumns; track $index) {
-      <div class="divide-y divide-gold/20">
-        @for (dmg of column; track dmg.key) {
-          <label class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-fantasy-black/30 transition-colors">
-            <span class="relative flex items-center shrink-0">
-              <input type="checkbox" class="peer appearance-none w-6 h-6 rounded-sm border-2 border-gold bg-fantasy-blue cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                [checked]="combat.isResistanceChecked(dmg.key)" [disabled]="context.readOnly()" (change)="combat.toggleResistance(dmg.key)" />
-              <svg class="pointer-events-none absolute inset-0 m-auto w-4 h-4 hidden peer-checked:block text-fantasy-gold" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 8.5l3 3 7-7" />
-              </svg>
-            </span>
-            <app-damage-type-icon [type]="dmg.key" [label]="localeService.t('damage_type_' + dmg.key)" [size]="18" class="shrink-0 text-fantasy-gold" />
-            <span class="text-xs uppercase tracking-wider font-bold text-gold-glow [text-shadow:0_1px_3px_rgba(0,0,0,0.85)]">{{ localeService.t('damage_type_' + dmg.key) }}</span>
-          </label>
+  @if (compact()) {
+    <div class="flex flex-wrap gap-2 justify-center">
+      @for (dmg of allDamageTypes; track dmg.key) {
+        @if (combat.isResistanceChecked(dmg.key)) {
+          <span class="relative flex items-center gap-2 px-3 py-1.5 rounded-full frame-medieval overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold">
+            <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+            <app-damage-type-icon [type]="dmg.key" [label]="localeService.t('damage_type_' + dmg.key)" [size]="16" class="relative shrink-0 text-gold-glow" />
+            <span class="relative text-xs uppercase tracking-wider font-bold text-gold-glow [text-shadow:0_1px_2px_rgba(0,0,0,0.95)]">{{ localeService.t('damage_type_' + dmg.key) }}</span>
+          </span>
         }
-      </div>
-    }
-  </div>
+      }
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 @2xl:grid-cols-3 @2xl:gap-x-6">
+      @for (column of resistanceColumns; track $index) {
+        <div class="divide-y divide-gold/20">
+          @for (dmg of column; track dmg.key) {
+            <label class="flex items-center gap-3 py-2.5 cursor-pointer hover:bg-fantasy-black/30 transition-colors">
+              <span class="relative flex items-center shrink-0">
+                <input type="checkbox" class="peer appearance-none w-6 h-6 rounded-sm border-2 border-gold bg-fantasy-blue cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  [checked]="combat.isResistanceChecked(dmg.key)" [disabled]="context.readOnly()" (change)="combat.toggleResistance(dmg.key)" />
+                <svg class="pointer-events-none absolute inset-0 m-auto w-4 h-4 hidden peer-checked:block text-fantasy-gold" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 8.5l3 3 7-7" />
+                </svg>
+              </span>
+              <app-damage-type-icon [type]="dmg.key" [label]="localeService.t('damage_type_' + dmg.key)" [size]="18" class="shrink-0 text-fantasy-gold" />
+              <span class="text-xs uppercase tracking-wider font-bold text-gold-glow [text-shadow:0_1px_3px_rgba(0,0,0,0.85)]">{{ localeService.t('damage_type_' + dmg.key) }}</span>
+            </label>
+          }
+        </div>
+      }
+    </div>
+  }
 </div>

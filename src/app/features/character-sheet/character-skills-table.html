@@ -1,6 +1,32 @@
 @if (context.character(); as c) {
   <div class="border-t border-gold/20 pt-5">
     <h3 class="font-display text-lg text-fantasy-gold uppercase tracking-wide mb-3 text-center">{{ localeService.t('skills_label') }}</h3>
+    @if (compact()) {
+      <div class="divide-y divide-gold/20">
+        @for (skill of allSkills; track skill.key) {
+          <div class="relative flex items-center gap-2 py-1.5 px-2"
+            [class]="combat.isSkillChecked(skill.key) ? 'frame-medieval rounded-sm overflow-hidden bg-linear-to-br from-fantasy-gold via-gold-bright to-fantasy-gold' : ''">
+            @if (combat.isSkillChecked(skill.key)) {
+              <div class="absolute inset-0 bg-linear-to-t from-transparent via-white/10 to-transparent"></div>
+            }
+            <span class="relative flex-1 min-w-0">
+              <span class="block text-[0.65rem]" [class]="combat.isSkillChecked(skill.key) ? 'text-fantasy-black' : 'opacity-60'">
+                ({{ localeService.t('ability_' + skill.ability) }}: {{ identity.abilityScores()[skill.ability] }})
+                @if (combat.isSkillMastered(skill.key)) { · {{ localeService.t('skill_mastery_label') }} }
+              </span>
+              <span class="block text-xs uppercase tracking-wider font-bold"
+                [class]="combat.isSkillChecked(skill.key) ? 'text-fantasy-black' : 'text-gold-glow [text-shadow:0_1px_3px_rgba(0,0,0,0.85)]'">
+                {{ localeService.t('skill_' + skill.key) }}
+              </span>
+            </span>
+            <span class="relative shrink-0 px-2.5 py-0.5 rounded-full border text-sm font-bold"
+              [class]="combat.isSkillChecked(skill.key) ? 'bg-fantasy-black/30 border-fantasy-black/40 text-fantasy-black' : 'bg-fantasy-black/60 border-gold/50 text-fantasy-gold'">
+              {{ formatModifier(combat.skillModifier(skill.ability, skill.key, c.level)) }}
+            </span>
+          </div>
+        }
+      </div>
+    } @else {
     <div class="grid grid-cols-1 @2xl:grid-cols-3 @2xl:gap-x-6">
       @for (column of skillColumns; track $index) {
         <div class="divide-y divide-gold/20">
@@ -44,5 +70,6 @@
         </div>
       }
     </div>
+    }
   </div>
 }
