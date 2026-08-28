@@ -44,3 +44,41 @@ export const EXP_PER_HOUR = 10;
 export function hoursToExp(hours: number): number {
   return hours * EXP_PER_HOUR;
 }
+
+export interface RankGroupEntry {
+  id: string;
+  nickname: string;
+  exp: number;
+}
+
+export interface RankGroup {
+  tier: RankTier;
+  entries: RankGroupEntry[];
+}
+
+// Raggruppa i profili per rango (RANK_TIERS dal più alto al più basso, come rankList in
+// Araldica ma senza Fato), omettendo i gruppi senza iscritti. Il rango è sempre quello che
+// spetterebbe per le ore accumulate, anche per gli admin: qui interessa l'araldica "reale",
+// non lo status speciale mostrato nel proprio badge (vedi Araldica.applySeconds).
+export function groupByRank(
+  profiles: { id: string; nickname: string | null; navigation_seconds: number }[]
+): RankGroup[] {
+  const orderedTiers = RANK_TIERS.slice().reverse();
+  const buckets = new Map<string, RankGroupEntry[]>();
+
+  for (const profile of profiles) {
+    const tier = getRankForSeconds(profile.navigation_seconds, false);
+    const entry: RankGroupEntry = {
+      id: profile.id,
+      nickname: profile.nickname ?? '???',
+      exp: hoursToExp(Math.floor(profile.navigation_seconds / 3600)),
+    };
+    const bucket = buckets.get(tier.name);
+    if (bucket) bucket.push(entry);
+    else buckets.set(tier.name, [entry]);
+  }
+
+  return orderedTiers
+    .filter((tier) => buckets.has(tier.name))
+    .map((tier) => ({ tier, entries: buckets.get(tier.name)!.sort((a, b) => b.exp - a.exp) }));
+}

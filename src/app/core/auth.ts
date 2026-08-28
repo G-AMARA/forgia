@@ -12,6 +12,15 @@ export interface AdminProfile {
   avatar_url: string | null;
 }
 
+// Riga di profiles per il pannello Avventurieri (aperto a tutti): niente ruoli/avatar, solo
+// quanto serve a calcolare rango ed exp lato client (vedi core/ranks.ts groupByRank, che
+// calcola sempre il rango "reale" da ore accumulate, anche per gli admin).
+export interface AdventurerProfile {
+  id: string;
+  nickname: string | null;
+  navigation_seconds: number;
+}
+
 export type Role = 'player' | 'master' | 'admin';
 
 const VIEW_ROLE_KEY_PREFIX = 'fanta-view-role-';
@@ -288,6 +297,17 @@ export class Auth {
   // Cambia ruolo di UN ALTRO utente. Funziona solo se chi chiama è già admin: la RLS
   // "profiles_update_admin" (sql/2026-08-25_profiles_admin_update.sql) è quello che lo
   // permette davvero, questo metodo non fa altro che invocare l'update lato client.
+  // Pubblico (RLS "Lettura pubblica profili" è qual: true): elenco di tutti gli iscritti
+  // per il pannello Avventurieri, raggruppato per araldica lato client (ranks.groupByRank).
+  async listAdventurers(): Promise<{ data: AdventurerProfile[]; error: { message: string } | null }> {
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .select('id, nickname, navigation_seconds')
+      .order('navigation_seconds', { ascending: false });
+
+    return { data: data ?? [], error };
+  }
+
   async updateUserRole(targetId: string, isMaster: boolean, isAdmin: boolean) {
     const { data, error } = await this.supabase.client
       .from('profiles')

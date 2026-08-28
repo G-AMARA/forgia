@@ -1,0 +1,48 @@
+@if (isOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+    (click)="close()"
+  >
+    <div
+      class="relative w-full max-w-md max-h-[80vh] flex flex-col bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+      (click)="$event.stopPropagation()"
+    >
+      <h3 class="font-display text-lg mb-4 text-fantasy-gold">{{ localeService.t('adventurers_title') }}</h3>
+
+      <div class="flex-1 overflow-y-auto space-y-5 pr-1">
+        @if (loading()) {
+          <p class="text-sm text-center text-slate-arcane">{{ localeService.t('adventurers_loading') }}</p>
+        } @else if (groups().length === 0) {
+          <p class="text-sm text-center text-slate-arcane">{{ localeService.t('adventurers_empty') }}</p>
+        } @else {
+          @for (group of groups(); track group.tier.name) {
+            <div>
+              <h4 class="font-display text-sm uppercase tracking-wide text-fantasy-gold mb-2 border-b border-gold/30 pb-1">
+                {{ group.tier.name }}
+              </h4>
+              <ul class="space-y-1.5">
+                @for (entry of group.entries; track entry.id) {
+                  <li class="flex items-center gap-2 text-sm">
+                    <img [src]="group.tier.icon" [alt]="group.tier.name" class="w-6 h-6 rounded-full border border-gold-bright shrink-0" />
+                    <span class="flex-1 truncate">{{ entry.nickname }}</span>
+                    <span class="text-[11px] uppercase text-slate-arcane">{{ entry.exp }} exp</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="flex justify-end mt-6">
+        <button
+          type="button"
+          (click)="close()"
+          class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+        >
+          {{ localeService.t('adventurers_close') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

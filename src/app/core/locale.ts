@@ -164,6 +164,12 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     tab_dice_roller: 'Lancia i Dadi',
     nav_menu_label: 'Menu',
 
+    adventurers_button: 'Avventurieri',
+    adventurers_title: 'Gli Avventurieri della Forgia',
+    adventurers_loading: 'Raduno degli avventurieri in corso...',
+    adventurers_empty: 'Nessun avventuriero iscritto.',
+    adventurers_close: 'Chiudi',
+
     bestiary_add_monster_button: 'Aggiungi Mostro',
     bestiary_empty_state: 'Nessun mostro selezionato per questa campagna.',
     bestiary_confirm_delete_monster: 'Eliminare il mostro',
@@ -798,6 +804,12 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     tab_manage: 'Manage',
     tab_dice_roller: 'Dice Roller',
     nav_menu_label: 'Menu',
+
+    adventurers_button: 'Adventurers',
+    adventurers_title: "The Forge's Adventurers",
+    adventurers_loading: 'Gathering the adventurers...',
+    adventurers_empty: 'No adventurers registered yet.',
+    adventurers_close: 'Close',
 
     bestiary_add_monster_button: 'Add Monster',
     bestiary_empty_state: 'No monsters selected for this campaign.',

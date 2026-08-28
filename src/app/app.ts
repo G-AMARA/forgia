@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, inject, signal, effect, viewChild } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { Location } from '@angular/common';
 import { AuthForm } from './features/auth-form/auth-form';
@@ -17,6 +17,7 @@ import { WeaponList } from './features/weapon-list/weapon-list';
 import { Manage } from './features/manage/manage';
 import { Profile } from './features/profile/profile';
 import { Araldica } from './features/araldica/araldica';
+import { Adventurers } from './features/adventurers/adventurers';
 import { GenericModalComponent } from './shared/modal/generic-adviser-modal/generic-adviser-modal';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
@@ -46,6 +47,7 @@ import { DiceRoller } from './shared/dice-roller/dice-roller';
     Manage,
     Profile,
     Araldica,
+    Adventurers,
     GenericModalComponent,
     DiceRoller,
   ],
@@ -66,6 +68,8 @@ export class App {
   private navigationTracker = inject(NavigationTracker);
   protected diceRollerOpen = signal(false);
   protected mobileNavOpen = signal(false);
+
+  private adventurersPanel = viewChild(Adventurers);
 
   // Etichetta della tab attiva sul pulsante del menu mobile: fallback su "Menu" per le
   // tab raggiungibili in altri modi (badge campagna, menu utente...) che non hanno una
@@ -148,6 +152,13 @@ export class App {
     } else {
       this.appNav.setTab(tab);
     }
+  }
+
+  // Trigger nella tab-bar (desktop + menu mobile): il pannello vive fuori, come
+  // <app-adventurers> nel template, richiamato qui via viewChild.
+  openAdventurers() {
+    this.mobileNavOpen.set(false);
+    this.adventurersPanel()?.open();
   }
 
   openDiceRollerModal() {

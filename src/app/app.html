@@ -120,6 +120,12 @@
           >
             {{ localeService.t('tab_catalog') }}
           </button>
+          <button
+            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 border-transparent transition-colors"
+            (click)="openAdventurers()"
+          >
+            {{ localeService.t('adventurers_button') }}
+          </button>
           @if (auth.isAdmin()) {
             <button
               class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
@@ -187,6 +193,13 @@
               >
                 {{ localeService.t('tab_catalog') }}
               </button>
+              <button
+                type="button"
+                (click)="openAdventurers()"
+                class="w-full text-left px-3 py-2 text-xs uppercase tracking-wide font-display hover:bg-gold hover:text-fantasy-black transition-colors"
+              >
+                {{ localeService.t('adventurers_button') }}
+              </button>
               @if (auth.isAdmin()) {
                 <button
                   type="button"
@@ -232,6 +245,7 @@
 
       </div>
     </nav>
+    <app-adventurers></app-adventurers>
     <div class="relative flex-1 overflow-hidden">
       <main class="relative max-w-5xl mx-auto px-4 py-6 space-y-8 w-full">
       @switch (appNav.activeTab()) {
