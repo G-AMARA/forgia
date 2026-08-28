@@ -10,15 +10,16 @@ import { BackgroundCreate } from '../background-create/background-create';
 import { ClassCreate } from '../class-create/class-create';
 import { SubclassCreate } from '../subclass-create/subclass-create';
 import { BestiaryManage } from './bestiary-manage/bestiary-manage';
+import { NpcManage } from './npc-manage/npc-manage';
 import { UserManage } from './user-manage/user-manage';
 import { LocaleService } from '../../core/locale';
 
-type ManageSection = 'races' | 'subraces' | 'classes' | 'subclasses' | 'backgrounds' | 'weapons' | 'spells' | 'equipment' | 'armors' | 'mounts' | 'bestiary' | 'users';
+type ManageSection = 'races' | 'subraces' | 'classes' | 'subclasses' | 'backgrounds' | 'weapons' | 'spells' | 'equipment' | 'armors' | 'mounts' | 'bestiary' | 'npc' | 'users';
 
 @Component({
   selector: 'app-manage',
   standalone: true,
-  imports: [RaceCreate, SubraceCreate, ClassCreate, SubclassCreate, BackgroundCreate, WeaponCreate, SpellCreate, EquipmentCreate, ArmorCreate, MountCreate, BestiaryManage, UserManage],
+  imports: [RaceCreate, SubraceCreate, ClassCreate, SubclassCreate, BackgroundCreate, WeaponCreate, SpellCreate, EquipmentCreate, ArmorCreate, MountCreate, BestiaryManage, NpcManage, UserManage],
   templateUrl: './manage.html',
 })
 export class Manage {

@@ -1,0 +1,34 @@
+<div class="border-2 border-gold rounded-lg p-4 bg-fantasy-black/60 space-y-3">
+  <div class="flex items-start justify-between gap-2 flex-wrap">
+    <div>
+      <h4 class="font-display text-xl text-fantasy-gold">{{ npc().name }}</h4>
+      @if (npc().title) {
+        <p class="text-xs italic text-slate-arcane">{{ npc().title }}</p>
+      }
+    </div>
+    @if (canPlaceOnMap()) {
+      <button
+        type="button"
+        (click)="placeOnMap.emit()"
+        class="text-xs px-3 py-1.5 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors shrink-0"
+      >
+        🗺️ {{ localeService.t('play_place_npc_button') }}
+      </button>
+    }
+  </div>
+
+  <div class="flex flex-wrap gap-2 text-xs">
+    @if (npc().location) {
+      <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">📍 {{ npc().location }}</span>
+    }
+    @if (npc().attitude) {
+      <span class="px-2 py-0.5 rounded-full border" [class]="attitudeClass(npc().attitude)">
+        {{ localeService.t('npc_attitude_' + npc().attitude) }}
+      </span>
+    }
+  </div>
+
+  @if (npc().description) {
+    <p class="text-sm whitespace-pre-line">{{ npc().description }}</p>
+  }
+</div>

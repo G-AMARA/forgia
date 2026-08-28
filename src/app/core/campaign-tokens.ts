@@ -1,6 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Supabase } from './supabase';
 
+// Provenienza della pedina: usata solo per la resa visiva (bordo diverso, vedi
+// token-permissions.ts borderClassFor), non incide su permessi/drag.
+export type TokenKind = 'character' | 'monster' | 'npc';
+
 export interface CampaignToken {
   id: string;
   campaignId: string;
@@ -12,6 +16,7 @@ export interface CampaignToken {
   size: number;
   isLocked: boolean;
   isVisible: boolean;
+  kind: TokenKind;
 }
 
 export interface NewCampaignToken {
@@ -21,6 +26,7 @@ export interface NewCampaignToken {
   avatarUrl: string;
   x: number;
   y: number;
+  kind: TokenKind;
 }
 
 // Payload condiviso tra InteractiveBoardComponent (emette durante/dopo il drag) e Play
@@ -40,7 +46,7 @@ const PLACEHOLDER_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#334155"/><text x="50" y="65" font-size="48" text-anchor="middle" fill="#cbd5e1">?</text></svg>';
 export const TOKEN_PLACEHOLDER_AVATAR = `data:image/svg+xml;utf8,${encodeURIComponent(PLACEHOLDER_SVG)}`;
 
-const TOKEN_COLUMNS = 'id, campaign_id, character_id, name, avatar_url, x, y, size, is_locked, is_visible';
+const TOKEN_COLUMNS = 'id, campaign_id, character_id, name, avatar_url, x, y, size, is_locked, is_visible, kind';
 
 function mapRow(row: any): CampaignToken {
   return {
@@ -54,6 +60,7 @@ function mapRow(row: any): CampaignToken {
     size: row.size,
     isLocked: row.is_locked,
     isVisible: row.is_visible,
+    kind: row.kind,
   };
 }
 
@@ -92,6 +99,7 @@ export class CampaignTokens {
       avatar_url: input.avatarUrl,
       x: input.x,
       y: input.y,
+      kind: input.kind,
     };
 
     // Un personaggio non può avere più di un token nella stessa campagna (vincolo unique

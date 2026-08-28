@@ -1,0 +1,51 @@
+<div class="space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-2">
+    <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('npc_catalog_title') }}</h3>
+    <button
+      type="button"
+      (click)="openAddForm()"
+      class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+    >
+      {{ localeService.t('npc_add_button') }}
+    </button>
+  </div>
+
+  @if (npcStore.catalog().length === 0) {
+    <p class="text-slate-arcane italic text-sm">{{ localeService.t('npc_catalog_empty_state') }}</p>
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      @for (npc of npcStore.catalog(); track npc.id) {
+        <div class="flex items-center gap-3 border border-gold/50 rounded-lg p-3 bg-fantasy-black/40">
+          <div class="w-14 h-14 shrink-0 rounded overflow-hidden border-2 border-gold bg-fantasy-black/60 flex items-center justify-center">
+            @if (npc.image_url) {
+              <img [src]="npc.image_url" [alt]="npc.name" class="w-full h-full object-cover" />
+            } @else {
+              <span class="text-slate-arcane text-xl">🧑</span>
+            }
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-display text-fantasy-moonstone truncate">{{ npc.name }}</p>
+            @if (npc.title) {
+              <p class="text-xs text-slate-arcane truncate">{{ npc.title }}</p>
+            }
+            <div class="flex gap-3 mt-1">
+              <button type="button" (click)="openEditForm(npc)" class="text-xs text-fantasy-gold underline">
+                {{ localeService.t('edit_button') }}
+              </button>
+              <button type="button" (click)="deleteNpc(npc)" class="text-xs text-red-300 underline">
+                {{ localeService.t('delete_button') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (formOpen()) {
+  <app-npc-form
+    [editingNpc]="editingNpc()"
+    (closed)="onFormClosed()"
+  ></app-npc-form>
+}

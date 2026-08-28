@@ -101,6 +101,7 @@ export class PlayCharacterPanel implements OnInit {
         avatarUrl: character.avatar_url || TOKEN_PLACEHOLDER_AVATAR,
         x: center.x,
         y: center.y,
+        kind: 'character',
       });
 
       // insert() ritorna null se l'INSERT è stato respinto (es. RLS): l'errore è già

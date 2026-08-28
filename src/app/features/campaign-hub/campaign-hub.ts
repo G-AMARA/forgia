@@ -9,14 +9,15 @@ import { Modal } from '../../core/modal';
 import { getCover, getCoverImagePath } from '../../core/campaign-covers';
 import { formatDateTime } from '../../core/datetime-local';
 import { Bestiary } from '../bestiary/bestiary';
+import { Npc } from '../npc/npc';
 import { Maps } from '../maps/maps';
 
-type CampaignSection = 'session-log' | 'bestiary' | 'maps';
+type CampaignSection = 'npc' | 'bestiary' | 'maps';
 
 @Component({
   selector: 'app-campaign-hub',
   standalone: true,
-  imports: [Bestiary, Maps],
+  imports: [Bestiary, Npc, Maps],
   templateUrl: './campaign-hub.html',
 })
 export class CampaignHub {
@@ -103,7 +104,7 @@ export class CampaignHub {
 
   // Stato locale a questo componente (non in AppNav, che guida la navigazione a livello
   // di app): un semplice accordion a una sola sezione aperta per volta, per le tre card
-  // "Registro sessioni" / "Bestiario" / "Mappe e luoghi".
+  // "PNG" / "Bestiario" / "Mappe e luoghi".
   expandedSection = signal<CampaignSection | null>(null);
 
   toggleSection(section: CampaignSection) {

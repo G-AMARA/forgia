@@ -110,10 +110,16 @@
   
       <!-- Sezioni future -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="border border-gold/50 rounded-lg p-4 text-center opacity-60">
-          <p class="font-display text-sm text-fantasy-moonstone">📖 {{ localeService.t('session_log_title') }}</p>
-          <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
-        </div>
+        @if (isOwner() || auth.isAdmin()) {
+          <button
+            type="button"
+            (click)="toggleSection('npc')"
+            class="border border-gold/50 rounded-lg p-4 text-center cursor-pointer hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
+            [class.border-gold-bright]="expandedSection() === 'npc'"
+          >
+            <p class="font-display text-sm text-fantasy-moonstone">🧑 {{ localeService.t('npc_title') }}</p>
+          </button>
+        }
         @if (isOwner() || auth.isAdmin()) {
           <button
             type="button"
@@ -136,6 +142,9 @@
         }
       </div>
 
+      @if (expandedSection() === 'npc') {
+        <app-npc [campaignId]="campaignStore.current()!.id"></app-npc>
+      }
       @if (expandedSection() === 'bestiary') {
         <app-bestiary [campaignId]="campaignStore.current()!.id"></app-bestiary>
       }

@@ -1,19 +1,36 @@
 <!-- Backdrop: sfuocato e scuro, un click lo chiude. La card ferma la propagazione per non
-     chiudersi quando si clicca al suo interno. -->
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" (click)="closed.emit()">
+     chiudersi quando si clicca al suo interno. items-start (con overflow-y-auto) invece di
+     items-center: in landscape su mobile l'altezza dello schermo è spesso più bassa della
+     card, "center" la taglierebbe sopra e sotto in egual misura senza modo di scrollare
+     fino ai bordi; ancorata in alto, lo scroll del backdrop la raggiunge per intero. -->
+<div
+  class="fixed inset-0 z-50 flex justify-center items-start sm:items-center overflow-y-auto bg-black/70 backdrop-blur-sm p-2 sm:p-4"
+  (click)="closed.emit()"
+>
   <div
     (click)="$event.stopPropagation()"
-    class="relative w-full max-w-md rounded-2xl border-4 border-gold bg-fantasy-black shadow-2xl overflow-hidden"
+    class="relative flex flex-col w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl border-4 border-gold bg-fantasy-black shadow-2xl"
   >
+    <!-- sticky, non absolute: da primo figlio del box che scrolla (flex-col), resta
+         ancorato in alto durante lo scroll interno invece di sparire con l'immagine.
+         L'immagine sotto compensa con -mt-10 (altezza pulsante + margine) per restare
+         comunque a ridosso dell'angolo, look identico a prima. -->
     <button
       type="button"
       (click)="closed.emit()"
-      class="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded border border-gold bg-fantasy-black/80 text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors"
+      class="sticky top-2 z-10 self-end mt-2 mr-2 w-8 h-8 shrink-0 flex items-center justify-center rounded border border-gold bg-fantasy-black/80 text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors"
     >
       ✕
     </button>
 
-    <img [src]="token().avatarUrl" [alt]="token().name" class="w-full aspect-square object-cover" />
+    <!-- Sotto i 500px di altezza (landscape su telefono) l'immagine quadrata a piena
+         larghezza da sola supererebbe lo schermo: qui diventa un'anteprima contenuta e
+         bassa invece che ritagliata a forza dal max-h del box. -->
+    <img
+      [src]="token().avatarUrl"
+      [alt]="token().name"
+      class="w-full aspect-square object-cover -mt-10 [@media(max-height:500px)]:aspect-auto [@media(max-height:500px)]:max-h-48 [@media(max-height:500px)]:object-contain"
+    />
 
     <div class="px-4 py-3 bg-linear-to-t from-fantasy-black to-fantasy-black/90 border-t-2 border-gold text-center">
       <h3 class="font-display text-2xl text-fantasy-gold">{{ token().name }}</h3>

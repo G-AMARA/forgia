@@ -1,0 +1,63 @@
+<div class="space-y-4 p-4 border border-gold/50 rounded-lg bg-fantasy-black/40">
+  <div class="flex items-center justify-between flex-wrap gap-2">
+    <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('npc_title') }}</h3>
+    @if (canManage()) {
+      <button
+        type="button"
+        (click)="openPicker()"
+        class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+      >
+        {{ localeService.t('npc_select_button') }}
+      </button>
+    }
+  </div>
+
+  @if (selectedNpcs().length === 0) {
+    <p class="text-slate-arcane italic text-sm">
+      {{ canManage() ? localeService.t('npc_no_selection_hint') : localeService.t('npc_empty_state') }}
+    </p>
+  } @else {
+    <!-- Raccoglitore di carte: stesso effetto "cards" di Swiper usato dal Bestiario. -->
+    <div class="flex justify-center">
+      <swiper-container
+        init="true"
+        effect="cards"
+        grab-cursor="true"
+        navigation="true"
+        style="--swiper-navigation-color: #c7a45e"
+        class="block w-full max-w-60 aspect-3/4"
+        (swiperslidechange)="onSlideChange($event)"
+      >
+        @for (npc of selectedNpcs(); track npc.id) {
+          <swiper-slide class="flex flex-col rounded-2xl overflow-hidden border-4 border-gold bg-fantasy-black shadow-lg shadow-black/50">
+            <div class="flex-1 min-h-0 bg-fantasy-black/60 flex items-center justify-center overflow-hidden">
+              @if (npc.image_url) {
+                <img [src]="npc.image_url" [alt]="npc.name" class="w-full h-full object-cover" />
+              } @else {
+                <span class="text-slate-arcane text-5xl">🧑</span>
+              }
+            </div>
+            <div class="shrink-0 px-2 py-1.5 bg-linear-to-t from-fantasy-black to-fantasy-black/90 border-t-2 border-gold text-center">
+              <p class="font-display text-sm text-fantasy-gold truncate">{{ npc.name }}</p>
+              @if (npc.title) {
+                <p class="text-[10px] text-slate-arcane truncate">{{ npc.title }}</p>
+              }
+            </div>
+          </swiper-slide>
+        }
+      </swiper-container>
+    </div>
+
+    <!-- Pannello dettagli del PNG in cima al mazzo -->
+    @if (selectedNpc(); as npc) {
+      <app-npc-detail-card [npc]="npc" [canPlaceOnMap]="canPlaceOnMap()" (placeOnMap)="placeOnMap(npc)" />
+    }
+  }
+</div>
+
+@if (pickerOpen()) {
+  <app-npc-picker
+    [campaignId]="campaignId"
+    (closed)="onPickerClosed()"
+  ></app-npc-picker>
+}

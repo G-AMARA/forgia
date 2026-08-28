@@ -1,8 +1,15 @@
 <div class="space-y-3">
-  <div class="border border-gold/50 rounded-lg p-3 text-center opacity-60">
-    <p class="font-display text-sm text-fantasy-moonstone">📖 {{ localeService.t('session_log_title') }}</p>
-    <p class="text-xs italic mt-1">{{ localeService.t('coming_soon') }}</p>
-  </div>
+  <button
+    type="button"
+    (click)="toggleSection('npc')"
+    class="w-full border border-gold/50 rounded-lg p-3 text-center hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
+    [class.border-gold-bright]="expandedSection() === 'npc'"
+  >
+    <p class="font-display text-sm text-fantasy-moonstone">🧑 {{ localeService.t('npc_title') }}</p>
+  </button>
+  @if (expandedSection() === 'npc') {
+    <app-npc [campaignId]="campaignId()" (tokensChanged)="tokensChanged.emit()"></app-npc>
+  }
 
   <button
     type="button"

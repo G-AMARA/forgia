@@ -21,6 +21,7 @@ export function isOwnCharacterToken(token: CampaignToken, myCharacterId: string 
 
 export function borderClassFor(token: CampaignToken, myCharacterId: string | null): string {
   if (token.characterId && token.characterId === myCharacterId) return 'border-amber-400';
-  if (token.characterId === null) return 'border-red-500';
-  return 'border-slate-400';
+  if (token.characterId !== null) return 'border-slate-400';
+  if (token.kind === 'npc') return 'border-sky-400';
+  return 'border-red-500';
 }

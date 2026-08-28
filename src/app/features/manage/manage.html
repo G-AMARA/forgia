@@ -92,6 +92,14 @@
     </button>
     <button
       class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
+      [class.border-fantasy-gold]="activeSection() === 'npc'"
+      [class.border-transparent]="activeSection() !== 'npc'"
+      (click)="setSection('npc')"
+    >
+      {{ localeService.t('tab_npc_manage') }}
+    </button>
+    <button
+      class="px-4 py-2 font-display text-sm border-b-4 transition-colors"
       [class.border-fantasy-gold]="activeSection() === 'users'"
       [class.border-transparent]="activeSection() !== 'users'"
       (click)="setSection('users')"
@@ -112,6 +120,7 @@
     @case ('armors') { <app-armor-create></app-armor-create> }
     @case ('mounts') { <app-mount-create></app-mount-create> }
     @case ('bestiary') { <app-bestiary-manage></app-bestiary-manage> }
+    @case ('npc') { <app-npc-manage></app-npc-manage> }
     @case ('users') { <app-user-manage></app-user-manage> }
   }
 </section>
