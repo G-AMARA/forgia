@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
-import { CampaignTokens, TOKEN_PLACEHOLDER_AVATAR } from '../../core/campaign-tokens';
+import { CampaignTokens, TOKEN_PLACEHOLDER_AVATAR, TokenPositionEvent } from '../../core/campaign-tokens';
 import { LocaleService } from '../../core/locale';
 import { BoardViewport } from './components/interactive-board/board-viewport';
 import { CharacterSheetContext } from '../character-sheet/character-sheet-context';
@@ -68,14 +68,24 @@ export class PlayCharacterPanel implements OnInit {
 
   readonly campaignId = input.required<string>();
   readonly tokensChanged = output<void>();
+  // "Centra PG sulla mappa": sposta il TOKEN al centro del viewport corrente (non la vista
+  // sul token, vedi centerOnMap()). Play la riceve e la instrada nella stessa pipeline del
+  // drag (broadcast + persistenza), esattamente come TokenDrag/D-Pad.
+  readonly tokenPositionChange = output<TokenPositionEvent>();
 
   protected expandedSection = signal<PlaySection | null>(null);
 
   // Il proprio personaggio ha già una pedina in plancia? Se sì, il pulsante di
-  // piazzamento resta nascosto (niente doppioni, niente re-inserimento accidentale).
+  // piazzamento è sostituito da "Centra PG sulla mappa" (niente doppioni, niente
+  // re-inserimento accidentale, e un modo per ritrovare la pedina se finita fuori vista).
   protected hasTokenOnMap = computed(() => {
     const characterId = this.context.character()?.id;
     return !!characterId && this.campaignTokens.tokens().some((t) => t.characterId === characterId);
+  });
+
+  private myToken = computed(() => {
+    const characterId = this.context.character()?.id;
+    return this.campaignTokens.tokens().find((t) => t.characterId === characterId) ?? null;
   });
 
   ngOnInit() {
@@ -92,8 +102,9 @@ export class PlayCharacterPanel implements OnInit {
 
     try {
       // getViewportCenter() ha già un fallback interno (centro dell'immagine mondo) se il
-      // viewport non è ancora stato misurato: non può restituire null/undefined.
-      const center = this.viewport.getViewportCenter();
+      // viewport non è ancora stato misurato: non può restituire null/undefined. Clampato
+      // per difesa in profondità, anche se il centro del viewport è normalmente già valido.
+      const center = this.viewport.clampToBounds(this.viewport.getViewportCenter());
       const token = await this.campaignTokens.insert({
         campaignId: this.campaignId(),
         characterId: character.id,
@@ -112,5 +123,16 @@ export class PlayCharacterPanel implements OnInit {
     } catch (err) {
       console.error('[Self-Spawn Error]', err);
     }
+  }
+
+  // Sposta il proprio token al centro dell'area attualmente inquadrata (stessa posizione
+  // che placeOnMap() userebbe per un piazzamento iniziale): utile per recuperare una
+  // pedina finita fuori vista, riportandola dove si sta guardando invece di spostare la
+  // visuale a inseguirla.
+  centerOnMap() {
+    const token = this.myToken();
+    if (!token) return;
+    const center = this.viewport.clampToBounds(this.viewport.getViewportCenter());
+    this.tokenPositionChange.emit({ tokenId: token.id, x: center.x, y: center.y, committed: true });
   }
 }

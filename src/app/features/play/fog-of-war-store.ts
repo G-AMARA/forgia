@@ -8,21 +8,19 @@ export interface FogRect {
   h: number;
 }
 
+export type FogOp = { type: 'reveal' | 'cover'; rect: FogRect };
+
 export interface FogState {
-  revealed: FogRect[];
-  covered: FogRect[];
+  operations: FogOp[];
 }
 
-function containsPoint(rects: FogRect[], x: number, y: number): boolean {
-  return rects.some((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h);
-}
-
-// Stato della nebbia per la mappa attiva: due liste separate in coordinate mondo (stesso
-// spazio di token.x/y). revealedAreas svela, coveredAreas ri-copre SOPRA una rivelazione —
-// nella <mask> di FogOfWarComponent i coveredAreas sono disegnati DOPO i revealedAreas,
-// quindi ritagliano con precisione solo la porzione toccata invece di rimuovere l'intero
-// rettangolo rivelato sottostante (bugfix: la versione precedente teneva un solo array e
-// "coprire" cancellava per intero ogni rettangolo intersecato).
+// Stato della nebbia per la mappa attiva: UNA lista ordinata di operazioni (non due liste
+// separate revealed/covered), in coordinate mondo (stesso spazio di token.x/y). Rese nella
+// stessa sequenza in cui sono state disegnate (vedi FogOfWarComponent, che le itera in
+// ordine in un'unica <mask>): l'operazione più recente che tocca un punto vince sempre,
+// che sia "copri" o "scopri" — a differenza del vecchio modello a due liste, dove "copri"
+// vinceva sempre su "scopri" indipendentemente dall'ordine reale delle azioni (bug: un'area
+// coperta non poteva più essere ri-scoperta).
 // Persistito come stato unico per (campaign_id, map_image_id), non una riga per rettangolo
 // (vedi sql/2026-08-26_map_fog_state.sql): reveal/cover restano semplici append, nessuna
 // geometria (unione/sottrazione) lato SQL o lato client.
@@ -30,39 +28,49 @@ function containsPoint(rects: FogRect[], x: number, y: number): boolean {
 export class FogOfWarStore {
   private supabase = inject(Supabase);
 
-  readonly revealedAreas = signal<FogRect[]>([]);
-  readonly coveredAreas = signal<FogRect[]>([]);
+  readonly operations = signal<FogOp[]>([]);
+
+  // Incrementato a ogni load(): una risposta di rete in arrivo per una richiesta non più
+  // "corrente" (superata da un load() più recente, es. cambio rapido di mappa in ingresso
+  // sessione) viene scartata invece di sovrascrivere uno stato più recente e corretto.
+  private requestSeq = 0;
 
   async load(campaignId: string, mapImageId: string) {
+    const requestId = ++this.requestSeq;
+    // Azzera subito, prima della risposta: meglio un istante "tutto coperto" (fail-safe)
+    // che rischiare di mostrare per uno o più frame lo stato della mappa precedente.
+    this.operations.set([]);
+
     const { data, error } = await this.supabase.client
       .from('map_fog_state')
-      .select('revealed_areas, covered_areas')
+      .select('operations')
       .eq('campaign_id', campaignId)
       .eq('map_image_id', mapImageId)
       .maybeSingle();
 
+    if (requestId !== this.requestSeq) return;
+
     if (error) {
       console.error('Errore caricamento nebbia', error.message);
-      this.clear();
+      this.operations.set([]);
       return;
     }
 
-    this.revealedAreas.set((data?.revealed_areas as FogRect[] | undefined) ?? []);
-    this.coveredAreas.set((data?.covered_areas as FogRect[] | undefined) ?? []);
+    this.operations.set((data?.operations as FogOp[] | undefined) ?? []);
   }
 
   clear() {
-    this.revealedAreas.set([]);
-    this.coveredAreas.set([]);
+    this.requestSeq++;
+    this.operations.set([]);
   }
 
   reveal(rect: FogRect): FogState {
-    this.revealedAreas.update((list) => [...list, rect]);
+    this.operations.update((list) => [...list, { type: 'reveal', rect }]);
     return this.snapshot();
   }
 
   cover(rect: FogRect): FogState {
-    this.coveredAreas.update((list) => [...list, rect]);
+    this.operations.update((list) => [...list, { type: 'cover', rect }]);
     return this.snapshot();
   }
 
@@ -75,16 +83,22 @@ export class FogOfWarStore {
   // già persistita con save()) e nessun segnale "modifica locale" verso FogDrawing, per non
   // ribroadcastare in eco quanto appena ricevuto.
   setLocal(state: FogState) {
-    this.revealedAreas.set(state.revealed);
-    this.coveredAreas.set(state.covered);
+    this.operations.set(state.operations);
   }
 
   isRevealedAt(x: number, y: number): boolean {
-    return containsPoint(this.revealedAreas(), x, y) && !containsPoint(this.coveredAreas(), x, y);
+    const ops = this.operations();
+    for (let i = ops.length - 1; i >= 0; i--) {
+      const { type, rect } = ops[i];
+      if (x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h) {
+        return type === 'reveal';
+      }
+    }
+    return false;
   }
 
   private snapshot(): FogState {
-    return { revealed: this.revealedAreas(), covered: this.coveredAreas() };
+    return { operations: this.operations() };
   }
 
   async save(campaignId: string, mapImageId: string, state: FogState) {
@@ -92,8 +106,7 @@ export class FogOfWarStore {
       {
         campaign_id: campaignId,
         map_image_id: mapImageId,
-        revealed_areas: state.revealed,
-        covered_areas: state.covered,
+        operations: state.operations,
       },
       { onConflict: 'campaign_id,map_image_id' }
     );

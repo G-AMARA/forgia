@@ -37,8 +37,7 @@
       </svg>
     }
     <app-fog-of-war
-      [revealedAreas]="fogStore.revealedAreas()"
-      [coveredAreas]="fogStore.coveredAreas()"
+      [operations]="fogStore.operations()"
       [isMaster]="isMaster()"
       [drawingRect]="fogDrawing.drawingRect()" />
     @for (token of tokens(); track token.id) {

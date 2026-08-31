@@ -1,5 +1,5 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
-import { BoardViewport } from './board-viewport';
+import { BoardViewport, WorldPoint } from './board-viewport';
 
 // Sotto questa distanza schermo, pointerdown->pointerup su una pedina è un tap (seleziona
 // per il D-Pad) non un drag.
@@ -70,7 +70,7 @@ export class TokenDrag {
     if (!this.exceedsThreshold()) return;
 
     this.dragConfirmed.set(true);
-    const world = this.viewport.screenToWorld(event.clientX, event.clientY);
+    const world = this.viewport.clampToBounds(this.viewport.screenToWorld(event.clientX, event.clientY));
     this.draggingToken.set({ id: dragging.id, x: world.x, y: world.y });
     this.result.set({ type: 'move', tokenId: dragging.id, x: world.x, y: world.y });
   }
@@ -90,7 +90,9 @@ export class TokenDrag {
     // (semplificazione voluta: lo snap "perfetto" per pedine 2x2+ è fuori scope per ora).
     const size = this.gridSize;
     const snap = (value: number) => Math.round((value - size / 2) / size) * size + size / 2;
-    this.result.set({ type: 'commit', tokenId: dragging.id, x: snap(dragging.x), y: snap(dragging.y) });
+    // Lo snap può spingere di mezza cella oltre il bordo: clampare di nuovo dopo l'aggancio.
+    const snapped: WorldPoint = this.viewport.clampToBounds({ x: snap(dragging.x), y: snap(dragging.y) });
+    this.result.set({ type: 'commit', tokenId: dragging.id, x: snapped.x, y: snapped.y });
   }
 
   private exceedsThreshold(): boolean {

@@ -1,15 +1,18 @@
 <svg class="absolute inset-0 w-full h-full pointer-events-none">
   <defs>
     <mask [id]="maskId">
-      <!-- Bianco = nebbia visibile ovunque di default; i rettangoli rivelati la bucano in
-           nero (mappa visibile lì); i rettangoli coperti ridisegnano bianco SOPRA (ultimo
-           vince), ripristinando la nebbia solo nella porzione toccata. -->
+      <!-- Bianco = nebbia visibile ovunque di default; ogni operazione successiva è resa
+           nell'ordine in cui è stata disegnata: nero per "scopri" (buca la nebbia), bianco
+           per "copri" (la richiude) — l'ultima che tocca un punto vince. -->
       <rect width="100%" height="100%" fill="white" />
-      @for (area of revealedAreas(); track $index) {
-        <rect [attr.x]="area.x" [attr.y]="area.y" [attr.width]="area.w" [attr.height]="area.h" fill="black" />
-      }
-      @for (area of coveredAreas(); track $index) {
-        <rect [attr.x]="area.x" [attr.y]="area.y" [attr.width]="area.w" [attr.height]="area.h" fill="white" />
+      @for (op of operations(); track $index) {
+        <rect
+          [attr.x]="op.rect.x"
+          [attr.y]="op.rect.y"
+          [attr.width]="op.rect.w"
+          [attr.height]="op.rect.h"
+          [attr.fill]="op.type === 'reveal' ? 'black' : 'white'"
+        />
       }
     </mask>
   </defs>

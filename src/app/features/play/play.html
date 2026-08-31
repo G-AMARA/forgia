@@ -56,7 +56,11 @@
           (tokensChanged)="onTokensChanged()"
         />
       } @else {
-        <app-play-character-panel [campaignId]="campaignId" (tokensChanged)="onTokensChanged()" />
+        <app-play-character-panel
+          [campaignId]="campaignId"
+          (tokensChanged)="onTokensChanged()"
+          (tokenPositionChange)="onTokenPositionChange($event)"
+        />
       }
     </div>
   } @else {

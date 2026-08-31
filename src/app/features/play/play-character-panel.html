@@ -8,6 +8,14 @@
       >
         🗺️ {{ localeService.t('play_place_character_button') }}
       </button>
+    } @else {
+      <button
+        type="button"
+        (click)="centerOnMap()"
+        class="w-full text-sm px-3 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+      >
+        🎯 {{ localeService.t('play_center_character_button') }}
+      </button>
     }
 
     <app-character-vital-stats [banner]="true" />

@@ -1,6 +1,14 @@
 <div class="space-y-3">
   <button
     type="button"
+    (click)="clearMonstersAndNpcs()"
+    class="w-full text-sm px-3 py-2 bg-fantasy-black/80 text-fantasy-gold rounded border border-gold hover:bg-gold hover:text-fantasy-black transition-colors"
+  >
+    🧹 {{ localeService.t('play_clear_tokens_button') }}
+  </button>
+
+  <button
+    type="button"
     (click)="toggleSection('npc')"
     class="w-full border border-gold/50 rounded-lg p-3 text-center hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
     [class.border-gold-bright]="expandedSection() === 'npc'"

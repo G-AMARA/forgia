@@ -191,7 +191,8 @@ export class InteractiveBoardComponent {
     const token = this.selectedToken();
     if (!token || !this.canDrag(token)) return;
     const size = this.gridSize();
-    this.tokenPositionChange.emit({ tokenId: token.id, x: token.x + dx * size, y: token.y + dy * size, committed: true });
+    const target = this.viewport.clampToBounds({ x: token.x + dx * size, y: token.y + dy * size });
+    this.tokenPositionChange.emit({ tokenId: token.id, x: target.x, y: target.y, committed: true });
   }
 
   protected deselectToken() {

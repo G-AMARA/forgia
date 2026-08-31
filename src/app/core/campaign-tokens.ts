@@ -152,6 +152,28 @@ export class CampaignTokens {
     return true;
   }
 
+  // Rimozione di massa dei soli mostri/PNG (mai dei PG, piazzati dai giocatori stessi):
+  // usata dal Master per svuotare la plancia in un click, tipicamente prima di cambiare
+  // mappa, invece di rimuovere ogni pedina una alla volta dal menu contestuale. Ritorna il
+  // numero di pedine effettivamente cancellate.
+  async removeMonstersAndNpcs(campaignId: string): Promise<number> {
+    const { data, error } = await this.supabase.client
+      .from('campaign_tokens')
+      .delete()
+      .eq('campaign_id', campaignId)
+      .in('kind', ['monster', 'npc'])
+      .select('id');
+
+    if (error) {
+      console.error('Errore rimozione mostri/PNG dalla plancia', error.message);
+      return 0;
+    }
+
+    const removedIds = new Set((data ?? []).map((row: any) => row.id));
+    this.tokens.update((list) => list.filter((t) => !removedIds.has(t.id)));
+    return removedIds.size;
+  }
+
   // Chiamata solo al rilascio del drag (evento "committed"): durante il trascinamento la
   // posizione provvisoria viaggia solo via broadcast, mai sul DB.
   async updatePosition(tokenId: string, x: number, y: number) {

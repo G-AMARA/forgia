@@ -1,5 +1,5 @@
 import { Component, computed, input } from '@angular/core';
-import { FogRect } from '../../fog-of-war-store';
+import { FogOp, FogRect } from '../../fog-of-war-store';
 
 let nextFogId = 0;
 
@@ -9,18 +9,19 @@ let nextFogId = 0;
 // di intersezione). Nessun viewBox: come la griglia in interactive-board.html, le coordinate
 // sono px "mondo" 1:1 con la dimensione renderizzata dell'SVG (w-full h-full su .board).
 //
-// Due liste, disegnate in ordine nella mask (vedi .html): base bianca (nebbia ovunque),
-// revealedAreas neri (bucano la nebbia), coveredAreas bianchi SOPRA (ri-chiudono solo la
-// porzione toccata, senza cancellare il resto del buco sottostante — questo è il bugfix:
-// "coprire" non tocca più revealedAreas).
+// Le operazioni sono rese nella mask nello STESSO ordine cronologico in cui sono state
+// disegnate (vedi .html): base bianca (nebbia ovunque), poi un rettangolo nero per ogni
+// "reveal" o bianco per ogni "cover", in sequenza — l'ultima operazione che tocca un punto
+// vince sempre, sia essa "copri" o "scopri" (bugfix: col vecchio modello a due liste
+// raggruppate per tipo, "copri" vinceva sempre su "scopri" indipendentemente dall'ordine
+// reale delle azioni).
 @Component({
   selector: 'app-fog-of-war',
   standalone: true,
   templateUrl: './fog-of-war.html',
 })
 export class FogOfWarComponent {
-  readonly revealedAreas = input.required<FogRect[]>();
-  readonly coveredAreas = input<FogRect[]>([]);
+  readonly operations = input.required<FogOp[]>();
   readonly isMaster = input(false);
   readonly drawingRect = input<FogRect | null>(null);
 

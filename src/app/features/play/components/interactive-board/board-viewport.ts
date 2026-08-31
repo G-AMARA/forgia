@@ -28,15 +28,13 @@ export class BoardViewport {
 
   readonly transform = signal<BoardTransform>({ x: 0, y: 0, scale: 1 });
   readonly isPanning = signal(false);
-  readonly spacePressed = signal(false);
   // Risoluzione naturale dell'immagine: lo spazio "mondo" stabile in cui vivono le
   // coordinate dei token, indipendente dalla dimensione (variabile) del viewport.
   readonly naturalSize = signal(FALLBACK_IMAGE_SIZE);
 
-  readonly cursorClass = computed(() => {
-    if (this.isPanning()) return 'cursor-grabbing';
-    return this.spacePressed() ? 'cursor-grab' : 'cursor-default';
-  });
+  // Lo sfondo è sempre trascinabile col mouse (vedi onPointerDown): 'cursor-grab' è quindi
+  // il default, non solo con Spazio premuto.
+  readonly cursorClass = computed(() => (this.isPanning() ? 'cursor-grabbing' : 'cursor-grab'));
 
   // Vive qui (non in Play): in UI sta affiancato al pulsante di reset vista.
   readonly isFullscreen = signal(!!document.fullscreenElement);
@@ -70,26 +68,12 @@ export class BoardViewport {
       this.endPan();
     }
   };
-  private readonly onKeyDown = (event: KeyboardEvent) => {
-    if (event.code !== 'Space' || this.isTypingTarget(event.target) || event.repeat) return;
-    event.preventDefault();
-    this.spacePressed.set(true);
-  };
-  private readonly onKeyUp = (event: KeyboardEvent) => {
-    if (event.code !== 'Space') return;
-    this.spacePressed.set(false);
-  };
-
   private readonly onFullscreenChange = () => this.isFullscreen.set(!!document.fullscreenElement);
 
   constructor() {
-    window.addEventListener('keydown', this.onKeyDown);
-    window.addEventListener('keyup', this.onKeyUp);
     // Coerenza anche se il fullscreen cambia per vie diverse dal pulsante (ESC nativo, gesture).
     document.addEventListener('fullscreenchange', this.onFullscreenChange);
     this.destroyRef.onDestroy(() => {
-      window.removeEventListener('keydown', this.onKeyDown);
-      window.removeEventListener('keyup', this.onKeyUp);
       document.removeEventListener('fullscreenchange', this.onFullscreenChange);
       this.detachPanListeners();
     });
@@ -155,9 +139,10 @@ export class BoardViewport {
       return;
     }
 
-    const isMiddleButton = event.button === 1;
-    const isSpaceDrag = event.button === 0 && this.spacePressed();
-    if (!isMiddleButton && !isSpaceDrag) return;
+    // Tasto sinistro o centrale sullo sfondo avviano il pan (chi intercetta prima un
+    // tasto sinistro per altri scopi — token, Modalità Nebbia — ferma la propagazione o
+    // non richiama questo metodo, vedi InteractiveBoardComponent.onBoardPointerDown).
+    if (event.button !== 0 && event.button !== 1) return;
 
     event.preventDefault();
     this.beginPan(event.clientX, event.clientY);
@@ -191,6 +176,17 @@ export class BoardViewport {
       return { x: width / 2, y: height / 2 };
     }
     return this.screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  }
+
+  // Vincola un punto mondo ai bordi dell'immagine: usato ovunque un token possa essere
+  // spostato (drag, D-Pad, piazzamento iniziale) per evitare che finisca fuori mappa,
+  // introvabile perché fuori dall'area visibile e senza modo di essere ricentrato.
+  clampToBounds(point: WorldPoint): WorldPoint {
+    const { width, height } = this.naturalSize();
+    return {
+      x: Math.min(Math.max(point.x, 0), width),
+      y: Math.min(Math.max(point.y, 0), height),
+    };
   }
 
   // Converte coordinate schermo in coordinate mondo (spazio di token.x/y), invertendo
@@ -268,10 +264,5 @@ export class BoardViewport {
     window.removeEventListener('pointermove', this.onPointerMove);
     window.removeEventListener('pointerup', this.onPointerUp);
     window.removeEventListener('pointercancel', this.onPointerUp);
-  }
-
-  private isTypingTarget(target: EventTarget | null): boolean {
-    const element = target as HTMLElement | null;
-    return element?.tagName === 'INPUT' || element?.tagName === 'TEXTAREA' || !!element?.isContentEditable;
   }
 }
