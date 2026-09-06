@@ -29,6 +29,9 @@ export interface CharacterSummary {
   // PG base della Fucina da cui questo personaggio è stato clonato (vedi
   // CharacterStore.cloneCharacterToCampaign): null per i PG base stessi.
   template_id?: string | null;
+  // Card di sfondo scelta al momento dell'aggiunta a una campagna (vedi
+  // core/character-cards.ts), mostrata nel roster di campaign-hub. 'basic' di default.
+  card_key: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -111,6 +114,7 @@ export class CharacterStore {
         experience_points,
         race_id,
         background_id,
+        card_key,
         races ( name ),
         backgrounds ( name ),
         character_classes ( level, class_id, classes ( name ) )
@@ -154,6 +158,7 @@ export class CharacterStore {
         classTranslations[row.character_classes?.[0]?.class_id] ??
         row.character_classes?.[0]?.classes?.name ??
         null,
+      card_key: row.card_key ?? 'basic',
     }));
 
     this.characters.set(mapped);
@@ -226,6 +231,7 @@ export class CharacterStore {
         background_id,
         campaign_id,
         template_id,
+        card_key,
         races ( name ),
         backgrounds ( name ),
         campaigns ( name ),
@@ -262,6 +268,7 @@ export class CharacterStore {
       campaign_id: row.campaign_id,
       campaign_name: row.campaigns?.name ?? null,
       template_id: row.template_id,
+      card_key: row.card_key ?? 'basic',
     }));
 
     this.roster.set(mapped);
@@ -378,6 +385,21 @@ export class CharacterStore {
     return { error: null, characterId: character.id };
   }
 
+  // Cambia solo la card di sfondo di un clone già in campagna (menu "Modifica" in
+  // campaign-hub), tra quelle sbloccate per il rango di chi la sceglie.
+  async updateCardKey(characterId: string, cardKey: string) {
+    const { error } = await this.supabase.client
+      .from('characters')
+      .update({ card_key: cardKey })
+      .eq('id', characterId);
+
+    if (!error) {
+      await this.loadForActiveCampaign();
+    }
+
+    return { error };
+  }
+
   async deleteCharacter(characterId: string) {
     const { error } = await this.supabase.client.from('characters').delete().eq('id', characterId);
 
@@ -489,7 +511,7 @@ export class CharacterStore {
   // vecchio comportamento), la clona in una nuova riga dedicata a quella campagna. Il base
   // resta invariato e riusabile per altre campagne (solo i base, campaign_id nullo, contano
   // per la quota, vedi myCharacterCount/forgeBases e get_character_creation_limit lato RLS).
-  async cloneCharacterToCampaign(campaignId: string, templateCharacterId: string) {
+  async cloneCharacterToCampaign(campaignId: string, templateCharacterId: string, cardKey: string) {
     const userId = this.auth.user()?.id;
     if (!userId) return { error: { message: 'Utente non autenticato' } };
 
@@ -504,6 +526,7 @@ export class CharacterStore {
         campaign_id: campaignId,
         owner_id: userId,
         template_id: templateCharacterId,
+        card_key: cardKey,
         ...this.cloneScalarFields(source),
       })
       .select('id')

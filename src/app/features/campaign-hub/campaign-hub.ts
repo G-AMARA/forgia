@@ -1,24 +1,31 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ActiveCampaign } from '../../core/active-campaign';
-import { CharacterStore } from '../../core/character-store';
+import { CharacterStore, CharacterSummary } from '../../core/character-store';
 import { Auth } from '../../core/auth';
 import { AppNav } from '../../core/app-nav';
 import { LocaleService } from '../../core/locale';
-import { Modal } from '../../core/modal';
 import { getCover, getCoverImagePath } from '../../core/campaign-covers';
+import { CHARACTER_CARDS, getCardImagePath } from '../../core/character-cards';
 import { formatDateTime } from '../../core/datetime-local';
 import { Bestiary } from '../bestiary/bestiary';
 import { Npc } from '../npc/npc';
 import { Maps } from '../maps/maps';
 import { AddHeroModal } from './add-hero-modal';
+import { PlayerHeraldryModal } from './player-heraldry-modal';
+import { EditHeroModal } from './edit-hero-modal';
 
 type CampaignSection = 'npc' | 'bestiary' | 'maps';
+
+interface HeraldryModalTarget {
+  ownerId: string;
+  ownerNickname: string;
+}
 
 @Component({
   selector: 'app-campaign-hub',
   standalone: true,
-  imports: [Bestiary, Npc, Maps, AddHeroModal],
+  imports: [Bestiary, Npc, Maps, AddHeroModal, PlayerHeraldryModal, EditHeroModal],
   templateUrl: './campaign-hub.html',
 })
 export class CampaignHub {
@@ -27,7 +34,6 @@ export class CampaignHub {
   protected auth = inject(Auth);
   protected appNav = inject(AppNav);
   protected localeService = inject(LocaleService);
-  private modal = inject(Modal);
   private router = inject(Router);
 
   cover = computed(() => {
@@ -36,6 +42,14 @@ export class CampaignHub {
   });
 
   getCoverImagePath = getCoverImagePath;
+
+  // Card di sfondo del personaggio nel roster (scelta in add-hero-modal, vedi
+  // core/character-cards.ts): risolta per key invece che passare l'intero oggetto perché
+  // CharacterSummary salva solo card_key, non la entry completa del catalogo.
+  getCharacterCardPath(cardKey: string): string {
+    const card = CHARACTER_CARDS.find((c) => c.key === cardKey) ?? CHARACTER_CARDS[0];
+    return getCardImagePath(card);
+  }
 
   formatNextSession(iso: string | null): string | null {
     return formatDateTime(iso, this.localeService.locale());
@@ -65,6 +79,32 @@ export class CampaignHub {
     this.showAddHeroModal.set(false);
   }
 
+  // Popup "araldica altrui" (bottone oro col nickname sulle card del roster non tue):
+  // chi vede la card di un compagno clicca lì invece del bottone rosso "Rimuovi/Elimina".
+  heraldryModalTarget = signal<HeraldryModalTarget | null>(null);
+
+  openHeraldryModal(event: Event, ownerId: string, ownerNickname: string | null) {
+    event.stopPropagation();
+    this.heraldryModalTarget.set({ ownerId, ownerNickname: ownerNickname ?? '???' });
+  }
+
+  closeHeraldryModal() {
+    this.heraldryModalTarget.set(null);
+  }
+
+  // Menu "Modifica" sulla propria card (cambia PG/card, o rimuovi dalla campagna),
+  // vedi EditHeroModal. Sostituisce il vecchio bottone diretto "Rimuovi" per l'owner.
+  editHeroModalTarget = signal<CharacterSummary | null>(null);
+
+  openEditHeroModal(event: Event, character: CharacterSummary) {
+    event.stopPropagation();
+    this.editHeroModalTarget.set(character);
+  }
+
+  closeEditHeroModal() {
+    this.editHeroModalTarget.set(null);
+  }
+
   // Porta alla pagina "Gioca" (/gioca/:campaignId): il Master la vede sempre (non serve
   // un proprio personaggio), il giocatore solo se ha già un personaggio nel roster —
   // la colonna sinistra della pagina mostra proprio quello.
@@ -81,30 +121,6 @@ export class CampaignHub {
   goToCharacterSheet(characterId: string) {
     this.appNav.setTab('character-sheet');
     this.router.navigate(['/scheda-personaggio', characterId]);
-  }
-
-  async deleteCharacter(event: Event, characterId: string, characterName: string) {
-    event.stopPropagation(); // evita che il click apra anche la scheda
-    //controlla in giro per il codcie di inserire e creare le firme giuste per le modali di conferma.
-    const confirmed = await this.modal.confirm(
-      `${this.localeService.t('confirm_delete_character')} "${characterName}"?`,
-      {
-        cancelLabel: this.localeService.t('cancel_button'),
-        confirmLabel: this.localeService.t('confirm_delete_button_confirm'),
-      }
-    );
-    if (!confirmed) return;
-
-    const { error } = await this.characterStore.deleteCharacter(characterId);
-    if (error) {
-      this.modal.error(error.message);
-    }
-    else{
-      let confirmed = await this.modal.success(
-        `${this.localeService.t('character_deleted_msg_1')} "${characterName}" ${this.localeService.t('character_deleted_msg_2')}`
-      );
-      if(!confirmed) return;
-    }
   }
 
   togglePlayEnabled() {

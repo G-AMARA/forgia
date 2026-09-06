@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { groupByRank, RankGroup } from '../../core/ranks';
+import { AraldicaPerksTab } from './araldica-perks-tab';
 
 // Solo il pannello modale: sola lettura, dati caricati al momento dell'apertura per non
 // pesare sul caricamento dell'app. Il trigger vive nella tab-bar di App (accanto a
@@ -9,6 +10,7 @@ import { groupByRank, RankGroup } from '../../core/ranks';
 @Component({
   selector: 'app-adventurers',
   standalone: true,
+  imports: [AraldicaPerksTab],
   templateUrl: './adventurers.html',
 })
 export class Adventurers {
@@ -18,9 +20,11 @@ export class Adventurers {
   protected isOpen = signal(false);
   protected loading = signal(false);
   protected groups = signal<RankGroup[]>([]);
+  protected activeTab = signal<'roster' | 'perks'>('roster');
 
   async open() {
     this.isOpen.set(true);
+    this.activeTab.set('roster');
     this.loading.set(true);
     const { data } = await this.auth.listAdventurers();
     this.groups.set(groupByRank(data));

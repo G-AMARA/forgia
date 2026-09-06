@@ -1,0 +1,31 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+  (click)="close()"
+>
+  <div
+    class="relative w-full max-w-xs bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone text-center"
+    (click)="$event.stopPropagation()"
+  >
+    <h3 class="font-display text-lg mb-4 text-fantasy-gold">{{ ownerNickname }}</h3>
+
+    @if (loading()) {
+      <p class="text-sm italic text-slate-arcane">{{ localeService.t('loading') }}</p>
+    } @else if (rank(); as r) {
+      <div class="flex flex-col items-center gap-2">
+        <img [src]="r.icon" [alt]="r.name" class="w-16 h-16 rounded-full border-2 border-gold-bright" />
+        <span class="font-display text-base text-fantasy-gold">{{ r.name }}</span>
+        @if (r.minHours >= 0) {
+          <span class="text-xs uppercase text-slate-arcane">{{ hoursToExp(navigationHours()) }} exp</span>
+        }
+      </div>
+    }
+
+    <button
+      type="button"
+      (click)="close()"
+      class="mt-6 px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+    >
+      {{ localeService.t('close_button') }}
+    </button>
+  </div>
+</div>

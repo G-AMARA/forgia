@@ -7,25 +7,48 @@
     (click)="$event.stopPropagation()"
   >
     <h2 class="font-display text-2xl text-fantasy-gold mb-4">
-      {{ localeService.t(step() === 'hero' ? 'add_hero_modal_title' : 'choose_card_modal_title') }}
+      {{
+        localeService.t(
+          step() === 'menu' ? 'edit_hero_modal_title' : step() === 'change-hero' ? 'add_hero_modal_title' : 'choose_card_modal_title'
+        )
+      }}
     </h2>
 
-    @if (step() === 'hero') {
-      @if (availableHeroes().length === 0) {
-        <p class="text-sm italic text-slate-arcane">{{ localeService.t('no_available_heroes_hint') }}</p>
+    @if (step() === 'menu') {
+      <div class="space-y-2">
+        @if (isOwnHero()) {
+          <button
+            type="button"
+            (click)="goToChangeHero()"
+            class="w-full text-left bg-fantasy-black/60 border border-gold rounded-lg p-3 hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
+          >
+            {{ localeService.t('change_hero_button') }}
+          </button>
+        }
         <button
           type="button"
-          (click)="goToCharacterFactory()"
-          class="mt-4 text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+          (click)="goToChangeCard()"
+          class="w-full text-left bg-fantasy-black/60 border border-gold rounded-lg p-3 hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
         >
-          {{ localeService.t('tab_characters') }}
+          {{ localeService.t('change_card_button') }}
         </button>
+        <button
+          type="button"
+          (click)="removeFromCampaign()"
+          class="w-full text-left bg-red-900/40 border border-red-800 rounded-lg p-3 hover:bg-red-900/60 transition-colors"
+        >
+          {{ localeService.t('remove_from_campaign_button') }}
+        </button>
+      </div>
+    } @else if (step() === 'change-hero') {
+      @if (availableHeroes().length === 0) {
+        <p class="text-sm italic text-slate-arcane">{{ localeService.t('no_available_heroes_hint') }}</p>
       } @else {
         <div class="space-y-2">
           @for (hero of availableHeroes(); track hero.id) {
             <button
               type="button"
-              (click)="chooseHero(hero.id)"
+              (click)="confirmChangeHero(hero.id)"
               class="w-full text-left bg-fantasy-black/60 border border-gold rounded-lg p-3 hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
             >
               <p class="font-display text-base text-fantasy-moonstone">{{ hero.name }}</p>
@@ -36,12 +59,19 @@
           }
         </div>
       }
+      <button
+        type="button"
+        (click)="backToMenu()"
+        class="mt-4 text-sm px-4 py-2 border border-gold/50 rounded hover:bg-gold/20 transition-colors"
+      >
+        {{ localeService.t('back_button') }}
+      </button>
     } @else {
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
         @for (card of unlockedCards(); track card.key) {
           <button
             type="button"
-            (click)="confirmCard(card.key)"
+            (click)="confirmChangeCard(card.key)"
             class="border-2 border-gold/50 rounded-lg overflow-hidden hover:border-gold-bright transition-colors"
           >
             <img [src]="getCardImagePath(card)" [alt]="card.label" class="w-full aspect-3/4 object-cover" />
@@ -51,7 +81,7 @@
       </div>
       <button
         type="button"
-        (click)="backToHeroStep()"
+        (click)="backToMenu()"
         class="mt-4 text-sm px-4 py-2 border border-gold/50 rounded hover:bg-gold/20 transition-colors"
       >
         {{ localeService.t('back_button') }}

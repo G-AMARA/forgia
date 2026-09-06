@@ -2,24 +2,27 @@ export interface RankTier {
   minHours: number;
   name: string;
   icon: string;
+  // Slug stabile usato per mappare il rango su una cartella (es. public/cards/rank/<key>/),
+  // così un rinomino del nome visualizzato non rompe i riferimenti alle risorse su disco.
+  key: string;
 }
 
 // Tabella dei ranghi in ordine crescente: deve restare sincronizzata con la tabella
 // public.rank_tiers su Supabase. Duplicata qui per calcolare il rango lato client
 // (tick del tracker, evento realtime) senza un round-trip al DB ogni volta.
 export const RANK_TIERS: RankTier[] = [
-  { minHours: 0, name: 'Adepto', icon: 'icons/adepto.png' },
-  { minHours: 10, name: 'Ramingo di Bronzo', icon: 'icons/ramingo.png' },
-  { minHours: 50, name: 'Avventuriero di Ferro', icon: 'icons/avventuriero.png' },
-  { minHours: 100, name: "Canaglia d'Argento", icon: 'icons/canaglia.png' },
-  { minHours: 200, name: "Paladino d'Oro", icon: 'icons/paladino.png' },
-  { minHours: 350, name: 'Campione di Platino', icon: 'icons/campione.png' },
-  { minHours: 500, name: 'Signore del Mithral', icon: 'icons/signore.png' },
+  { minHours: 0, name: 'Adepto', icon: 'icons/adepto.png', key: 'adepto' },
+  { minHours: 10, name: 'Ramingo di Bronzo', icon: 'icons/ramingo.png', key: 'ramingo-di-bronzo' },
+  { minHours: 50, name: 'Avventuriero di Ferro', icon: 'icons/avventuriero.png', key: 'avventuriero-di-ferro' },
+  { minHours: 100, name: "Canaglia d'Argento", icon: 'icons/canaglia.png', key: 'canaglia-d-argento' },
+  { minHours: 200, name: "Paladino d'Oro", icon: 'icons/paladino.png', key: 'paladino-d-oro' },
+  { minHours: 350, name: 'Campione di Platino', icon: 'icons/campione.png', key: 'campione-di-platino' },
+  { minHours: 500, name: 'Signore del Mithral', icon: 'icons/signore.png', key: 'signore-del-mithral' },
 ];
 
 // Rango speciale riservato agli admin: non è sbloccato dalle ore, ha sempre priorità
 // assoluta sul calcolo normale (stesso controllo fatto lato DB in get_user_rank).
-export const FATO_RANK: RankTier = { minHours: -1, name: 'Fato', icon: 'icons/fato.png' };
+export const FATO_RANK: RankTier = { minHours: -1, name: 'Fato', icon: 'icons/fato.png', key: 'fato' };
 
 // Quota di PNG creabili in campagna (Npc.createNpc) per rango araldico: 1 per Adepto,
 // poi 3/6/9/12/15/18 di 3 in 3 salendo di rango. Fato (admin) è l'unico caso illimitato,
@@ -110,3 +113,4 @@ export function groupByRank(
     .filter((tier) => buckets.has(tier.name))
     .map((tier) => ({ tier, entries: buckets.get(tier.name)!.sort((a, b) => b.exp - a.exp) }));
 }
+

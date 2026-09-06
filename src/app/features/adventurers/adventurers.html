@@ -9,28 +9,53 @@
     >
       <h3 class="font-display text-lg mb-4 text-fantasy-gold">{{ localeService.t('adventurers_title') }}</h3>
 
+      <div class="flex gap-2 mb-4 border-b border-gold/30 shrink-0">
+        <button
+          type="button"
+          (click)="activeTab.set('roster')"
+          [class.text-fantasy-gold]="activeTab() === 'roster'"
+          [class.border-fantasy-gold]="activeTab() === 'roster'"
+          class="px-3 py-1.5 text-sm font-display border-b-2 border-transparent text-slate-arcane hover:text-fantasy-gold transition-colors"
+        >
+          {{ localeService.t('adventurers_tab_roster') }}
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('perks')"
+          [class.text-fantasy-gold]="activeTab() === 'perks'"
+          [class.border-fantasy-gold]="activeTab() === 'perks'"
+          class="px-3 py-1.5 text-sm font-display border-b-2 border-transparent text-slate-arcane hover:text-fantasy-gold transition-colors"
+        >
+          {{ localeService.t('adventurers_tab_perks') }}
+        </button>
+      </div>
+
       <div class="flex-1 overflow-y-auto space-y-5 pr-1">
-        @if (loading()) {
-          <p class="text-sm text-center text-slate-arcane">{{ localeService.t('adventurers_loading') }}</p>
-        } @else if (groups().length === 0) {
-          <p class="text-sm text-center text-slate-arcane">{{ localeService.t('adventurers_empty') }}</p>
-        } @else {
-          @for (group of groups(); track group.tier.name) {
-            <div>
-              <h4 class="font-display text-sm uppercase tracking-wide text-fantasy-gold mb-2 border-b border-gold/30 pb-1">
-                {{ group.tier.name }}
-              </h4>
-              <ul class="space-y-1.5">
-                @for (entry of group.entries; track entry.id) {
-                  <li class="flex items-center gap-2 text-sm">
-                    <img [src]="group.tier.icon" [alt]="group.tier.name" class="w-6 h-6 rounded-full border border-gold-bright shrink-0" />
-                    <span class="flex-1 truncate">{{ entry.nickname }}</span>
-                    <span class="text-[11px] uppercase text-slate-arcane">{{ entry.exp }} exp</span>
-                  </li>
-                }
-              </ul>
-            </div>
+        @if (activeTab() === 'roster') {
+          @if (loading()) {
+            <p class="text-sm text-center text-slate-arcane">{{ localeService.t('adventurers_loading') }}</p>
+          } @else if (groups().length === 0) {
+            <p class="text-sm text-center text-slate-arcane">{{ localeService.t('adventurers_empty') }}</p>
+          } @else {
+            @for (group of groups(); track group.tier.name) {
+              <div>
+                <h4 class="font-display text-sm uppercase tracking-wide text-fantasy-gold mb-2 border-b border-gold/30 pb-1">
+                  {{ group.tier.name }}
+                </h4>
+                <ul class="space-y-1.5">
+                  @for (entry of group.entries; track entry.id) {
+                    <li class="flex items-center gap-2 text-sm">
+                      <img [src]="group.tier.icon" [alt]="group.tier.name" class="w-6 h-6 rounded-full border border-gold-bright shrink-0" />
+                      <span class="flex-1 truncate">{{ entry.nickname }}</span>
+                      <span class="text-[11px] uppercase text-slate-arcane">{{ entry.exp }} exp</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
           }
+        } @else {
+          <app-araldica-perks-tab />
         }
       </div>
 

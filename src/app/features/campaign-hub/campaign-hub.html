@@ -103,27 +103,49 @@
         @if (characterStore.characters().length === 0) {
           <p class="text-slate-arcane italic">{{ localeService.t('no_characters_yet') }}</p>
         } @else {
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div class="flex flex-wrap gap-3">
             @for (character of characterStore.characters(); track character.id) {
               <div
                 (click)="goToCharacterSheet(character.id)"
-                class="relative bg-fantasy-black/60 border border-gold rounded-lg p-3 cursor-pointer hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
+                [title]="localeService.t('player_label') + ': ' + character.owner_nickname"
+                class="relative cursor-pointer w-80 h-15.75"
               >
+                <img [src]="getCharacterCardPath(character.card_key)" alt="" class="w-full h-full object-contain" />
                 @if (auth.isAdmin()) {
+                  <div class="absolute top-0.5 right-0.5 flex items-center gap-1">
+                    <button
+                      (click)="openHeraldryModal($event, character.owner_id, character.owner_nickname)"
+                      class="text-[9px] leading-none px-1.5 py-0.5 bg-fantasy-gold text-fantasy-black rounded hover:bg-fantasy-moonstone transition-colors"
+                    >
+                      {{ character.owner_nickname }}
+                    </button>
+                    <button
+                      (click)="openEditHeroModal($event, character)"
+                      class="text-[9px] leading-none px-1.5 py-0.5 bg-red-900/80 text-white rounded hover:bg-red-800 transition-colors"
+                    >
+                      {{ localeService.t('edit_button') }}
+                    </button>
+                  </div>
+                } @else if (character.owner_id === auth.user()?.id) {
                   <button
-                    (click)="deleteCharacter($event, character.id, character.name)"
-                    class="absolute top-2 right-2 text-xs px-2 py-1 bg-red-900/80 text-white rounded hover:bg-red-800 transition-colors"
+                    (click)="openEditHeroModal($event, character)"
+                    class="absolute top-0.5 right-0.5 text-[9px] leading-none px-1.5 py-0.5 bg-red-900/80 text-white rounded hover:bg-red-800 transition-colors"
                   >
-                    {{ localeService.t('delete_button') }}
+                    {{ localeService.t('edit_button') }}
+                  </button>
+                } @else {
+                  <button
+                    (click)="openHeraldryModal($event, character.owner_id, character.owner_nickname)"
+                    class="absolute top-0.5 right-0.5 text-[9px] leading-none px-1.5 py-0.5 bg-fantasy-gold text-fantasy-black rounded hover:bg-fantasy-moonstone transition-colors"
+                  >
+                    {{ character.owner_nickname }}
                   </button>
                 }
-                <p class="font-display text-base text-fantasy-moonstone">{{ character.name }}</p>
-                <p class="text-xs text-slate-arcane">
-                  {{ localeService.t('level_label') }} {{ character.level }} · {{ character.race_name }} · {{ character.class_name }}
-                </p>
-                <p class="text-xs opacity-70">
-                  {{ localeService.t('player_label') }}: {{ character.owner_nickname }}
-                </p>
+                <div class="absolute inset-0 flex items-center justify-center text-center px-[12%] text-gold-glow pointer-events-none">
+                  <p class="font-display text-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.9)]">
+                    {{ character.name }} - {{ character.class_name }}
+                  </p>
+                </div>
               </div>
             }
           </div>
@@ -176,6 +198,22 @@
 
       @if (showAddHeroModal()) {
         <app-add-hero-modal [campaignId]="campaignStore.current()!.id" (closed)="closeAddHeroModal()"></app-add-hero-modal>
+      }
+
+      @if (editHeroModalTarget(); as target) {
+        <app-edit-hero-modal
+          [campaignId]="campaignStore.current()!.id"
+          [character]="target"
+          (closed)="closeEditHeroModal()"
+        ></app-edit-hero-modal>
+      }
+
+      @if (heraldryModalTarget(); as target) {
+        <app-player-heraldry-modal
+          [ownerId]="target.ownerId"
+          [ownerNickname]="target.ownerNickname"
+          (closed)="closeHeraldryModal()"
+        ></app-player-heraldry-modal>
       }
     </section>
   }
