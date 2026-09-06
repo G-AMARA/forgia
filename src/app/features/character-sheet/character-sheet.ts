@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input, signal } from '@angular/core';
+import { Component, effect, inject, input, signal } from '@angular/core';
 import { LocaleService } from '../../core/locale';
 import { CharacterSheetContext } from './character-sheet-context';
 import { CharacterIdentityService } from './character-identity';
@@ -49,7 +49,7 @@ import { SubTab } from './character-sheet.types';
   ],
   templateUrl: './character-sheet.html',
 })
-export class CharacterSheet implements OnInit {
+export class CharacterSheet {
   protected context = inject(CharacterSheetContext);
   protected identity = inject(CharacterIdentityService);
   protected combat = inject(CharacterCombatService);
@@ -63,12 +63,16 @@ export class CharacterSheet implements OnInit {
 
   protected activeSubTab = signal<SubTab>('general');
 
-  ngOnInit() {
-    // Ricarica sempre all'apertura della scheda (non solo al cambio di campagna, l'unico
-    // altro momento in cui CharacterStore la aggiorna da solo): senza, un rinominare razza/
-    // sottoclasse/background/ecc. da Gestione mentre la campagna resta la stessa non si
-    // vedrebbe finché non si ricarica l'intera pagina.
-    this.context.load(this.characterId());
+  constructor() {
+    // effect() e non ngOnInit(): characterId è un input signal, e quando lo stesso
+    // componente viene riusato cambiando solo l'id (es. la Fucina che passa da un eroe
+    // all'altro, o la rotta /scheda-personaggio/:id verso un altro personaggio) Angular non
+    // ricrea l'istanza né richiama ngOnInit, quindi la scheda restava bloccata sui dati del
+    // personaggio aperto per primo. L'effect ricarica ogni volta che characterId() cambia,
+    // e anche subito al primo mount (comportamento equivalente al vecchio ngOnInit).
+    effect(() => {
+      this.context.load(this.characterId());
+    });
   }
 
   protected setSubTab(tab: SubTab) {

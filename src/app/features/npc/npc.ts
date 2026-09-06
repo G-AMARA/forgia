@@ -8,11 +8,12 @@ import { BoardViewport } from '../play/components/interactive-board/board-viewpo
 import { ensureSwiperRegistered } from '../../core/swiper-register';
 import { NpcDetailCard } from './npc-detail-card';
 import { NpcPicker } from './npc-picker';
+import { NpcForm } from '../manage/npc-manage/npc-form';
 
 @Component({
   selector: 'app-npc',
   standalone: true,
-  imports: [NpcPicker, NpcDetailCard],
+  imports: [NpcPicker, NpcDetailCard, NpcForm],
   templateUrl: './npc.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA], // richiesto da <swiper-container>/<swiper-slide> (web component di swiper/element)
 })
@@ -26,6 +27,9 @@ export class Npc implements OnInit {
   // il pulsante "Piazza sulla Mappa" non compare (vedi canPlaceOnMap).
   private viewport = inject(BoardViewport, { optional: true });
   protected localeService = inject(LocaleService);
+  // Il template non risolve i globali JS: serve esposto per nascondere la quota quando il
+  // rango è Fato (NpcStore.myNpcLimit()).
+  protected readonly Infinity = Infinity;
 
   @Input() campaignId!: string;
 
@@ -53,6 +57,9 @@ export class Npc implements OnInit {
   );
 
   protected pickerOpen = signal(false);
+  // Come il picker, riservato al Master/admin (canManage): entro la quota del proprio
+  // rango araldico (vedi NpcStore.canCreateNpc), non un catalogo condiviso illimitato.
+  protected npcCreateOpen = signal(false);
 
   ngOnInit() {
     ensureSwiperRegistered();
@@ -88,6 +95,14 @@ export class Npc implements OnInit {
 
   openPicker() {
     this.pickerOpen.set(true);
+  }
+
+  openCreateForm() {
+    this.npcCreateOpen.set(true);
+  }
+
+  onCreateFormClosed() {
+    this.npcCreateOpen.set(false);
   }
 
   onPickerClosed() {

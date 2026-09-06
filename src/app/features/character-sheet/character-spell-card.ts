@@ -1,6 +1,6 @@
 import { Component, inject, input } from '@angular/core';
 import { LocaleService } from '../../core/locale';
-import { getSpellLevelTheme } from '../../core/spell-level-theme';
+import { getSpellSchoolTheme } from '../../core/spell-school-theme';
 import { SpellLevelSeal } from '../../shared/spell-level-seal/spell-level-seal';
 import { SpellSchoolIcon } from '../../shared/spell-school-icon/spell-school-icon';
 import { CharacterSheetContext } from './character-sheet-context';
@@ -19,7 +19,7 @@ export class CharacterSpellCard {
   protected context = inject(CharacterSheetContext);
   protected spells = inject(CharacterSpellsService);
   protected localeService = inject(LocaleService);
-  protected getSpellLevelTheme = getSpellLevelTheme;
+  protected getSpellSchoolTheme = getSpellSchoolTheme;
 
   readonly spell = input.required<{
     rowId: string; name: string; level: number; school: string; schoolRaw: string;

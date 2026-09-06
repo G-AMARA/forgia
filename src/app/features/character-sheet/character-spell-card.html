@@ -1,17 +1,19 @@
-@let theme = getSpellLevelTheme(spell().level);
-<div class="group relative flex flex-col gap-2.5 rounded-xl border border-white/10 bg-[#1a1a1f]/90 backdrop-blur-sm p-3.5 overflow-hidden transition-all duration-250 ease-out hover:-translate-y-0.5 hover:border-white/20"
-  [style.box-shadow]="'0 10px 24px -14px ' + theme.glow">
-  <!-- alone arcano di sfondo, quasi impercettibile -->
-  <div class="pointer-events-none absolute inset-0 opacity-70 transition-opacity duration-250 group-hover:opacity-100"
-    [style.background]="'radial-gradient(circle at 50% -10%, ' + theme.soft + ', transparent 65%)'"></div>
+@let theme = getSpellSchoolTheme(spell().schoolRaw);
+<div [class]="'group relative flex flex-col gap-2.5 rounded-xl bg-zinc-950/90 backdrop-blur-sm p-3.5 overflow-hidden transition-all duration-300 ease-out hover:-translate-y-0.5 ' + theme.border + ' ' + theme.glow">
+  <!-- texture di sfondo distintiva della scuola -->
+  <div [class]="'pointer-events-none absolute inset-0 transition-opacity duration-300 opacity-70 group-hover:opacity-100 ' + theme.bg"></div>
   <!-- filo superiore colorato al posto di un bordo pieno -->
-  <div class="pointer-events-none absolute inset-x-0 top-0 h-px opacity-70 transition-opacity duration-250 group-hover:opacity-100"
-    [style.background]="'linear-gradient(90deg, transparent, ' + theme.color + ', transparent)'"></div>
+  <div class="pointer-events-none absolute inset-x-0 top-0 h-px opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+    [style.background]="'linear-gradient(90deg, transparent, ' + theme.accent + ', transparent)'"></div>
+  <!-- watermark/runa della scuola, filigrana sullo sfondo -->
+  <app-spell-school-icon [school]="spell().schoolRaw" [size]="128"
+    class="pointer-events-none absolute right-2 bottom-2 w-32 h-32 opacity-5"
+    [style.color]="theme.accent" />
 
   <!-- HEADER: icona scuola + nome, sigillo di livello -->
   <div class="relative flex items-start justify-between gap-2">
     <div class="flex min-w-0 items-start gap-2">
-      <span class="mt-0.5 shrink-0 opacity-85 transition-opacity duration-250 group-hover:opacity-100" [style.color]="theme.color">
+      <span class="mt-0.5 shrink-0 opacity-85 transition-opacity duration-300 group-hover:opacity-100" [style.color]="theme.accent">
         <app-spell-school-icon [school]="spell().schoolRaw" [label]="spell().school" [size]="17" />
       </span>
       <div class="min-w-0">
@@ -29,9 +31,9 @@
 
   <!-- separatore magico -->
   <div class="relative flex items-center gap-2 opacity-80">
-    <span class="h-px flex-1" [style.background]="'linear-gradient(90deg, transparent, ' + theme.color + ')'"></span>
-    <span class="h-1.5 w-1.5 shrink-0 rotate-45 border" [style.border-color]="theme.color"></span>
-    <span class="h-px flex-1" [style.background]="'linear-gradient(90deg, ' + theme.color + ', transparent)'"></span>
+    <span class="h-px flex-1" [style.background]="'linear-gradient(90deg, transparent, ' + theme.accent + ')'"></span>
+    <span class="h-1.5 w-1.5 shrink-0 rotate-45 border" [style.border-color]="theme.accent"></span>
+    <span class="h-px flex-1" [style.background]="'linear-gradient(90deg, ' + theme.accent + ', transparent)'"></span>
   </div>
 
   <!-- statistiche -->

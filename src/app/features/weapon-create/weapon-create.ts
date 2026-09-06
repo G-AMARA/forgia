@@ -4,11 +4,12 @@ import { ContentStore } from '../../core/content-store';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
+import { WeaponImagePreviewModal } from './weapon-image-preview-modal';
 
 @Component({
   selector: 'app-weapon-create',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, WeaponImagePreviewModal],
   templateUrl: './weapon-create.html',
 })
 export class WeaponCreate {
@@ -47,6 +48,7 @@ export class WeaponCreate {
 
   loading = signal(false);
   imageUploading = signal(false);
+  imagePreviewOpen = signal(false);
 
   toggleAttackAbility(key: string) {
     const current = new Set(this.suggestedAttackAbilities);

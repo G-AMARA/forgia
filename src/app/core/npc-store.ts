@@ -1,6 +1,7 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { Supabase } from './supabase';
 import { Auth } from './auth';
+import { getNpcLimitForSeconds } from './ranks';
 
 export type NpcAttitude = 'friendly' | 'neutral' | 'hostile';
 
@@ -12,6 +13,7 @@ export interface NpcCharacter {
   attitude: NpcAttitude | null;
   description: string | null;
   image_url: string | null;
+  created_by: string | null;
 }
 
 // I PNG sono un catalogo globale (come il Bestiario, vedi BestiaryStore), gestito da
@@ -26,6 +28,17 @@ export class NpcStore {
   readonly catalog = signal<NpcCharacter[]>([]);
   readonly selectedIds = signal<Set<string>>(new Set());
   readonly loading = signal(false);
+
+  // Quota di PNG auto-creati (Npc.openCreateForm) in base al rango araldico dell'utente
+  // corrente (vedi core/ranks.ts): il conteggio è globale, non per campagna, perché il
+  // catalogo PNG stesso è globale. Rispecchia il limite applicato lato RLS
+  // (get_npc_creation_limit), qui solo per la UI (disabilitare il bottone in anticipo).
+  readonly myNpcLimit = computed(() => getNpcLimitForSeconds(this.auth.navigationSeconds(), this.auth.isAdmin()));
+  readonly myNpcCount = computed(() => {
+    const userId = this.auth.user()?.id;
+    return userId ? this.catalog().filter((n) => n.created_by === userId).length : 0;
+  });
+  readonly canCreateNpc = computed(() => this.myNpcCount() < this.myNpcLimit());
 
   async loadCatalog() {
     this.loading.set(true);
@@ -61,20 +74,29 @@ export class NpcStore {
     this.selectedIds.set(new Set((data ?? []).map((row) => row.npc_id)));
   }
 
-  async createNpc(payload: Omit<NpcCharacter, 'id'>) {
+  // campaignId: quando il PNG nasce dal tab PNG di una campagna (invece che da Gestione >
+  // PNG), lo collega subito a quella campagna (campaign_npc_characters) così compare senza
+  // dover passare dal picker, riservato a owner/admin.
+  async createNpc(payload: Omit<NpcCharacter, 'id' | 'created_by'>, campaignId?: string) {
     const userId = this.auth.user()?.id;
     if (!userId) return { error: { message: 'Utente non autenticato' } };
 
-    const { error } = await this.supabase.client.from('npc_characters').insert({
-      ...payload,
-      created_by: userId,
-    });
+    const { data, error } = await this.supabase.client
+      .from('npc_characters')
+      .insert({ ...payload, created_by: userId })
+      .select()
+      .single();
 
-    if (!error) {
-      await this.loadCatalog();
+    if (error) return { error };
+
+    await this.loadCatalog();
+
+    if (campaignId) {
+      const { error: linkError } = await this.addToCampaign(campaignId, data.id);
+      if (linkError) return { error: linkError };
     }
 
-    return { error };
+    return { error: null };
   }
 
   async updateNpc(id: string, payload: Partial<NpcCharacter>) {

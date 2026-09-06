@@ -2,13 +2,29 @@
   <div class="flex items-center justify-between flex-wrap gap-2">
     <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('npc_title') }}</h3>
     @if (canManage()) {
-      <button
-        type="button"
-        (click)="openPicker()"
-        class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
-      >
-        {{ localeService.t('npc_select_button') }}
-      </button>
+      <div class="flex items-center gap-3 flex-wrap">
+        @if (npcStore.myNpcLimit() !== Infinity) {
+          <span class="text-xs text-slate-arcane">
+            {{ npcStore.myNpcCount() }}/{{ npcStore.myNpcLimit() }} {{ localeService.t('npc_quota_label') }}
+          </span>
+        }
+        <button
+          type="button"
+          (click)="openCreateForm()"
+          [disabled]="!npcStore.canCreateNpc()"
+          [title]="npcStore.canCreateNpc() ? '' : localeService.t('npc_quota_reached_hint')"
+          class="text-sm px-4 py-2 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-inherit"
+        >
+          {{ localeService.t('npc_create_button') }}
+        </button>
+        <button
+          type="button"
+          (click)="openPicker()"
+          class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+        >
+          {{ localeService.t('npc_select_button') }}
+        </button>
+      </div>
     }
   </div>
 
@@ -60,4 +76,11 @@
     [campaignId]="campaignId"
     (closed)="onPickerClosed()"
   ></app-npc-picker>
+}
+
+@if (npcCreateOpen()) {
+  <app-npc-form
+    [campaignId]="campaignId"
+    (closed)="onCreateFormClosed()"
+  ></app-npc-form>
 }

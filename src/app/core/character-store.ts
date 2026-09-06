@@ -1,8 +1,9 @@
-import { Injectable, inject, signal, effect } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { Supabase } from './supabase';
 import { Auth } from './auth';
 import { ActiveCampaign } from './active-campaign';
 import { LocaleService } from './locale';
+import { getCharacterLimitForSeconds } from './ranks';
 
 export interface DiaryEntry {
   id: string;
@@ -23,6 +24,11 @@ export interface CharacterSummary {
   race_name: string | null;
   class_name: string | null;
   background_name: string | null;
+  campaign_id?: string | null;
+  campaign_name?: string | null;
+  // PG base della Fucina da cui questo personaggio è stato clonato (vedi
+  // CharacterStore.cloneCharacterToCampaign): null per i PG base stessi.
+  template_id?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,6 +42,38 @@ export class CharacterStore {
   readonly loading = signal(false);
   readonly myCharacter = signal<CharacterFull | null>(null);
   readonly selectedCharacter = signal<CharacterFull | null>(null);
+
+  // Parco personaggi dell'utente corrente (CharacterCreate "fabbrica" + picker
+  // "Aggiungi il tuo Eroe" in campaign-hub): tutti i PG posseduti, a prescindere dalla
+  // campagna (campaign_id anche null per quelli non ancora assegnati). Separato da
+  // `characters`, che resta invece lo scoping per campagna attiva.
+  readonly roster = signal<CharacterSummary[]>([]);
+  readonly rosterLoading = signal(false);
+
+  // Quota di PG creabili in base al rango araldico dell'utente corrente (vedi
+  // core/ranks.ts): rispecchia il limite lato RLS (get_character_creation_limit), qui
+  // solo per la UI (bloccare il submit in anticipo con un messaggio chiaro).
+  readonly myCharacterLimit = computed(() =>
+    getCharacterLimitForSeconds(this.auth.navigationSeconds(), this.auth.isAdmin())
+  );
+
+  // PG "base" della Fucina: quelli senza campaign_id, l'unico tipo che consuma la quota, che
+  // compare come sorgente selezionabile nel picker "Aggiungi il tuo Eroe" e come elenco della
+  // colonna sinistra della Fucina. I cloni in campagna (campaign_id valorizzato, vedi
+  // cloneCharacterToCampaign) non contano e non compaiono qui: sono copie derivate, nested
+  // sotto il loro base (vedi clonesOfTemplate/forge-clones-panel). I personaggi creati prima
+  // della Fucina (campaign_id valorizzato fin dalla nascita) vanno prima "scissi" in base+clone
+  // con la migrazione sql/2026-09-06_character_legacy_split.sql, altrimenti restano visibili
+  // solo nel roster della loro campagna, non qui.
+  readonly forgeBases = computed(() => this.roster().filter((c) => !c.campaign_id));
+  readonly myCharacterCount = computed(() => this.forgeBases().length);
+  readonly canCreateCharacter = computed(() => this.myCharacterCount() < this.myCharacterLimit());
+
+  // Cloni in campagna generati da un dato PG base (vedi cloneCharacterToCampaign), per il
+  // pannello "Aggiorna dalla campagna X" nella Fucina.
+  clonesOfTemplate(templateId: string): CharacterSummary[] {
+    return this.roster().filter((c) => c.template_id === templateId);
+  }
 
   constructor() {
     // Si ricarica da solo ogni volta che cambia la campagna attiva,
@@ -88,31 +126,8 @@ export class CharacterStore {
       return;
     }
 
-    const locale = this.localeService.locale();
-    let raceTranslations: Record<string, string> = {};
-    let classTranslations: Record<string, string> = {};
-    let backgroundTranslations: Record<string, string> = {};
-
-    if (locale !== 'en' && data && data.length > 0) {
-      const raceIds = [...new Set(data.map((r: any) => r.race_id).filter(Boolean))];
-      const classIds = [
-        ...new Set(data.flatMap((r: any) => r.character_classes?.map((cc: any) => cc.class_id) ?? [])),
-      ];
-      const backgroundIds = [...new Set(data.map((r: any) => r.background_id).filter(Boolean))];
-
-      const { data: translationRows } = await this.supabase.client
-        .from('content_translations')
-        .select('content_table, content_id, name')
-        .eq('locale', locale)
-        .in('content_table', ['races', 'classes', 'backgrounds'])
-        .in('content_id', [...raceIds, ...classIds, ...backgroundIds]);
-
-      for (const t of translationRows ?? []) {
-        if (t.content_table === 'races') raceTranslations[t.content_id] = t.name;
-        if (t.content_table === 'classes') classTranslations[t.content_id] = t.name;
-        if (t.content_table === 'backgrounds') backgroundTranslations[t.content_id] = t.name;
-      }
-    }
+    const { raceTranslations, classTranslations, backgroundTranslations } =
+      await this.resolveSummaryTranslations(data);
 
     // Nickname dei proprietari (per il roster nel quadro campagna)
     const ownerIds = [...new Set((data ?? []).map((r: any) => r.owner_id))];
@@ -145,6 +160,114 @@ export class CharacterStore {
     this.loading.set(false);
   }
 
+  // Traduzioni di razza/classe/background per una lista di righe `characters`, condivisa
+  // tra loadForActiveCampaign (scoping per campagna) e loadMyRoster (scoping per
+  // proprietario): stessa logica, evita di duplicarla due volte.
+  private async resolveSummaryTranslations(
+    data: any[] | null
+  ): Promise<{
+    raceTranslations: Record<string, string>;
+    classTranslations: Record<string, string>;
+    backgroundTranslations: Record<string, string>;
+  }> {
+    const raceTranslations: Record<string, string> = {};
+    const classTranslations: Record<string, string> = {};
+    const backgroundTranslations: Record<string, string> = {};
+
+    const locale = this.localeService.locale();
+    if (locale === 'en' || !data || data.length === 0) {
+      return { raceTranslations, classTranslations, backgroundTranslations };
+    }
+
+    const raceIds = [...new Set(data.map((r: any) => r.race_id).filter(Boolean))];
+    const classIds = [
+      ...new Set(data.flatMap((r: any) => r.character_classes?.map((cc: any) => cc.class_id) ?? [])),
+    ];
+    const backgroundIds = [...new Set(data.map((r: any) => r.background_id).filter(Boolean))];
+
+    const { data: translationRows } = await this.supabase.client
+      .from('content_translations')
+      .select('content_table, content_id, name')
+      .eq('locale', locale)
+      .in('content_table', ['races', 'classes', 'backgrounds'])
+      .in('content_id', [...raceIds, ...classIds, ...backgroundIds]);
+
+    for (const t of translationRows ?? []) {
+      if (t.content_table === 'races') raceTranslations[t.content_id] = t.name;
+      if (t.content_table === 'classes') classTranslations[t.content_id] = t.name;
+      if (t.content_table === 'backgrounds') backgroundTranslations[t.content_id] = t.name;
+    }
+
+    return { raceTranslations, classTranslations, backgroundTranslations };
+  }
+
+  // Carica il parco personaggi dell'utente corrente (CharacterCreate "fabbrica" +
+  // picker "Aggiungi il tuo Eroe"): tutti i PG posseduti, assegnati o no a una campagna.
+  async loadMyRoster() {
+    const userId = this.auth.user()?.id;
+    if (!userId) {
+      this.roster.set([]);
+      return;
+    }
+
+    this.rosterLoading.set(true);
+
+    const { data, error } = await this.supabase.client
+      .from('characters')
+      .select(
+        `
+        id,
+        name,
+        level,
+        owner_id,
+        alignment,
+        experience_points,
+        race_id,
+        background_id,
+        campaign_id,
+        template_id,
+        races ( name ),
+        backgrounds ( name ),
+        campaigns ( name ),
+        character_classes ( level, class_id, classes ( name ) )
+      `
+      )
+      .eq('owner_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Errore caricamento parco personaggi', error.message);
+      this.roster.set([]);
+      this.rosterLoading.set(false);
+      return;
+    }
+
+    const { raceTranslations, classTranslations, backgroundTranslations } =
+      await this.resolveSummaryTranslations(data);
+
+    const mapped: CharacterSummary[] = (data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      level: row.level,
+      owner_id: row.owner_id,
+      owner_nickname: null,
+      alignment: row.alignment,
+      experience_points: row.experience_points,
+      race_name: raceTranslations[row.race_id] ?? row.races?.name ?? null,
+      background_name: backgroundTranslations[row.background_id] ?? row.backgrounds?.name ?? null,
+      class_name:
+        classTranslations[row.character_classes?.[0]?.class_id] ??
+        row.character_classes?.[0]?.classes?.name ??
+        null,
+      campaign_id: row.campaign_id,
+      campaign_name: row.campaigns?.name ?? null,
+      template_id: row.template_id,
+    }));
+
+    this.roster.set(mapped);
+    this.rosterLoading.set(false);
+  }
+
   async createCharacter(params: {
     name: string;
     raceId: string;
@@ -165,16 +288,16 @@ export class CharacterStore {
     shieldEquipped: boolean;
     startingGold: number;
   }): Promise<{ error: { message: string } | null; characterId?: string }> {
-    const campaign = this.activeCampaign.current();
     const userId = this.auth.user()?.id;
 
-    if (!campaign) return { error: { message: 'Nessuna campagna attiva' } };
     if (!userId) return { error: { message: 'Utente non autenticato' } };
 
+    // Il PG nasce nel parco personale, senza campagna: viene clonato in una campagna in un
+    // secondo momento con cloneCharacterToCampaign (picker "Aggiungi il tuo Eroe").
     const { data: character, error: charError } = await this.supabase.client
       .from('characters')
       .insert({
-        campaign_id: campaign.id,
+        campaign_id: null,
         owner_id: userId,
         name: params.name,
         race_id: params.raceId,
@@ -250,7 +373,7 @@ export class CharacterStore {
       }
     }
 
-    await this.loadForActiveCampaign();
+    await this.loadMyRoster();
 
     return { error: null, characterId: character.id };
   }
@@ -263,6 +386,166 @@ export class CharacterStore {
     }
 
     return { error };
+  }
+
+  // Colonne "portatili" di un personaggio, usate sia per clonare un PG base in una nuova
+  // campagna sia per sovrascrivere il base con lo stato di un suo clone (pullFromCampaignClone):
+  // tutto tranne le chiavi identificative (id, owner_id, campaign_id, template_id).
+  private static readonly CLONE_SOURCE_SELECT = `
+    id, name, level, alignment, experience_points, avatar_url, notes,
+    current_hp, max_hp, armor_class, equipped_armor_id, shield_equipped, mount_equipment_id,
+    copper, silver, electrum, gold, platinum, ability_scores, applied_bonus,
+    race_id, subrace_id, background_id, sex,
+    skill_proficiencies, skill_mastery, damage_resistances, damage_immunities, condition_immunities,
+    character_classes ( class_id, subclass_id, level ),
+    character_spells ( spell_id, prepared ),
+    character_inventory ( equipment_id, quantity, equipped ),
+    character_weapons ( weapon_id, quantity )
+  `;
+
+  private async fetchCloneSource(characterId: string) {
+    return this.supabase.client
+      .from('characters')
+      .select(CharacterStore.CLONE_SOURCE_SELECT)
+      .eq('id', characterId)
+      .maybeSingle();
+  }
+
+  private cloneScalarFields(source: any) {
+    return {
+      name: source.name,
+      level: source.level,
+      alignment: source.alignment,
+      experience_points: source.experience_points,
+      avatar_url: source.avatar_url,
+      notes: source.notes,
+      current_hp: source.current_hp,
+      max_hp: source.max_hp,
+      armor_class: source.armor_class,
+      equipped_armor_id: source.equipped_armor_id,
+      shield_equipped: source.shield_equipped,
+      mount_equipment_id: source.mount_equipment_id,
+      copper: source.copper,
+      silver: source.silver,
+      electrum: source.electrum,
+      gold: source.gold,
+      platinum: source.platinum,
+      ability_scores: source.ability_scores,
+      applied_bonus: source.applied_bonus,
+      race_id: source.race_id,
+      subrace_id: source.subrace_id,
+      background_id: source.background_id,
+      sex: source.sex,
+      skill_proficiencies: source.skill_proficiencies,
+      skill_mastery: source.skill_mastery,
+      damage_resistances: source.damage_resistances,
+      damage_immunities: source.damage_immunities,
+      condition_immunities: source.condition_immunities,
+    };
+  }
+
+  // Copia classe/incantesimi/inventario/armi di `source` (letto con CLONE_SOURCE_SELECT) sul
+  // personaggio `targetId`. Presuppone che targetId non abbia già righe figlie: per il pull
+  // (sovrascrittura del base) il chiamante le cancella prima di richiamare questo metodo.
+  private async insertClonedChildren(source: any, targetId: string) {
+    const cls = source.character_classes?.[0];
+    if (cls) {
+      await this.supabase.client.from('character_classes').insert({
+        character_id: targetId,
+        class_id: cls.class_id,
+        subclass_id: cls.subclass_id,
+        level: cls.level,
+      });
+    }
+
+    const spells = source.character_spells ?? [];
+    if (spells.length > 0) {
+      await this.supabase.client.from('character_spells').insert(
+        spells.map((s: any) => ({ character_id: targetId, spell_id: s.spell_id, prepared: s.prepared }))
+      );
+    }
+
+    const inventory = source.character_inventory ?? [];
+    if (inventory.length > 0) {
+      await this.supabase.client.from('character_inventory').insert(
+        inventory.map((i: any) => ({
+          character_id: targetId,
+          equipment_id: i.equipment_id,
+          quantity: i.quantity,
+          equipped: i.equipped,
+        }))
+      );
+    }
+
+    const weapons = source.character_weapons ?? [];
+    if (weapons.length > 0) {
+      await this.supabase.client.from('character_weapons').insert(
+        weapons.map((w: any) => ({ character_id: targetId, weapon_id: w.weapon_id, quantity: w.quantity }))
+      );
+    }
+  }
+
+  // Aggiunge un PG base della Fucina a una campagna: non sposta più la riga (a differenza del
+  // vecchio comportamento), la clona in una nuova riga dedicata a quella campagna. Il base
+  // resta invariato e riusabile per altre campagne (solo i base, campaign_id nullo, contano
+  // per la quota, vedi myCharacterCount/forgeBases e get_character_creation_limit lato RLS).
+  async cloneCharacterToCampaign(campaignId: string, templateCharacterId: string) {
+    const userId = this.auth.user()?.id;
+    if (!userId) return { error: { message: 'Utente non autenticato' } };
+
+    const { data: source, error: fetchError } = await this.fetchCloneSource(templateCharacterId);
+    if (fetchError || !source) {
+      return { error: fetchError ?? { message: 'Personaggio base non trovato' } };
+    }
+
+    const { data: clone, error: insertError } = await this.supabase.client
+      .from('characters')
+      .insert({
+        campaign_id: campaignId,
+        owner_id: userId,
+        template_id: templateCharacterId,
+        ...this.cloneScalarFields(source),
+      })
+      .select('id')
+      .single();
+
+    if (insertError || !clone) {
+      return { error: insertError ?? { message: 'Errore sconosciuto' } };
+    }
+
+    await this.insertClonedChildren(source, clone.id);
+    await Promise.all([this.loadMyRoster(), this.loadForActiveCampaign()]);
+
+    return { error: null };
+  }
+
+  // "Aggiorna dalla campagna X" nella Fucina: copia manuale una tantum, non un collegamento
+  // continuo (per riaggiornare va ripremuto). Sovrascrive il base con lo stato attuale di uno
+  // dei suoi cloni; le righe figlie del base vengono sostituite, non unite a quelle esistenti.
+  async pullFromCampaignClone(baseCharacterId: string, cloneCharacterId: string) {
+    const { data: source, error: fetchError } = await this.fetchCloneSource(cloneCharacterId);
+    if (fetchError || !source) {
+      return { error: fetchError ?? { message: 'Copia in campagna non trovata' } };
+    }
+
+    const { error: updateError } = await this.supabase.client
+      .from('characters')
+      .update(this.cloneScalarFields(source))
+      .eq('id', baseCharacterId);
+
+    if (updateError) return { error: updateError };
+
+    await Promise.all([
+      this.supabase.client.from('character_classes').delete().eq('character_id', baseCharacterId),
+      this.supabase.client.from('character_spells').delete().eq('character_id', baseCharacterId),
+      this.supabase.client.from('character_inventory').delete().eq('character_id', baseCharacterId),
+      this.supabase.client.from('character_weapons').delete().eq('character_id', baseCharacterId),
+    ]);
+
+    await this.insertClonedChildren(source, baseCharacterId);
+    await Promise.all([this.loadMyRoster(), this.refreshCharacter(baseCharacterId)]);
+
+    return { error: null };
   }
 
   private static readonly FULL_CHARACTER_SELECT = `

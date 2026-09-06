@@ -16,6 +16,10 @@ export class NpcForm implements OnInit {
   private modal = inject(Modal);
 
   @Input() editingNpc: NpcCharacter | null = null;
+  // Valorizzato solo quando il form è aperto dal tab PNG di una campagna (Npc component):
+  // lega il PNG appena creato a quella campagna invece che lasciarlo nel solo catalogo
+  // globale (vedi NpcStore.createNpc). Resta null per Gestione > PNG.
+  @Input() campaignId: string | null = null;
   @Output() closed = new EventEmitter<void>();
 
   protected readonly attitudes: NpcAttitude[] = ['friendly', 'neutral', 'hostile'];
@@ -69,6 +73,14 @@ export class NpcForm implements OnInit {
       return;
     }
 
+    // Il limite vero è imposto lato RLS (get_npc_creation_limit): questo controllo evita
+    // solo un errore di permessi poco chiaro se la quota si è esaurita nel frattempo
+    // (es. un altro tab dello stesso utente).
+    if (!this.editingId && this.campaignId && !this.npcStore.canCreateNpc()) {
+      this.modal.error(this.localeService.t('npc_quota_reached_hint'));
+      return;
+    }
+
     this.loading.set(true);
 
     const payload = {
@@ -82,7 +94,7 @@ export class NpcForm implements OnInit {
 
     const { error } = this.editingId
       ? await this.npcStore.updateNpc(this.editingId, payload)
-      : await this.npcStore.createNpc(payload);
+      : await this.npcStore.createNpc(payload, this.campaignId ?? undefined);
 
     this.loading.set(false);
 

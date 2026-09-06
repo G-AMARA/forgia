@@ -1,0 +1,19 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/80 backdrop-blur-sm"
+  (click)="closed.emit()"
+>
+  <div class="relative max-w-2xl max-h-[90dvh]" (click)="$event.stopPropagation()">
+    <button
+      type="button"
+      (click)="closed.emit()"
+      class="absolute -top-3 -right-3 w-8 h-8 flex items-center justify-center rounded-full border-2 border-gold bg-fantasy-black text-fantasy-gold hover:bg-gold hover:text-fantasy-black transition-colors"
+    >
+      ✕
+    </button>
+    <img
+      [src]="imageUrl()"
+      [alt]="name()"
+      class="max-w-full max-h-[90dvh] object-contain rounded-lg border-2 border-gold-bright"
+    />
+  </div>
+</div>

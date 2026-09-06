@@ -66,6 +66,12 @@ export class Auth {
   private _avatarUrl = signal<string | null>(null);
   readonly avatarUrl = this._avatarUrl.asReadonly();
 
+  // Secondi di navigazione accreditati (vedi NavigationTracker): serve a calcolare il
+  // rango araldico dell'utente corrente lato client (NpcStore.myNpcLimit), senza un
+  // secondo round-trip a profiles.
+  private _navigationSeconds = signal(0);
+  readonly navigationSeconds = this._navigationSeconds.asReadonly();
+
   constructor() {
     // Controlla se c'è già una sessione attiva al caricamento dell'app
     this.supabase.client.auth.getSession().then(({ data }) => {
@@ -89,12 +95,13 @@ export class Auth {
       this._isAdminDb.set(false);
       this._viewRole.set(null);
       this._avatarUrl.set(null);
+      this._navigationSeconds.set(0);
       return;
     }
 
     const { data, error } = await this.supabase.client
       .from('profiles')
-      .select('nickname, is_master, is_admin, avatar_url')
+      .select('nickname, is_master, is_admin, avatar_url, navigation_seconds')
       .eq('id', userId)
       .single();
 
@@ -104,6 +111,7 @@ export class Auth {
       this._isAdminDb.set(false);
       this._viewRole.set(null);
       this._avatarUrl.set(null);
+      this._navigationSeconds.set(0);
       return;
     }
 
@@ -111,6 +119,7 @@ export class Auth {
     this._isMasterDb.set(data?.is_master ?? false);
     this._isAdminDb.set(data?.is_admin ?? false);
     this._avatarUrl.set(data?.avatar_url ?? null);
+    this._navigationSeconds.set(data?.navigation_seconds ?? 0);
     // La modalità di visualizzazione ha senso solo per un vero admin: per chiunque altro
     // resta null (= usa il ruolo reale), anche se in localStorage fosse rimasto un valore
     // di quando l'account era admin (es. dopo una revoca da Gestione > Utenti).

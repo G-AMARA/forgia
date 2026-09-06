@@ -22,10 +22,13 @@ export interface Campaign {
   // null se nessuna. Persistita (non solo trasmessa via broadcast, vedi PlaySessionChannel)
   // così un giocatore che entra dopo o ricarica la pagina la ritrova subito.
   active_map_id?: string | null;
+  // Interruttore del Master per il tasto "Gioca" (campaign-hub.ts): a false, solo owner/admin
+  // possono entrare in sessione, i giocatori restano in attesa finché non viene riacceso.
+  play_enabled: boolean;
 }
 
 const CAMPAIGN_COLUMNS =
-  'id, name, description, edition_code, cover_key, owner_id, status, next_session_at, max_players, starting_level, is_public, active_map_id';
+  'id, name, description, edition_code, cover_key, owner_id, status, next_session_at, max_players, starting_level, is_public, active_map_id, play_enabled';
 
 @Injectable({ providedIn: 'root' })
 export class ActiveCampaign {
@@ -150,6 +153,26 @@ export class ActiveCampaign {
 
     if (error) {
       console.error('Errore salvataggio mappa attiva', error.message);
+      return;
+    }
+    if (data) {
+      this.campaigns.update((list) => list.map((c) => (c.id === campaignId ? data : c)));
+      if (this.current()?.id === campaignId) this.current.set(data);
+    }
+  }
+
+  // Toggle immediato (nessun form da salvare), simmetrico a setActiveMap: usato dal
+  // pulsante ON/OFF accanto al tasto "Gioca" in campaign-hub.
+  async setPlayEnabled(campaignId: string, playEnabled: boolean) {
+    const { data, error } = await this.supabase.client
+      .from('campaigns')
+      .update({ play_enabled: playEnabled })
+      .eq('id', campaignId)
+      .select(CAMPAIGN_COLUMNS)
+      .single();
+
+    if (error) {
+      console.error('Errore salvataggio stato Gioco', error.message);
       return;
     }
     if (data) {

@@ -23,6 +23,7 @@ interface BoardCampaign {
   maxPlayers: number | null;
   startingLevel: number;
   isPublic: boolean;
+  playEnabled: boolean;
 }
 
 @Component({
@@ -61,7 +62,7 @@ export class Dashboard implements OnInit {
     const { data: campaigns, error } = await this.supabase.client
       .from('campaigns')
       .select(
-        'id, name, description, edition_code, cover_key, owner_id, status, next_session_at, max_players, starting_level, is_public'
+        'id, name, description, edition_code, cover_key, owner_id, status, next_session_at, max_players, starting_level, is_public, play_enabled'
       )
       .order('created_at', { ascending: false });
 
@@ -100,6 +101,7 @@ export class Dashboard implements OnInit {
       maxPlayers: c.max_players,
       startingLevel: c.starting_level,
       isPublic: c.is_public,
+      playEnabled: c.play_enabled,
     }));
 
     this.boardCampaigns.set(mapped);
@@ -119,6 +121,7 @@ export class Dashboard implements OnInit {
       max_players: campaign.maxPlayers,
       starting_level: campaign.startingLevel,
       is_public: campaign.isPublic,
+      play_enabled: campaign.playEnabled,
     });
     this.appNav.setTab('hub');
   }

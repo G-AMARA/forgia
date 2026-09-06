@@ -1,383 +1,60 @@
-<section class="relative overflow-hidden bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4">
-  @if (!hasOwnCharacterAlready() && classImagePath(); as classImg) {
-    <img
-      [src]="classImg" alt=""
-      class="absolute inset-y-0 right-0 h-full w-1/2 object-cover opacity-10 pointer-events-none [-webkit-mask-image:linear-gradient(to_left,black,transparent)] [mask-image:linear-gradient(to_left,black,transparent)]"
-    />
-  }
-
-  <div class="relative space-y-4">
-  <h2 class="font-display text-2xl text-fantasy-gold">
-    @if (campaignStore.current() && hasOwnCharacterAlready()) {
-      {{ localeService.t('your_character_title') }} "{{ campaignStore.current()?.name }}"
-    } @else {
-      {{ localeService.t('create_character_title') }}
-    }
-  </h2>
-
-  @if (!campaignStore.current()) {
-    <p class="text-slate-arcane italic">{{ localeService.t('no_active_campaign') }}</p>
-  } @else if (hasOwnCharacterAlready()) {
-    <app-character-sheet></app-character-sheet>
-  } @else {
-    <p class="text-sm">
-      {{ localeService.t('active_campaign_label') }}:
-      <strong class="text-fantasy-gold">{{ campaignStore.current()?.name }}</strong>
-    </p>
-
-    <form (ngSubmit)="submit()" class="flex flex-col gap-4">
-      <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold">{{ localeService.t('character_name_label') }} <span class="text-red-300">*</span></label>
-        <input
-          type="text" name="name" [(ngModel)]="name" required
-          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-        />
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('race_label') }} <span class="text-red-300">*</span></label>
-          <select
-            name="race" [ngModel]="raceId" (ngModelChange)="onRaceChange($event)" required
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          >
-            <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-            @for (race of races(); track race.id) {
-              <option [value]="race.id">{{ race.name }}</option>
-            }
-          </select>
-          @if (getRaceDescription(); as desc) {
-            <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
-          }
-        </div>
-
-        @if (availableSubraces().length > 0) {
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('subrace_label') }}</label>
-            <select
-              name="subrace" [ngModel]="subraceId" (ngModelChange)="onSubraceChange($event)"
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-            >
-              <option value="">{{ localeService.t('subrace_none') }}</option>
-              @for (sub of availableSubraces(); track sub.id) {
-                <option [value]="sub.id">{{ sub.name }}</option>
-              }
-            </select>
-            @if (getSubraceDescription(); as desc) {
-              <p class="text-xs italic bg-fantasy-black/60 border border-gold/40 rounded p-2 mt-1">{{ desc }}</p>
-            }
-          </div>
-        }
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('class_label') }} <span class="text-red-300">*</span></label>
-          <select
-            name="class" [ngModel]="classId" (ngModelChange)="onClassChange($event)" required
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          >
-            <option value="" disabled>{{ localeService.t('select_placeholder') }}</option>
-            @for (cls of classes(); track cls.id) {
-              <option [value]="cls.id">{{ cls.name }}</option>
-            }
-          </select>
-        </div>
-
-        @if (availableSubclasses().length > 0) {
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('subclass_label') }}</label>
-            <select
-              name="subclass" [(ngModel)]="subclassId"
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-            >
-              <option value="">{{ localeService.t('subclass_none') }}</option>
-              @for (sub of availableSubclasses(); track sub.id) {
-                <option [value]="sub.id">{{ sub.name }}</option>
-              }
-            </select>
-          </div>
-        }
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('background_label') }}</label>
-          <select
-            name="background" [ngModel]="backgroundId" (ngModelChange)="onBackgroundChange($event)"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          >
-            <option value="">{{ localeService.t('subclass_none') }}</option>
-            @for (bg of backgrounds(); track bg.id) {
-              <option [value]="bg.id">{{ bg.name }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('level_label') }}</label>
-          <select
-            name="level" [ngModel]="level" (ngModelChange)="onLevelChange($event)"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          >
-            @for (lvl of levels; track lvl) {
-              <option [value]="lvl">{{ lvl }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('alignment_label') }} <span class="text-red-300">*</span></label>
-          <select
-            name="alignment" [(ngModel)]="alignment" required
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          >
-            @for (al of alignments; track al) {
-              <option [value]="al">{{ localeService.t('alignment_' + al) }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('xp_label') }}</label>
-          <input
-            type="number" min="0" name="xp" [(ngModel)]="experiencePoints"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          />
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('sex_label') }}</label>
-          <select
-            name="sex" [(ngModel)]="sex"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          >
-            <option value="M">{{ localeService.t('sex_male') }}</option>
-            <option value="F">{{ localeService.t('sex_female') }}</option>
-          </select>
-        </div>
-
-      </div>
-
-      <!-- Punteggi caratteristica -->
-      <div class="flex flex-col gap-2">
-        <div class="flex items-center justify-between">
-          <label class="text-sm font-semibold">{{ localeService.t('ability_scores_label') }}</label>
-          <button
-            type="button" (click)="rollAllScores()"
-            class="text-xs px-3 py-1 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
-          >
-            🎲 {{ localeService.t('casual_roll_dice_button') }}
-          </button>
-        </div>
-
-        <!-- Bonus Razziale: automatico, definito dalla razza scelta in Gestione > Razze.
-             Sempre visibile (anche con background selezionato): il bonus di background
-             manuale è disattivato, vedi blocco commentato sotto. -->
-        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
-          <div class="col-span-3 sm:col-span-6 mb-1">
-            <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('racial_bonus_label') }}</label>
-            @if (!raceId) {
-              <p class="text-xs italic text-slate-arcane">{{ localeService.t('select_race_first_hint') }}</p>
-            }
-          </div>
-          @for (key of abilityKeys; track key) {
-            <div class="flex flex-col gap-1">
-              <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
-              <div class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center text-sm font-semibold">
-                @if (getRaceOrSubraceBonus(key) > 0) {
-                  +{{ getRaceOrSubraceBonus(key) }}
-                } @else {
-                  —
-                }
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- Bonus a Scelta: monte punti dato da razza/sottorazza "a scelta libera" (es. Umano
-             Variante, Draconide Cromatico), distribuito liberamente dal giocatore entro il tetto
-             per caratteristica. Visibile solo se razza/sottorazza scelte ne concedono almeno uno. -->
-        @if (freeBonusPoints() > 0) {
-          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-fantasy-black/40 p-3 rounded border border-dashed border-slate-arcane">
-            <div class="col-span-3 sm:col-span-6 mb-1 flex items-center justify-between">
-              <label class="text-xs uppercase font-semibold text-fantasy-gold">{{ localeService.t('free_bonus_label') }}</label>
-              <span class="text-xs font-semibold" [class]="freeBonusRemaining() > 0 ? 'text-fantasy-gold' : 'text-fantasy-red'">
-                {{ localeService.t('points_remaining_label') }}: {{ freeBonusRemaining() }}/{{ freeBonusPoints() }}
-              </span>
-            </div>
-            @for (key of abilityKeys; track key) {
-              <div class="flex flex-col gap-1">
-                <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
-                <input
-                  type="number" min="0" [attr.max]="maxFreeBonus(key)"
-                  [ngModel]="freeBonuses[key]"
-                  (ngModelChange)="setFreeBonus(key, $event)"
-                  [disabled]="freeBonuses[key] === 0 && freeBonusRemaining() === 0"
-                  [name]="'free_bonus_' + key"
-                  class="px-2 py-1 rounded border border-slate-300 bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold text-sm disabled:opacity-50"
-                />
-              </div>
-            }
-          </div>
-        }
-
-        <!-- Punteggi Base + Totali -->
-        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          @for (key of abilityKeys; track key) {
-            <div class="flex flex-col gap-1">
-              <!-- LABEL + ICONA DADO -->
-                <div class="flex items-center justify-center gap-1.5">
-                  <label class="text-xs uppercase text-center">{{ localeService.t('ability_' + key) }}</label>
-                  
-                  <!-- Icona Dado cliccabile per aprire il roller -->
-                  <button type="button" 
-                          (click)="openDiceRollerForAbility(key)" 
-                          class="text-amber-500 hover:text-amber-400 transition-transform hover:scale-110 focus:outline-none"
-                          title="Tira i dadi per questa caratteristica">
-                    <!-- Piccola icona SVG del dado -->
-                    <svg class="w-4 h-4 fill-current" viewBox="0 0 100 100">
-                      <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" />
-                    </svg>
-                  </button>
-                </div>
-              <input
-                type="number" min="1" max="30" [(ngModel)]="abilityScores[key]" [name]="'ability_' + key"
-                class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 text-center focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-              />
-              @if (getAppliedBonus(key) > 0) {
-                <div class="text-xs text-center text-slate-arcane">
-                  {{ abilityScores[key] }} + {{ getAppliedBonus(key) }} = {{ getTotalScore(key) }}
-                </div>
-              }
-              <div class="text-xs text-center font-semibold" [class]="getModifier(getTotalScore(key)) >= 0 ? 'text-forest' : 'text-red-300'">
-                @if (getModifier(getTotalScore(key)) >= 0) {
-                  +{{ getModifier(getTotalScore(key)) }}
-                } @else {
-                  {{ getModifier(getTotalScore(key)) }}
-                }
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-
-      @if (availableSpells().length > 0) {
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-semibold">{{ localeService.t('spells_known_label') }}</label>
-          @if (currentSpellcastingInfo(); as info) {
-            <p class="text-xs text-slate-arcane">
-              {{ localeService.t('cantrips_known_label') }}: {{ knownCantripsCount() }}/{{ info.cantripsKnown }}
-              @if (info.spellsKnownLimit !== null) {
-                · {{ localeService.t('spells_know_label') }}: {{ knownLeveledSpellsCount() }}/{{ info.spellsKnownLimit }}
-              }
-            </p>
-          }
-          <div class="max-h-48 overflow-y-auto border border-gold rounded p-2 grid grid-cols-1 sm:grid-cols-2 gap-1 bg-fantasy-black/50">
-            @for (spell of availableSpells(); track spell.id) {
-              <label class="flex items-center gap-2 text-sm" [class.opacity-50]="!canSelectSpell(spell)">
-                <input
-                  type="checkbox"
-                  [checked]="isSpellSelected(spell.id)"
-                  [disabled]="!canSelectSpell(spell)"
-                  (change)="toggleSpell(spell.id)"
-                />
-                {{ spell.name }}
-                <span class="text-xs text-slate-arcane">
-                  ({{ spell.raw.level === 0 ? localeService.t('cantrip_short') : 'Lv.' + spell.raw.level }})
-                </span>
-              </label>
-            }
-          </div>
-        </div>
+<section class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4">
+  <div class="flex items-center justify-between flex-wrap gap-2">
+    <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('hero_forge_title') }}</h2>
+    <div class="flex items-center gap-3 flex-wrap">
+      @if (characterStore.myCharacterLimit() !== Infinity) {
+        <span class="text-xs text-slate-arcane">
+          {{ characterStore.myCharacterCount() }}/{{ characterStore.myCharacterLimit() }} {{ localeService.t('character_roster_count_label') }}
+        </span>
       }
-
-      @if (startingEquipmentGroups().length > 0) {
-        <div class="flex flex-col gap-3">
-          <label class="text-sm font-semibold">{{ localeService.t('starting_equipment_title') }}</label>
-
-          @if (classEquipmentGroups().length > 0) {
-            <div class="flex flex-col gap-2">
-              <span class="text-xs uppercase tracking-wide text-slate-arcane">{{ localeService.t('starting_equipment_class_title') }}</span>
-              <ng-container *ngTemplateOutlet="equipmentGroupsTpl; context: { groups: classEquipmentGroups() }"></ng-container>
-            </div>
-          }
-
-          @if (backgroundEquipmentGroups().length > 0 || startingGoldPreview() > 0) {
-            <div class="flex flex-col gap-2">
-              <span class="text-xs uppercase tracking-wide text-slate-arcane">{{ localeService.t('starting_equipment_background_title') }}</span>
-              @if (startingGoldPreview() > 0) {
-                <span class="text-sm text-slate-arcane">{{ localeService.t('starting_gold_label') }}: {{ startingGoldPreview() }}</span>
-              }
-              <ng-container *ngTemplateOutlet="equipmentGroupsTpl; context: { groups: backgroundEquipmentGroups() }"></ng-container>
-            </div>
-          }
-        </div>
-      }
-
-      <ng-template #equipmentGroupsTpl let-groups="groups">
-        @for (entry of groups; track entry.groupKey) {
-          <div class="flex flex-col gap-1 border border-gold rounded p-2 bg-fantasy-black/50">
-            @for (option of entry.group.options; track $index) {
-              @if (entry.group.options.length > 1) {
-                <label class="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio" [name]="entry.groupKey"
-                    [checked]="selectedOptionIndex(entry.groupKey) === $index"
-                    (change)="selectEquipmentOption(entry.groupKey, $index)"
-                  />
-                  {{ optionLabel(option.refs) }}
-                </label>
-              } @else {
-                <span class="text-sm text-slate-arcane">{{ optionLabel(option.refs) }}</span>
-              }
-
-              @if (selectedOptionIndex(entry.groupKey) === $index) {
-                @for (ref of option.refs; track $index; let refIndex = $index) {
-                  @if (ref.kind === 'category') {
-                    @for (slot of categoryPickSlots(ref); track slot) {
-                      <select
-                        class="ml-6 px-2 py-1 text-sm rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-                        [ngModel]="getCategoryPick(entry.groupKey, refIndex, slot)"
-                        (ngModelChange)="setCategoryPick(entry.groupKey, refIndex, slot, $event)"
-                        [name]="entry.groupKey + '-' + refIndex + '-' + slot"
-                      >
-                        <option value="">{{ localeService.t('starting_equipment_choose_item_label') }}</option>
-                        @for (item of categoryOptionsFor(ref); track item.id) {
-                          <option [value]="item.id">{{ categoryItemName(item) }}</option>
-                        }
-                      </select>
-                    }
-                  }
-                }
-              }
-            }
-          </div>
-        }
-      </ng-template>
-
-      <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold">{{ localeService.t('backstory_label') }}</label>
-        <textarea
-          name="backstory" [(ngModel)]="backstory" rows="4"
-          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
-        ></textarea>
-      </div>
-
       <button
-        type="submit" [disabled]="loading()"
-        class="self-start px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
+        type="button"
+        (click)="startCreating()"
+        [disabled]="!characterStore.canCreateCharacter()"
+        [title]="characterStore.canCreateCharacter() ? '' : localeService.t('character_quota_reached_hint')"
+        class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-40 disabled:hover:bg-fantasy-gold"
       >
-        {{ localeService.t('create_character_button') }}
+        {{ localeService.t('create_hero_button') }}
       </button>
+    </div>
+  </div>
 
-    </form>
-  }
+  <div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 items-start">
+    <!-- Colonna sinistra: solo i PG base (i cloni in campagna compaiono nested sotto il loro
+         base, vedi app-forge-clones-panel). I personaggi creati prima della Fucina compaiono
+         qui solo dopo aver applicato sql/2026-09-06_character_legacy_split.sql. -->
+    <div class="space-y-1">
+      @if (characterStore.forgeBases().length === 0) {
+        <p class="text-sm italic text-slate-arcane">{{ localeService.t('no_characters_yet') }}</p>
+      }
+      @for (hero of characterStore.forgeBases(); track hero.id) {
+        <button
+          type="button"
+          (click)="selectHero(hero.id)"
+          class="w-full text-left px-3 py-2 rounded border transition-colors"
+          [class]="isSelected(hero.id)
+            ? 'border-gold-bright bg-fantasy-black/80 text-fantasy-gold'
+            : 'border-gold/30 hover:bg-fantasy-black/60 text-fantasy-moonstone'"
+        >
+          <p class="font-display text-sm">{{ hero.name }}</p>
+          <p class="text-xs opacity-70">{{ localeService.t('level_label') }} {{ hero.level }} · {{ hero.class_name }}</p>
+        </button>
+      }
+    </div>
+
+    <!-- Colonna destra: scheda dell'eroe selezionato, o il form di creazione -->
+    <div>
+      @if (creating()) {
+        <app-character-create-form
+          (created)="onHeroCreated($event)"
+          (cancelled)="onCreationCancelled()"
+        ></app-character-create-form>
+      } @else if (selectedHeroId()) {
+        <app-character-sheet [characterId]="selectedHeroId()!"></app-character-sheet>
+        <app-forge-clones-panel [baseId]="selectedHeroId()!"></app-forge-clones-panel>
+      } @else {
+        <p class="text-sm italic text-slate-arcane">{{ localeService.t('select_or_create_hero_hint') }}</p>
+      }
+    </div>
   </div>
 </section>
-
-@defer (when isDiceRollerOpen) {
-  @if (isDiceRollerOpen) {
-    <app-dice-roller
-      [abilityMode]="isAbilityRollMode"
-      (rollResults)="handleRollResult($event)"
-      (close)="closeDiceRoller()">
-    </app-dice-roller>
-  }
-}

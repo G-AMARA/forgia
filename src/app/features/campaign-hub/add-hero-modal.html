@@ -1,0 +1,47 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+  (click)="cancel()"
+>
+  <div
+    class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+    (click)="$event.stopPropagation()"
+  >
+    <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('add_hero_modal_title') }}</h2>
+
+    @if (availableHeroes().length === 0) {
+      <p class="text-sm italic text-slate-arcane">{{ localeService.t('no_available_heroes_hint') }}</p>
+      <button
+        type="button"
+        (click)="goToCharacterFactory()"
+        class="mt-4 text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+      >
+        {{ localeService.t('tab_characters') }}
+      </button>
+    } @else {
+      <div class="space-y-2">
+        @for (hero of availableHeroes(); track hero.id) {
+          <button
+            type="button"
+            (click)="selectHero(hero.id)"
+            class="w-full text-left bg-fantasy-black/60 border border-gold rounded-lg p-3 hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
+          >
+            <p class="font-display text-base text-fantasy-moonstone">{{ hero.name }}</p>
+            <p class="text-xs text-slate-arcane">
+              {{ localeService.t('level_label') }} {{ hero.level }} · {{ hero.race_name }} · {{ hero.class_name }}
+            </p>
+          </button>
+        }
+      </div>
+    }
+
+    <div class="flex justify-end mt-4">
+      <button
+        type="button"
+        (click)="cancel()"
+        class="text-sm px-4 py-2 border border-gold/50 rounded hover:bg-gold/20 transition-colors"
+      >
+        {{ localeService.t('cancel_button') }}
+      </button>
+    </div>
+  </div>
+</div>

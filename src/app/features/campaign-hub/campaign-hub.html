@@ -56,19 +56,41 @@
                 {{ localeService.t('manage_campaign_button') }}
               </button>
             }
-            @if (isOwner() || hasOwnCharacter()) {
+            @if (isOwner() || auth.isAdmin()) {
               <button
                 (click)="goToPlaySession()"
                 class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
               >
                 {{ localeService.t('play_button') }}
               </button>
+              <button
+                (click)="togglePlayEnabled()"
+                class="text-sm px-4 py-2 rounded border transition-colors"
+                [class]="campaignStore.current()?.play_enabled
+                  ? 'border-forest text-forest hover:bg-forest hover:text-fantasy-black'
+                  : 'border-slate-arcane text-slate-arcane hover:bg-slate-arcane hover:text-fantasy-black'"
+              >
+                {{ localeService.t(campaignStore.current()?.play_enabled ? 'play_enabled_on_label' : 'play_enabled_off_label') }}
+              </button>
+            } @else if (hasOwnCharacter()) {
+              @if (campaignStore.current()?.play_enabled) {
+                <button
+                  (click)="goToPlaySession()"
+                  class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+                >
+                  {{ localeService.t('play_button') }}
+                </button>
+              } @else {
+                <span class="text-sm italic text-slate-arcane px-4 py-2">
+                  {{ localeService.t('play_disabled_wait_master') }}
+                </span>
+              }
             } @else {
               <button
-                (click)="goToCharacters()"
+                (click)="openAddHeroModal()"
                 class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
               >
-                {{ localeService.t('create_character_button') }}
+                {{ localeService.t('add_hero_button') }}
               </button>
             }
           </div>
@@ -150,6 +172,10 @@
       }
       @if (expandedSection() === 'maps') {
         <app-maps [campaignId]="campaignStore.current()!.id"></app-maps>
+      }
+
+      @if (showAddHeroModal()) {
+        <app-add-hero-modal [campaignId]="campaignStore.current()!.id" (closed)="closeAddHeroModal()"></app-add-hero-modal>
       }
     </section>
   }

@@ -6,7 +6,7 @@
     @if (canManage()) {
       <input
         type="text" #captionInput [value]="image().caption ?? ''" (change)="captionSave.emit(captionInput.value)"
-        [placeholder]="localeService.t('map_image_caption_placeholder')"
+        maxlength="30" [placeholder]="localeService.t('map_image_caption_placeholder')"
         class="px-2 py-1 rounded border border-gold/60 bg-fantasy-black/60 text-xs focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
       />
       <button

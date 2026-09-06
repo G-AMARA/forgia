@@ -21,6 +21,34 @@ export const RANK_TIERS: RankTier[] = [
 // assoluta sul calcolo normale (stesso controllo fatto lato DB in get_user_rank).
 export const FATO_RANK: RankTier = { minHours: -1, name: 'Fato', icon: 'icons/fato.png' };
 
+// Quota di PNG creabili in campagna (Npc.createNpc) per rango araldico: 1 per Adepto,
+// poi 3/6/9/12/15/18 di 3 in 3 salendo di rango. Fato (admin) è l'unico caso illimitato,
+// riconosciuto dallo stesso identifier FATO_RANK usato da getRankForSeconds. Deve restare
+// in sync con la function SQL get_npc_creation_limit (vedi sql/2026-09-05_npc_creation_limit.sql),
+// che applica lo stesso limite lato RLS.
+export function npcLimitForTier(tier: RankTier): number {
+  if (tier === FATO_RANK) return Infinity;
+  const index = RANK_TIERS.indexOf(tier);
+  return index <= 0 ? 1 : index * 3;
+}
+
+export function getNpcLimitForSeconds(seconds: number, isAdmin: boolean): number {
+  return npcLimitForTier(getRankForSeconds(seconds, isAdmin));
+}
+
+// Quota di PG creabili nel parco personale (CharacterStore.roster) per rango araldico:
+// 1 per Adepto, poi +1 per ogni rango successivo. Fato (admin) è illimitato, come per
+// npcLimitForTier. Deve restare in sync con la function SQL get_character_creation_limit
+// (vedi sql/2026-09-06_character_roster.sql), che applica lo stesso limite lato RLS.
+export function characterLimitForTier(tier: RankTier): number {
+  if (tier === FATO_RANK) return Infinity;
+  return RANK_TIERS.indexOf(tier) + 1;
+}
+
+export function getCharacterLimitForSeconds(seconds: number, isAdmin: boolean): number {
+  return characterLimitForTier(getRankForSeconds(seconds, isAdmin));
+}
+
 export function getRankForSeconds(seconds: number, isAdmin: boolean): RankTier {
   if (isAdmin) return FATO_RANK;
 

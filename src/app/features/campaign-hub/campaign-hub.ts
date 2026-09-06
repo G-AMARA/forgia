@@ -11,13 +11,14 @@ import { formatDateTime } from '../../core/datetime-local';
 import { Bestiary } from '../bestiary/bestiary';
 import { Npc } from '../npc/npc';
 import { Maps } from '../maps/maps';
+import { AddHeroModal } from './add-hero-modal';
 
 type CampaignSection = 'npc' | 'bestiary' | 'maps';
 
 @Component({
   selector: 'app-campaign-hub',
   standalone: true,
-  imports: [Bestiary, Npc, Maps],
+  imports: [Bestiary, Npc, Maps, AddHeroModal],
   templateUrl: './campaign-hub.html',
 })
 export class CampaignHub {
@@ -52,8 +53,16 @@ export class CampaignHub {
     return this.characterStore.characters().some((c) => c.owner_id === userId);
   });
 
-  goToCharacters() {
-    this.appNav.setTab('characters');
+  // Picker "Aggiungi il tuo Eroe": mostra i PG del parco personale non ancora assegnati
+  // a una campagna (vedi AddHeroModal), invece di creare un PG nuovo direttamente qui.
+  showAddHeroModal = signal(false);
+
+  openAddHeroModal() {
+    this.showAddHeroModal.set(true);
+  }
+
+  closeAddHeroModal() {
+    this.showAddHeroModal.set(false);
   }
 
   // Porta alla pagina "Gioca" (/gioca/:campaignId): il Master la vede sempre (non serve
@@ -96,6 +105,12 @@ export class CampaignHub {
       );
       if(!confirmed) return;
     }
+  }
+
+  togglePlayEnabled() {
+    const campaign = this.campaignStore.current();
+    if (!campaign) return;
+    this.campaignStore.setPlayEnabled(campaign.id, !campaign.play_enabled);
   }
 
   goToManage() {
