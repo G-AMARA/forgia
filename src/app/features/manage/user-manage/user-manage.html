@@ -7,17 +7,17 @@
     <div class="overflow-x-auto">
       <table class="w-full text-sm border-collapse">
         <thead>
-          <tr class="border-b border-gold text-left">
-            <th class="py-2 pr-4">{{ localeService.t('nickname_label') }}</th>
-            <th class="py-2 pr-4">{{ localeService.t('role_label') }}</th>
+          <tr class="border-b border-forge-border-panel text-left">
+            <th class="py-2 pr-4 text-xs uppercase tracking-wide text-forge-label">{{ localeService.t('nickname_label') }}</th>
+            <th class="py-2 pr-4 text-xs uppercase tracking-wide text-forge-label">{{ localeService.t('role_label') }}</th>
           </tr>
         </thead>
         <tbody>
           @for (profile of profiles(); track profile.id) {
-            <tr class="border-b border-gold/20">
+            <tr class="border-b border-forge-border-panel/60">
               <td class="py-2 pr-4">
                 <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-full border border-gold overflow-hidden bg-stone flex items-center justify-center text-lg shrink-0">
+                  <div class="w-8 h-8 rounded-full border border-forge-border-panel overflow-hidden bg-forge-iron flex items-center justify-center text-lg shrink-0">
                     @if (profile.avatar_url) {
                       <img [src]="profile.avatar_url" alt="" class="w-full h-full object-cover" />
                     } @else {
@@ -32,7 +32,7 @@
                   [ngModel]="roleOf(profile)"
                   (ngModelChange)="setRole(profile, $event)"
                   [disabled]="savingId() === profile.id"
-                  class="px-2 py-1 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+                  class="px-2 py-1 rounded input-forge"
                 >
                   <option value="player">{{ localeService.t('role_player') }}</option>
                   <option value="master">{{ localeService.t('role_master') }}</option>

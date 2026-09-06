@@ -27,4 +27,13 @@ export class MonsterDetailCard {
     const modifier = Math.floor((score - 10) / 2);
     return modifier >= 0 ? `+${modifier}` : `${modifier}`;
   }
+
+  // Colore del modificatore in evidenza nella mattonella caratteristica: verde per un
+  // bonus, oro per neutro/negativo (qui non serve il rosso "malus" della scheda
+  // personaggio, è un dato statico da consultare, non uno stato del giocatore).
+  protected abilityModifierClass(score: number | null): string {
+    if (score === null) return 'text-forge-text-sub';
+    const modifier = Math.floor((score - 10) / 2);
+    return modifier > 0 ? 'text-emerald-400' : 'text-forge-gold-glow';
+  }
 }

@@ -1,7 +1,7 @@
 @if (!campaignStore.current()) {
     <p class="text-slate-arcane italic">{{ localeService.t('no_active_campaign') }}</p>
   } @else {
-    <section class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5 space-y-4 max-w-2xl">
+    <section class="panel-forge rounded-lg p-5 space-y-4 max-w-2xl">
       <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('edit_campaign_title') }}</h2>
   
       <form (ngSubmit)="submit()" class="flex flex-col gap-4">

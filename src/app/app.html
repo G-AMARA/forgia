@@ -56,11 +56,14 @@
   </div>
 
   <!-- Header -->
-  <header class="relative bg-header-portal text-fantasy-moonstone border-b-4 border-gold">
+  <header class="relative bg-header-portal text-fantasy-moonstone border-b-4 border-forge-bronze shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
     <div class="px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h1 class="flex items-center">
-        <button type="button" (click)="goToBoard()" title="Torna alla Dashboard" class="flex items-center">
-          <img src="themes/logoForgia.png" alt="Forgia" class="h-9 sm:h-11 w-auto" />
+        <button type="button" (click)="goToBoard()" title="Torna alla Dashboard" class="flex items-center group">
+          <img
+            src="themes/logoForgia.png" alt="Forgia"
+            class="h-9 sm:h-11 w-auto drop-shadow-[0_0_10px_rgba(255,107,0,0.45)] transition-transform group-hover:scale-105"
+          />
         </button>
       </h1>
 
@@ -82,58 +85,96 @@
   </header>
 
    <!-- Navigazione a schede -->
-    <nav class="bg-fantasy-black border-b border-gold">
-      <div class="px-4 py-1 flex items-center justify-between gap-2">
-        <!-- Tab in riga orizzontale da sm: in su -->
-        <div class="hidden sm:flex flex-wrap gap-1">
+    <nav class="bg-forge-obsidian border-b border-forge-iron-light">
+      <div class="px-4 py-1.5 flex items-center justify-between gap-2">
+        <!-- Tab in riga orizzontale da sm: in su. Voce attiva = testo/icona arancio
+        incandescente + "crepa di magma" sotto (.nav-crack), non più un rettangolo pieno. -->
+        <div class="hidden sm:flex flex-nowrap items-center gap-1.5">
           <button
-            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-            [class.border-fantasy-gold]="appNav.activeTab() === 'board'"
-            [class.border-transparent]="appNav.activeTab() !== 'board'"
+            class="nav-tab relative px-2.5 py-2 my-1 flex items-center gap-1.5 whitespace-nowrap font-display text-xs md:text-sm rounded transition-all"
+            [class]="appNav.activeTab() === 'board'
+              ? 'nav-tab-active'
+              : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
             (click)="goToBoard()"
           >
+            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3l7 4v5c0 5-3.5 9-7 10-3.5-1-7-5-7-10V7l7-4z" />
+            </svg>
             {{ localeService.t('tab_board') }}
+            @if (appNav.activeTab() === 'board') { <span class="nav-crack"></span> }
           </button>
           @if (auth.isMaster()) {
             <button
-              class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-              [class.border-fantasy-gold]="appNav.activeTab() === 'campaign'"
-              [class.border-transparent]="appNav.activeTab() !== 'campaign'"
+              class="nav-tab relative px-2.5 py-2 my-1 flex items-center gap-1.5 whitespace-nowrap font-display text-xs md:text-sm rounded transition-all"
+              [class]="appNav.activeTab() === 'campaign'
+                ? 'nav-tab-active'
+                : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
               (click)="appNav.setTab('campaign')"
             >
+              <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z" />
+                <path d="M9 4v14M15 6v14" />
+              </svg>
               {{ localeService.t('tab_campaign') }}
+              @if (appNav.activeTab() === 'campaign') { <span class="nav-crack"></span> }
             </button>
           }
           <button
-            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-            [class.border-fantasy-gold]="appNav.activeTab() === 'characters'"
-            [class.border-transparent]="appNav.activeTab() !== 'characters'"
+            class="nav-tab relative px-2.5 py-2 my-1 flex items-center gap-1.5 whitespace-nowrap font-display text-xs md:text-sm rounded transition-all"
+            [class]="appNav.activeTab() === 'characters'
+              ? 'nav-tab-active'
+              : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
             (click)="appNav.setTab('characters')"
           >
+            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
+              <path d="M13 19l6-6M16 16l4 4M19 21l2-2" />
+              <path d="M9.5 17.5L21 6V3h-3L6.5 14.5" />
+              <path d="M11 19l-6-6M8 16l-4 4M5 21l-2-2" />
+            </svg>
             {{ localeService.t('tab_characters') }}
+            @if (appNav.activeTab() === 'characters') { <span class="nav-crack"></span> }
           </button>
           <button
-            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-            [class.border-fantasy-gold]="appNav.activeTab() === 'catalog'"
-            [class.border-transparent]="appNav.activeTab() !== 'catalog'"
+            class="nav-tab relative px-2.5 py-2 my-1 flex items-center gap-1.5 whitespace-nowrap font-display text-xs md:text-sm rounded transition-all"
+            [class]="appNav.activeTab() === 'catalog'
+              ? 'nav-tab-active'
+              : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
             (click)="appNav.setTab('catalog')"
           >
+            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" />
+              <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" />
+            </svg>
             {{ localeService.t('tab_catalog') }}
+            @if (appNav.activeTab() === 'catalog') { <span class="nav-crack"></span> }
           </button>
           <button
-            class="px-4 py-3 font-display text-sm sm:text-base border-b-4 border-transparent transition-colors"
+            class="nav-tab relative px-2.5 py-2 my-1 flex items-center gap-1.5 whitespace-nowrap font-display text-xs md:text-sm rounded text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px transition-all"
             (click)="openAdventurers()"
           >
+            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 00-3-3.87" />
+              <path d="M16 3.13a4 4 0 010 7.75" />
+            </svg>
             {{ localeService.t('adventurers_button') }}
           </button>
           @if (auth.isAdmin()) {
             <button
-              class="px-4 py-3 font-display text-sm sm:text-base border-b-4 transition-colors"
-              [class.border-fantasy-gold]="appNav.activeTab() === 'manage'"
-              [class.border-transparent]="appNav.activeTab() !== 'manage'"
+              class="nav-tab relative px-2.5 py-2 my-1 flex items-center gap-1.5 whitespace-nowrap font-display text-xs md:text-sm rounded transition-all"
+              [class]="appNav.activeTab() === 'manage'
+                ? 'nav-tab-active'
+                : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
               (click)="appNav.setTab('manage')"
             >
+              <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+              </svg>
               {{ localeService.t('tab_manage') }}
+              @if (appNav.activeTab() === 'manage') { <span class="nav-crack"></span> }
             </button>
           }
         </div>
@@ -144,7 +185,7 @@
          <button
             type="button"
             (click)="mobileNavOpen.set(!mobileNavOpen())"
-            class="flex items-center justify-between gap-1.5 px-2.5 py-1.5 font-display text-[11px] text-gold border border-gold/50 rounded max-w-[150px] whitespace-normal text-left leading-tight"
+            class="flex items-center justify-between gap-1.5 px-2.5 py-1.5 font-display text-[11px] text-forge-bronze border border-forge-iron-light rounded max-w-[150px] whitespace-normal text-left leading-tight"
           >
             {{ mobileTabLabel() }}
             <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -154,60 +195,82 @@
 
           @if (mobileNavOpen()) {
             <button type="button" class="fixed inset-0 z-30 cursor-default" (click)="mobileNavOpen.set(false)" aria-label="Chiudi menu"></button>
-            <div class="absolute left-0 top-full mt-2 w-48 bg-stone-dark border border-gold rounded shadow-lg overflow-hidden z-40">
+            <div class="absolute left-0 top-full mt-2 w-48 bg-forge-stone border border-forge-iron-light rounded shadow-lg overflow-hidden z-40">
               <button
                 type="button"
                 (click)="selectMobileTab('board')"
-                class="w-full text-left px-3 py-2 text-xs uppercase tracking-wide font-display hover:bg-gold hover:text-fantasy-black transition-colors"
-                [class.bg-gold]="appNav.activeTab() === 'board'"
-                [class.text-fantasy-black]="appNav.activeTab() === 'board'"
+                class="w-full flex items-center gap-2 text-left px-3 py-2 text-xs uppercase tracking-wide font-display transition-colors"
+                [class]="appNav.activeTab() === 'board' ? 'bg-forge-iron nav-tab-active' : 'text-forge-text-sub hover:bg-forge-iron/60 hover:text-forge-text-main'"
               >
+                <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 3l7 4v5c0 5-3.5 9-7 10-3.5-1-7-5-7-10V7l7-4z" />
+                </svg>
                 {{ localeService.t('tab_board') }}
               </button>
               @if (auth.isMaster()) {
                 <button
                   type="button"
                   (click)="selectMobileTab('campaign')"
-                  class="w-full text-left px-3 py-2 text-xs uppercase tracking-wide font-display hover:bg-gold hover:text-fantasy-black transition-colors"
-                  [class.bg-gold]="appNav.activeTab() === 'campaign'"
-                  [class.text-fantasy-black]="appNav.activeTab() === 'campaign'"
+                  class="w-full flex items-center gap-2 text-left px-3 py-2 text-xs uppercase tracking-wide font-display transition-colors"
+                  [class]="appNav.activeTab() === 'campaign' ? 'bg-forge-iron nav-tab-active' : 'text-forge-text-sub hover:bg-forge-iron/60 hover:text-forge-text-main'"
                 >
+                  <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z" />
+                    <path d="M9 4v14M15 6v14" />
+                  </svg>
                   {{ localeService.t('tab_campaign') }}
                 </button>
               }
               <button
                 type="button"
                 (click)="selectMobileTab('characters')"
-                class="w-full text-left px-3 py-2 text-xs uppercase tracking-wide font-display hover:bg-gold hover:text-fantasy-black transition-colors"
-                [class.bg-gold]="appNav.activeTab() === 'characters'"
-                [class.text-fantasy-black]="appNav.activeTab() === 'characters'"
+                class="w-full flex items-center gap-2 text-left px-3 py-2 text-xs uppercase tracking-wide font-display transition-colors"
+                [class]="appNav.activeTab() === 'characters' ? 'bg-forge-iron nav-tab-active' : 'text-forge-text-sub hover:bg-forge-iron/60 hover:text-forge-text-main'"
               >
+                <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
+                  <path d="M13 19l6-6M16 16l4 4M19 21l2-2" />
+                  <path d="M9.5 17.5L21 6V3h-3L6.5 14.5" />
+                  <path d="M11 19l-6-6M8 16l-4 4M5 21l-2-2" />
+                </svg>
                 {{ localeService.t('tab_characters') }}
               </button>
               <button
                 type="button"
                 (click)="selectMobileTab('catalog')"
-                class="w-full text-left px-3 py-2 text-xs uppercase tracking-wide font-display hover:bg-gold hover:text-fantasy-black transition-colors"
-                [class.bg-gold]="appNav.activeTab() === 'catalog'"
-                [class.text-fantasy-black]="appNav.activeTab() === 'catalog'"
+                class="w-full flex items-center gap-2 text-left px-3 py-2 text-xs uppercase tracking-wide font-display transition-colors"
+                [class]="appNav.activeTab() === 'catalog' ? 'bg-forge-iron nav-tab-active' : 'text-forge-text-sub hover:bg-forge-iron/60 hover:text-forge-text-main'"
               >
+                <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" />
+                  <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" />
+                </svg>
                 {{ localeService.t('tab_catalog') }}
               </button>
               <button
                 type="button"
                 (click)="openAdventurers()"
-                class="w-full text-left px-3 py-2 text-xs uppercase tracking-wide font-display hover:bg-gold hover:text-fantasy-black transition-colors"
+                class="w-full flex items-center gap-2 text-left px-3 py-2 text-xs uppercase tracking-wide font-display text-forge-text-sub hover:bg-forge-iron/60 hover:text-forge-text-main transition-colors"
               >
+                <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                  <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
                 {{ localeService.t('adventurers_button') }}
               </button>
               @if (auth.isAdmin()) {
                 <button
                   type="button"
                   (click)="selectMobileTab('manage')"
-                  class="w-full text-left px-3 py-2 text-xs uppercase tracking-wide font-display hover:bg-gold hover:text-fantasy-black transition-colors"
-                  [class.bg-gold]="appNav.activeTab() === 'manage'"
-                  [class.text-fantasy-black]="appNav.activeTab() === 'manage'"
+                  class="w-full flex items-center gap-2 text-left px-3 py-2 text-xs uppercase tracking-wide font-display transition-colors"
+                  [class]="appNav.activeTab() === 'manage' ? 'bg-forge-iron nav-tab-active' : 'text-forge-text-sub hover:bg-forge-iron/60 hover:text-forge-text-main'"
                 >
+                  <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                  </svg>
                   {{ localeService.t('tab_manage') }}
                 </button>
               }
@@ -215,27 +278,25 @@
           }
         </div>
 
-        <!-- DESTRA: Pulsante Lancia Dadi e Selettore Lingua (Responsive) -->
+        <!-- DESTRA: Pulsante Lancia Dadi (lingotto arroventato) e Selettore Lingua -->
         <div class="flex items-center gap-3 shrink-0">
          <button
             (click)="openDiceRollerModal()"
-            class="px-2.5 py-1.5 sm:px-3 sm:py-2 bg-fantasy-gold hover:bg-gold-bright text-fantasy-black text-[10px] sm:text-sm uppercase tracking-wider rounded-lg shadow-lg transition-all hover:scale-[1.02] active:scale-95 z-20 whitespace-normal max-w-[75px] sm:max-w-none text-center leading-tight flex items-center justify-center"
+            class="px-3 py-1.5 sm:px-4 sm:py-2 bg-linear-to-r from-orange-600 via-amber-500 to-orange-600 bg-size-[200%_100%] hover:bg-position-[100%_0] text-forge-obsidian font-bold text-[10px] sm:text-sm uppercase tracking-wider rounded-lg glow-ember transition-all hover:scale-[1.03] active:scale-95 z-20 whitespace-normal max-w-[75px] sm:max-w-none text-center leading-tight flex items-center justify-center"
           >
             {{ localeService.t('tab_dice_roller') }}
           </button>
-          <div class="flex border border-gold rounded overflow-hidden text-sm shrink-0">
+          <div class="flex border border-forge-iron-light rounded overflow-hidden text-sm shrink-0">
             <button
-              class="px-3 py-1"
-              [class.bg-gold]="localeService.locale() === 'it'"
-              [class.text-fantasy-black]="localeService.locale() === 'it'"
+              class="px-3 py-1 transition-colors"
+              [class]="localeService.locale() === 'it' ? 'bg-forge-bronze text-forge-obsidian' : 'text-forge-text-sub hover:text-forge-text-main'"
               (click)="setLocale('it')"
             >
               IT
             </button>
             <button
-              class="px-3 py-1"
-              [class.bg-gold]="localeService.locale() === 'en'"
-              [class.text-fantasy-black]="localeService.locale() === 'en'"
+              class="px-3 py-1 transition-colors"
+              [class]="localeService.locale() === 'en' ? 'bg-forge-bronze text-forge-obsidian' : 'text-forge-text-sub hover:text-forge-text-main'"
               (click)="setLocale('en')"
             >
               EN

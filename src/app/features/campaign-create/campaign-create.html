@@ -44,7 +44,7 @@
     }
   
     @if (auth.isMaster()) {
-      <div class="bg-fantasy-black/60 border-2 border-gold rounded-lg p-5">
+      <div class="panel-forge rounded-lg p-5">
         <h3 class="font-display text-lg text-fantasy-moonstone mb-4">{{ localeService.t('create_campaign_title') }}</h3>
   
         <form (ngSubmit)="submit()" class="flex flex-col gap-4">

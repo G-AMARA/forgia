@@ -5,7 +5,7 @@
       type="search"
       [(ngModel)]="searchTerm"
       [placeholder]="localeService.t('search_campaigns_placeholder')"
-      class="w-full sm:w-72 px-3 py-2 rounded border border-gold bg-fantasy-black/60 text-fantasy-moonstone text-sm focus:outline-none focus:ring-2 focus:ring-gold-bright"
+      class="w-full sm:w-72 px-3 py-2 rounded input-forge text-sm"
     />
 
     @if (loading()) {
@@ -18,7 +18,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (campaign of filteredCampaigns(); track campaign.id) {
           <div
-            class="relative flex flex-col text-left border-2 border-gold rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all bg-fantasy-black/60 min-h-80"
+            class="group relative flex flex-col text-left border-2 border-forge-iron-light rounded-lg overflow-hidden bg-forge-stone shadow-lg transition-all min-h-80 hover:border-forge-amber hover:shadow-[0_0_15px_rgba(255,107,0,0.3)] hover:-translate-y-1"
           >
             @if (auth.user()?.id === campaign.ownerId || auth.isAdmin()) {
               <button
@@ -31,7 +31,7 @@
 
             <button (click)="enterCampaign(campaign)" class="flex flex-col flex-1 text-left">
               <!-- Copertina -->
-              <div class="h-44 shrink-0 bg-gradient-to-br" [class]="campaign.cover.gradient">
+              <div class="h-44 shrink-0 bg-linear-to-br" [class]="campaign.cover.gradient">
                 <img
                   [src]="getCoverImagePath(campaign.cover)"
                   [alt]="campaign.cover.label"
@@ -42,44 +42,45 @@
               <!-- Corpo -->
               <div class="p-4 flex flex-col gap-2 flex-1">
                 <div class="flex items-center justify-between gap-2">
-                  <h3 class="font-display text-lg text-fantasy-moonstone">{{ campaign.name }}</h3>
+                  <h3 class="font-display text-lg text-forge-bronze">{{ campaign.name }}</h3>
+                  <!-- Sigillo di ferro: badge inciso, bordo ramato su fondo scuro contrastante -->
                   <span
-                    class="shrink-0 text-[0.6rem] uppercase tracking-wide px-1.5 py-0.5 rounded border"
-                    [class]="campaign.isPublic ? 'border-forest text-forest' : 'border-slate-arcane text-slate-arcane'"
+                    class="shrink-0 font-display text-[0.6rem] uppercase tracking-wide px-1.5 py-0.5 rounded border bg-forge-obsidian shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)]"
+                    [class]="campaign.isPublic ? 'border-forest text-forest' : 'border-forge-bronze text-forge-bronze'"
                   >
                     {{ localeService.t(campaign.isPublic ? 'campaign_public_label' : 'campaign_private_label') }}
                   </span>
                 </div>
-                <p class="text-xs text-slate-arcane">
+                <p class="text-xs text-forge-text-sub">
                   {{ localeService.t('master_label') }}: <strong>{{ campaign.masterNickname }}</strong>
                 </p>
 
                 @if (campaign.description) {
-                  <p class="text-sm italic opacity-80">{{ campaign.description }}</p>
+                  <p class="text-sm italic text-forge-text-main/80 font-body">{{ campaign.description }}</p>
                 }
 
                 <div class="flex flex-wrap gap-1.5 text-[0.65rem]">
                   <span
-                    class="px-2 py-0.5 rounded-full border"
+                    class="font-display px-2 py-0.5 rounded-full border bg-forge-obsidian shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)]"
                     [class]="{
                       active: 'border-forest text-forest',
-                      paused: 'border-fantasy-gold text-fantasy-gold',
-                      completed: 'border-slate-arcane text-slate-arcane'
+                      paused: 'border-forge-bronze text-forge-bronze',
+                      completed: 'border-forge-text-sub text-forge-text-sub'
                     }[campaign.status]"
                   >
                     {{ localeService.t('campaign_status_' + campaign.status) }}
                   </span>
                   @if (formatNextSession(campaign.nextSessionAt); as nextSession) {
-                    <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">📅 {{ nextSession }}</span>
+                    <span class="px-2 py-0.5 rounded-full bg-forge-iron text-forge-text-main">📅 {{ nextSession }}</span>
                   }
-                  <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">
+                  <span class="px-2 py-0.5 rounded-full bg-forge-iron text-forge-text-main">
                     {{ localeService.t('level_label') }} {{ campaign.startingLevel }}
                   </span>
                 </div>
 
-                <div class="mt-auto pt-2 border-t border-gold/40 flex justify-between items-center">
+                <div class="mt-auto pt-2 border-t border-forge-iron-light flex justify-between items-center">
                   <span
-                    class="flex items-center gap-1 text-xs px-2 py-1 bg-gold/20 rounded-full text-fantasy-moonstone"
+                    class="flex items-center gap-1 text-xs px-2 py-1 bg-forge-iron rounded-full text-forge-text-main"
                     [attr.title]="localeService.t('characters_label')"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" [attr.aria-label]="localeService.t('characters_label')" role="img">
@@ -88,7 +89,7 @@
                     </svg>
                     {{ campaign.characterCount }}@if (campaign.maxPlayers) {/{{ campaign.maxPlayers }}}
                   </span>
-                  <span class="text-xs text-fantasy-gold underline">{{ localeService.t('enter_campaign') }}</span>
+                  <span class="text-xs font-semibold text-forge-amber-glow underline group-hover:text-forge-amber transition-colors">{{ localeService.t('enter_campaign') }}</span>
                 </div>
               </div>
             </button>

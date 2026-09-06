@@ -158,30 +158,30 @@
           <button
             type="button"
             (click)="toggleSection('npc')"
-            class="border border-gold/50 rounded-lg p-4 text-center cursor-pointer hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
-            [class.border-gold-bright]="expandedSection() === 'npc'"
+            class="compendium-tab rounded-lg p-4 text-center transition-all"
+            [class]="expandedSection() === 'npc' ? 'compendium-tab-active' : 'text-forge-text-sub hover:text-[#f0ebd8]'"
           >
-            <p class="font-display text-sm text-fantasy-moonstone">🧑 {{ localeService.t('npc_title') }}</p>
+            <p class="font-display text-sm">🧑 {{ localeService.t('npc_title') }}</p>
           </button>
         }
         @if (isOwner() || auth.isAdmin()) {
           <button
             type="button"
             (click)="toggleSection('bestiary')"
-            class="border border-gold/50 rounded-lg p-4 text-center cursor-pointer hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
-            [class.border-gold-bright]="expandedSection() === 'bestiary'"
+            class="compendium-tab rounded-lg p-4 text-center transition-all"
+            [class]="expandedSection() === 'bestiary' ? 'compendium-tab-active' : 'text-forge-text-sub hover:text-[#f0ebd8]'"
           >
-            <p class="font-display text-sm text-fantasy-moonstone">🐲 {{ localeService.t('bestiary_title') }}</p>
+            <p class="font-display text-sm">🐲 {{ localeService.t('bestiary_title') }}</p>
           </button>
         }
         @if (isOwner() || auth.isAdmin()) {
           <button
             type="button"
             (click)="toggleSection('maps')"
-            class="border border-gold/50 rounded-lg p-4 text-center cursor-pointer hover:bg-fantasy-black/80 hover:border-gold-bright transition-colors"
-            [class.border-gold-bright]="expandedSection() === 'maps'"
+            class="compendium-tab rounded-lg p-4 text-center transition-all"
+            [class]="expandedSection() === 'maps' ? 'compendium-tab-active' : 'text-forge-text-sub hover:text-[#f0ebd8]'"
           >
-            <p class="font-display text-sm text-fantasy-moonstone">🗺️ {{ localeService.t('maps_title') }}</p>
+            <p class="font-display text-sm">🗺️ {{ localeService.t('maps_title') }}</p>
           </button>
         }
       </div>

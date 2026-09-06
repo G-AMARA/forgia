@@ -2,7 +2,7 @@
   <div class="flex items-center gap-2">
     <button
       (click)="back.emit()"
-      class="shrink-0 text-xs px-3 py-1 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+      class="shrink-0 text-xs px-3 py-1 border border-forge-border-panel rounded text-forge-text-sub hover:text-forge-text-main hover:border-forge-iron-light transition-colors"
     >
       ← {{ localeService.t('back_to_albums_button') }}
     </button>
@@ -10,9 +10,9 @@
   </div>
 
   @if (canManage()) {
-    <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center bg-fantasy-black/40 border border-gold/40 rounded p-3">
+    <div class="compendium-card flex flex-col sm:flex-row gap-2 items-start sm:items-center p-3">
       <label
-        class="text-xs px-3 py-2 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors shrink-0"
+        class="text-xs px-3 py-2 border border-forge-border-panel rounded cursor-pointer text-forge-text-sub hover:border-forge-amber hover:text-forge-amber-glow transition-colors shrink-0"
         [class.opacity-50]="uploading()"
       >
         {{ uploading() ? localeService.t('loading') : localeService.t('choose_image_label') }}
@@ -20,7 +20,7 @@
       </label>
       <input
         type="text" [(ngModel)]="captionDraft" maxlength="30" [placeholder]="localeService.t('map_image_caption_placeholder')"
-        class="flex-1 w-full px-3 py-2 rounded border border-gold bg-fantasy-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+        class="flex-1 w-full px-3 py-2 rounded input-forge text-sm"
       />
     </div>
   }

@@ -1,32 +1,66 @@
 @import "tailwindcss";
 
 @theme {
-  /* Palette "Modern D&D Fantasy Portal" (da template.md) */
-  --color-fantasy-black: #1c1c21;
-  --color-fantasy-blue: #354a6a;
-  /* Blu più scuro di fantasy-blue, stesso valore già usato come stop centrale dei gradienti
-     (.bg-header-portal, .parchment-panel): qui è l'inchiostro delle pagine del "libro" arma. */
-  --color-fantasy-blue-deep: #243245;
-  --color-fantasy-gold: #c7a45e;
-  --color-fantasy-moonstone: #b8c0c8;
+  /* Palette "Cuore di Fucina" (Ember, Obsidian, Cast Iron & Glowing Bronze).
+     Sostituisce la precedente "Modern D&D Fantasy Portal" (blu/oro, da template.md). */
+  --color-forge-obsidian: #121214;
+  --color-forge-stone: #1a191c;
+  --color-forge-iron: #2b282e;
+  --color-forge-iron-light: #423e47;
+  --color-forge-amber: #ff6b00;
+  --color-forge-amber-glow: #ff9d42;
+  --color-forge-bronze: #c59b27;
+  --color-forge-text-main: #f0ebd8;
+  --color-forge-text-sub: #a39b8b;
+
+  /* Correzione contrasto/profondità: niente più nero piatto né "gabbia" di bordi dorati a
+     1px su ogni pannello/campo. Oro/ambra restano riservati a tab attiva e :focus. */
+  /* Ardesia calda per schede e pannelli (sostituisce bg-fantasy-black/60 come sfondo scheda). */
+  --color-forge-slate: #1e1c22;
+  /* Cuoio scuro / pergamena bruciata: sfondo dei campi input/select/textarea, deve
+     staccare nettamente dal ferro/pietra del pannello (.panel-forge) che li contiene. */
+  --color-forge-input: #241e1a;
+  /* Rame/bronzo antico: bordo dei campi input (non più border-gold). */
+  --color-forge-border-soft: #544336;
+  /* Acciaio scuro battuto: bordo dei pannelli/form (sostituisce border-gold sui contenitori). */
+  --color-forge-border-panel: #4a4154;
+  /* Etichette/titoletti: grigio-argento leggibile, non oro scuro. */
+  --color-forge-label: #a8a0b0;
+  /* Bronzo/rame opaco per il bordo del pannello "Informazioni Personaggio". */
+  --color-forge-copper-muted: #5e4d3b;
+  /* Oro pallido per i VALORI di testo (distinto dall'ambra acceso dei bagliori/hover). */
+  --color-forge-gold-glow: #f5e3bb;
+  /* Bordo metallico scuro per il pannello "Informazioni Personaggio". */
+  --color-forge-border-dark: #332f38;
+  /* Tessera cuoio/bronzo per i toggle di selezione (competenze, tag): stato non selezionato. */
+  --color-forge-leather: #2e2722;
+  --color-forge-leather-border: #4a3e35;
+  /* Stato selezionato dei toggle: bronzo/arancio incandescente. */
+  --color-forge-ember-select: #cc5200;
+  /* Placeholder dei campi di input: argento scuro, visibile ma distinto dal testo digitato. */
+  --color-forge-placeholder: #8c8275;
+
+  /* Alias dei token storici sulla nuova palette: ogni classe già in uso nei componenti
+     (bg-fantasy-black, text-gold, border-gold, text-slate-arcane, ecc.) eredita il tema
+     "Fucina" senza dover riscrivere ogni file uno per uno. */
+  --color-fantasy-black: var(--color-forge-obsidian);
+  --color-fantasy-blue: var(--color-forge-iron-light);
+  --color-fantasy-blue-deep: var(--color-forge-iron);
+  --color-fantasy-gold: var(--color-forge-bronze);
+  --color-fantasy-moonstone: var(--color-forge-text-main);
   --color-fantasy-green: #283732;
   --color-fantasy-red: #8d1b1b;
 
-  /* Token esistenti, ripuntati sui nuovi valori: stesso ruolo (bordo/accento dorato,
-     pannello scuro, testo secondario), tema scuro invece di pergamena chiara. */
-  --color-gold: #c7a45e;
-  --color-gold-bright: #d8bd85;
-  /* Oro più scuro/bronzeo: per icone su bottoni già dorati, dove serve un tono più
-     profondo del fondo per leggersi come incise/incastonate invece che sovrapposte. */
-  --color-gold-dark: #8a6a35;
-  /* Oro quasi bianco: lo stesso nucleo della punta luminosa della barra XP
-     (.glow-gold-intense). Usato per testo che deve staccarsi da uno sfondo già dorato. */
-  --color-gold-glow: #f5e3bb;
-  --color-stone: #1c1c21;
-  --color-stone-dark: #131316;
-  --color-slate-arcane: #838d97;
-  /* Per la scritta "ramata" delle monete di rame: bronzo-ramato, leggibile su sfondo scuro. */
-  --color-copper: #c2764a;
+  --color-gold: var(--color-forge-bronze);
+  --color-gold-bright: var(--color-forge-amber-glow);
+  /* Bronzo più scuro del fondo: per icone su bottoni già dorati, dove serve un tono più
+     profondo per leggersi come incise/incastonate invece che sovrapposte. */
+  --color-gold-dark: #8a5a1f;
+  --color-gold-glow: var(--color-forge-gold-glow);
+  --color-stone: var(--color-forge-stone);
+  --color-stone-dark: var(--color-forge-obsidian);
+  --color-slate-arcane: var(--color-forge-text-sub);
+  --color-copper: var(--color-forge-bronze);
   /* Più chiaro del fantasy-green ufficiale (#283732): quel valore è illeggibile come
      testo su sfondo quasi nero, qui serve per stati funzionali (successo, modificatore positivo). */
   --color-forest: #4f8f6b;
@@ -48,7 +82,9 @@ button:not(:disabled) {
 }
 
 body {
-  background-color: var(--color-fantasy-black);
+  /* Nero ghisa: leggermente più scuro/freddo di --color-forge-obsidian, per dare
+     profondità dietro ai pannelli in ferro (.panel-forge) che vi galleggiano sopra. */
+  background-color: #111012;
   color: var(--color-fantasy-moonstone);
   font-family: var(--font-body);
 }
@@ -94,19 +130,271 @@ select option {
   background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 60%);
 }
 
-/* Elevazione: ombra morbida singola */
-.panel-carved {
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.35),
-    0 8px 10px -6px rgba(0, 0, 0, 0.25);
+/* Texture "pietra vulcanica scura", generata via SVG noise inline (feTurbulence +
+   feColorMatrix, codificato base64) invece di un PNG esterno: nessun asset da caricare.
+   Il noise (ultimo layer, in cima) dà la grana ruvida della roccia; i due radial-gradient
+   sotto danno profondità (un filo di luce in alto a sinistra, buio verso i margini). */
+.bg-texture-stone {
+  background-color: #18171a;
+  background-image:
+    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxODAnIGhlaWdodD0nMTgwJz48ZmlsdGVyIGlkPSduJz48ZmVUdXJidWxlbmNlIHR5cGU9J2ZyYWN0YWxOb2lzZScgYmFzZUZyZXF1ZW5jeT0nMC45JyBudW1PY3RhdmVzPSc0JyBzdGl0Y2hUaWxlcz0nc3RpdGNoJy8+PGZlQ29sb3JNYXRyaXggdHlwZT0nbWF0cml4JyB2YWx1ZXM9JzAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAuMDkgMCcvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPScxMDAlJyBoZWlnaHQ9JzEwMCUnIGZpbHRlcj0ndXJsKCNuKScvPjwvc3ZnPgo="),
+    radial-gradient(ellipse at 25% 15%, rgba(255, 255, 255, 0.04), transparent 55%),
+    radial-gradient(ellipse at 50% 50%, #1d1c1f 0%, #121113 100%);
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, cover, cover;
 }
 
-/* Gradienti atmosferici (template.md sezione 2) */
+/* Texture "pergamena/carta scura": base ancora più scura di .bg-texture-stone, vignettatura
+   morbida verso il centro e la stessa tecnica di grana SVG ma più tenue, per restare
+   leggibile dietro testo e campi di input. Riusabile ovunque serva uno sfondo "di carta"
+   invece che pietra (pannelli dati, input, select, textarea). */
+.bg-texture-paper-dark {
+  background-color: #141316;
+  background-image:
+    url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNjAnIGhlaWdodD0nMTYwJz48ZmlsdGVyIGlkPSduJz48ZmVUdXJidWxlbmNlIHR5cGU9J2ZyYWN0YWxOb2lzZScgYmFzZUZyZXF1ZW5jeT0nMC42JyBudW1PY3RhdmVzPScyJyBzdGl0Y2hUaWxlcz0nc3RpdGNoJy8+PGZlQ29sb3JNYXRyaXggdHlwZT0nbWF0cml4JyB2YWx1ZXM9JzAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAuMDUgMCcvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPScxMDAlJyBoZWlnaHQ9JzEwMCUnIGZpbHRlcj0ndXJsKCNuKScvPjwvc3ZnPgo="),
+    radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0.025), transparent 65%),
+    linear-gradient(180deg, #17161a 0%, #141316 60%, #100f12 100%);
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-size: 160px 160px, cover, cover;
+}
+
+/* Scheda/pannello di form (Dashboard Gestione): gradiente ferro scuro -> pietra vulcanica,
+   bordo in acciaio battuto e ombra profonda che lo stacca dal nero ghisa della pagina
+   sottostante. Non più nero piatto né "gabbia" di bordo dorato: l'oro resta riservato a
+   tab attiva e stato :focus dei campi. */
+.panel-forge {
+  background-image: linear-gradient(180deg, #211e24 0%, #17151a 100%);
+  border: 1px solid var(--color-forge-border-panel);
+  box-shadow:
+    0 15px 35px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Campo input/select/textarea: cuoio scuro / pergamena bruciata, volutamente più caldo e
+   più chiaro del ferro/pietra di .panel-forge che lo contiene, per creare stacco netto di
+   materiale (non solo di tono). Incassato (ombra interna marcata), bordo rame/bronzo
+   antico. Il bagliore ambra/magma compare solo a :focus. */
+.input-forge {
+  background-color: var(--color-forge-input);
+  border: 1px solid var(--color-forge-border-soft);
+  color: #f2e8d8;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.7);
+}
+.input-forge:focus {
+  outline: none;
+  border-color: var(--color-forge-amber);
+  box-shadow:
+    0 0 10px rgba(255, 102, 0, 0.5),
+    inset 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Styling universale "Fucina" per QUALSIASI campo di inserimento dati dell'app, non solo
+   dove è stata applicata esplicitamente .input-forge: decine di form storici (wizard
+   Personaggio, Campagna, ricerca, modali) hanno ancora le vecchie classi Tailwind
+   "border-gold bg-fantasy-black/40" sparse nel markup. Riscriverle una per una in ogni
+   file è inutile: qui si forza lo stesso aspetto (cuoio incassato + focus magma) su ogni
+   <input>/<select>/<textarea> reale dell'app via selettore di tag, senza toccare l'HTML
+   esistente. checkbox/radio/file/submit/button sono esclusi perché quasi sempre
+   ristilizzati a mano (es. i chip .chip-forge nascondono la checkbox reale). */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]),
+select,
+textarea {
+  background-color: var(--color-forge-input) !important;
+  border: 1px solid var(--color-forge-border-soft) !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.7) !important;
+  color: #f2e8d8 !important;
+  font-family: var(--font-body), serif !important;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"])::placeholder,
+textarea::placeholder {
+  color: var(--color-forge-placeholder) !important;
+  opacity: 1 !important;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-forge-amber) !important;
+  box-shadow:
+    0 0 10px rgba(255, 102, 0, 0.5),
+    inset 0 2px 4px rgba(0, 0, 0, 0.8) !important;
+  outline: none !important;
+}
+
+/* Toggle di selezione (competenze, tag): tessera cuoio/bronzo a riposo, bronzo/arancio
+   incandescente con bagliore quando selezionata. Da abbinare a [class.is-selected]. */
+.chip-forge {
+  background-color: var(--color-forge-leather);
+  border: 1px solid var(--color-forge-leather-border);
+  color: var(--color-forge-text-sub);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+.chip-forge.is-selected {
+  background-color: var(--color-forge-ember-select);
+  border-color: var(--color-forge-ember-select);
+  color: #1a1006;
+  box-shadow: 0 0 10px rgba(204, 82, 0, 0.55);
+}
+
+/* Pannello "Informazioni Personaggio": il fondo arriva da .bg-texture-paper-dark (da
+   abbinare in HTML), qui solo lo stacco netto dal fondo scheda tramite bordo metallico
+   scuro e una leggera ombra incassata aggiuntiva. */
+.panel-character-info {
+  border: 1px solid var(--color-forge-border-dark);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Pannello "Diario dell'Avventuriero" (Storia del Personaggio): pietra scura/cuoio
+   profondo coordinato con .parchment-panel del pannello Privilegi a sinistra, non più la
+   pergamena PNG chiara (cromaticamente stonata col tema Fucina, testo bianco illeggibile
+   sopra un'immagine di sfondo chiara). Il riflesso dorato in alto (inset top-highlight) dà
+   la sensazione di un oggetto rilegato in metallo, non un rettangolo piatto. */
+.lore-journal-panel {
+  background-color: #18151a;
+  border: 1px solid #3d3242;
+  border-radius: 0.5rem;
+  box-shadow:
+    inset 0 1px 0 rgba(216, 168, 83, 0.12),
+    inset 0 0 20px rgba(0, 0, 0, 0.8),
+    0 10px 25px rgba(0, 0, 0, 0.7);
+  padding: 2.5rem;
+}
+
+/* Area di testo interna scrollabile: scrollbar sottile e bronzo scuro invece di quella
+   dorata standard dell'app (regola globale su `*` in cima al file) o di quella di sistema. */
+.lore-scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: #4a3a2a transparent;
+}
+.lore-scroll-area::-webkit-scrollbar {
+  width: 4px;
+}
+.lore-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lore-scroll-area::-webkit-scrollbar-thumb {
+  background: #4a3a2a;
+  border-radius: 9999px;
+}
+
+/* Capolettera: solo sul testo renderizzato in lettura (::first-letter non esiste su un
+   <textarea>, che è un form control senza rendering tipografico interno). */
+.lore-dropcap::first-letter {
+  font-family: var(--font-display);
+  color: #d8a853;
+  font-size: 2.2rem;
+  line-height: 1;
+  float: left;
+  margin-right: 8px;
+}
+
+/* "Compendio" del modulo Campagna: contenitore condiviso da PNG, Bestiario e Mappe (prima
+   .bestiary-compendium, usato solo dal Bestiario) per carta + blocco dati (prima riquadri
+   scollegati, carta isolata nel vuoto e dati piatti sotto). Toni caldi ghisa/pietra
+   vulcanica: i valori precedenti (#1f1c24, #4a3f52) avevano il canale blu più alto di
+   rosso/verde, virando visibilmente verso il viola. Il padding vive in HTML (p-6), qui solo
+   sfondo/bordo/ombra. */
+.compendium-card {
+  background: linear-gradient(180deg, #1a1614 0%, #120f0e 100%);
+  border: 1px solid #3d3128;
+  border-radius: 0.5rem;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* Tab di selezione sezione (PNG / Bestiario / Mappe): tessera in cuoio scuro quando attiva.
+   outline/box-shadow azzerati esplicitamente per rimuovere l'anello di focus nativo del
+   browser (blu su Chrome/Edge, giallastro su alcuni temi di sistema), sostituito da un
+   anello bronzo solo per navigazione da tastiera (:focus-visible). */
+.compendium-tab {
+  outline: none;
+  box-shadow: none;
+  border: 1px solid transparent;
+}
+.compendium-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(197, 155, 39, 0.5);
+}
+.compendium-tab-active {
+  background-color: #2b221b;
+  border-color: #6e553a;
+  color: #ff7700;
+}
+
+/* Tessera valore principale (Classe Armatura / Punti Ferita / Velocità nel Bestiario,
+   Relazione/Luogo nel PNG, ecc.): cuoio scuro con bordo bronzo, un dato da leggere a colpo
+   d'occhio, non un campo di input. */
+.compendium-stat-tile {
+  background-color: #28211c;
+  border: 1px solid var(--color-forge-copper-muted);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+}
+
+/* Mattonella caratteristica (FOR/DES/COS/INT/SAG/CAR): sfondo scuro compatto, distinto sia
+   dalle tessere CA/PF/Velocità (cuoio) sia dal pannello (ferro/pietra) che le contiene. */
+.bestiary-ability-tile {
+  background-color: #1a171d;
+  border: 1px solid var(--color-forge-border-panel);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+}
+
+/* Box testo descrittivo (tratti del mostro, personalità/segreti del PNG, lore del luogo):
+   leggero stacco dal fondo del pannello padre, testo avorio ereditato dai discendenti
+   (incluse le voci di .monster-trait-list). */
+.compendium-info-box {
+  background-color: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--color-forge-border-panel);
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+}
+
+/* Navbar principale: stato attivo come "incisione di magma" invece del vecchio rettangolo
+   pieno. .nav-tab-active colora testo+icona (stroke="currentColor" nelle icone eredita lo
+   stesso arancio) con un bagliore; .nav-crack è la crepa incandescente sotto la voce
+   attiva, assolutamente posizionata rispetto al bottone (che ha .nav-tab → position:
+   relative). */
+.nav-tab {
+  position: relative;
+}
+.nav-tab-active {
+  color: #ff7700;
+  filter: drop-shadow(0 0 6px rgba(255, 119, 0, 0.6));
+}
+.nav-crack {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, #ff5500, #ffaa00, #ff5500, transparent);
+  filter: drop-shadow(0 0 4px rgba(255, 119, 0, 0.7));
+}
+
+/* Elevazione: ombra morbida singola + riflesso ambrato appena percettibile sul bordo
+   superiore, come se il pannello fosse ancora tiepido di fucina. */
+.panel-carved {
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.5),
+    0 8px 10px -6px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 157, 66, 0.05);
+}
+
+/* Gradienti atmosferici "Cuore di Fucina": niente più stop blu, solo roccia vulcanica,
+   ferro brunito e un bagliore di magma che risale dal basso. */
 .bg-header-portal {
-  background-image: linear-gradient(to bottom, #1c1c21 0%, #243245 50%, #354a6a 100%);
+  background-image:
+    radial-gradient(120% 70% at 50% 100%, rgba(255, 107, 0, 0.22), transparent 70%),
+    linear-gradient(to bottom, #121214 0%, #1f1c1f 55%, #2b282e 100%);
 }
 .bg-body-portal {
-  background-image: linear-gradient(to bottom right, #2f3e58 0%, #354a6a 50%, #9e8a5b 100%);
+  background-image: radial-gradient(circle at center, #1a191c 0%, #121214 55%, #08080a 100%);
 }
 
 /* Bordo superiore del footer: non una linea retta né una singola diagonale, ma un
@@ -123,14 +411,15 @@ select option {
     inset 0 -1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* Cornice "medievale": doppio bordo dorato + ombra incassata. Sostituisce le illustrazioni
-   di sfondo nei riquadri caratteristica del tab Generale (solo testo, niente immagini). */
+/* Cornice "metallo battuto a caldo": doppio bordo bronzo antico + ombra incassata marcata,
+   come una piastra di ferro forgiata a mano. Sostituisce le illustrazioni di sfondo nei
+   riquadri caratteristica del tab Generale (solo testo, niente immagini). */
 .frame-medieval {
-  border: 3px double var(--color-gold-bright);
+  border: 3px double var(--color-forge-bronze);
   box-shadow:
-    0 0 0 1px rgba(199, 164, 94, 0.3),
-    inset 0 2px 8px rgba(0, 0, 0, 0.6),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(197, 155, 39, 0.35),
+    inset 0 2px 10px rgba(0, 0, 0, 0.7),
+    inset 0 -1px 0 rgba(255, 157, 66, 0.08);
 }
 
 /* Pergamena: i dati anagrafici del personaggio come se fossero scritti a inchiostro su un
@@ -139,13 +428,13 @@ select option {
    niente marrone inventato, resta nella palette esistente. */
 .parchment-panel {
   background:
-    radial-gradient(circle at 15% 15%, rgba(199, 164, 94, 0.16), transparent 55%),
-    radial-gradient(circle at 85% 75%, rgba(199, 164, 94, 0.12), transparent 50%),
-    linear-gradient(160deg, #1c1c21 0%, #243245 55%, #354a6a 100%);
-  border: 1px solid rgba(199, 164, 94, 0.35);
+    radial-gradient(circle at 15% 15%, rgba(197, 155, 39, 0.16), transparent 55%),
+    radial-gradient(circle at 85% 75%, rgba(255, 107, 0, 0.1), transparent 50%),
+    linear-gradient(160deg, #121214 0%, #1f1c1f 55%, #2b282e 100%);
+  border: 1px solid rgba(197, 155, 39, 0.35);
   box-shadow:
     inset 0 0 30px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 0 rgba(255, 157, 66, 0.05);
 }
 
 /* Papiro srotolato: come .parchment-panel, con due rulli (sopra/sotto) più stretti al
@@ -155,10 +444,10 @@ select option {
 .papyrus-scroll {
   position: relative;
   background:
-    radial-gradient(circle at 25% 10%, rgba(199, 164, 94, 0.12), transparent 50%),
-    linear-gradient(180deg, #1c1c21 0%, #243245 100%);
-  border-left: 1px solid rgba(199, 164, 94, 0.3);
-  border-right: 1px solid rgba(199, 164, 94, 0.3);
+    radial-gradient(circle at 25% 10%, rgba(197, 155, 39, 0.12), transparent 50%),
+    linear-gradient(180deg, #121214 0%, #1f1c1f 100%);
+  border-left: 1px solid rgba(197, 155, 39, 0.3);
+  border-right: 1px solid rgba(197, 155, 39, 0.3);
   box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
 }
 .papyrus-scroll::before,
@@ -182,24 +471,34 @@ select option {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* Bagliori (template.md sezione 3) */
+/* Bagliori: tono bronzo per i bordi dorati "freddi" (araldica, cornici), tono ember per i
+   punti focali che devono sembrare scaldati dal fuoco (bottoni primari, hover di selezione). */
 .glow-gold {
-  box-shadow: 0 0 15px rgba(199, 164, 94, 0.7);
-  filter: drop-shadow(0 0 5px rgba(199, 164, 94, 0.9));
+  box-shadow: 0 0 15px rgba(197, 155, 39, 0.7);
+  filter: drop-shadow(0 0 5px rgba(197, 155, 39, 0.9));
 }
 /* Variante più intensa di .glow-gold: nucleo quasi bianco-oro + doppio alone più ampio.
    Usata per punti focali piccoli (es. la punta della barra XP) che devono "bruciare"
    più del bordo dorato standard dei pannelli. */
 .glow-gold-intense {
   box-shadow:
-    0 0 6px 2px rgba(245, 227, 187, 0.95),
-    0 0 18px 6px rgba(216, 189, 133, 0.85),
-    0 0 34px 12px rgba(199, 164, 94, 0.55);
-  filter: drop-shadow(0 0 10px rgba(216, 189, 133, 0.95));
+    0 0 6px 2px rgba(255, 157, 66, 0.95),
+    0 0 18px 6px rgba(197, 155, 39, 0.85),
+    0 0 34px 12px rgba(197, 155, 39, 0.55);
+  filter: drop-shadow(0 0 10px rgba(255, 157, 66, 0.95));
 }
-.glow-blue {
-  box-shadow: 0 0 15px rgba(53, 74, 106, 0.7);
-  filter: drop-shadow(0 0 5px rgba(53, 74, 106, 0.9));
+/* Bagliore "magma": box-shadow radiale arancio/ambra, effetto oggetto scaldato dal fuoco.
+   Per il bottone Lancia i Dadi e per gli hover/stati attivi dei pannelli in primo piano. */
+.glow-ember {
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
+  filter: drop-shadow(0 0 5px rgba(255, 107, 0, 0.8));
+}
+.glow-ember-intense {
+  box-shadow:
+    0 0 6px 2px rgba(255, 157, 66, 0.95),
+    0 0 18px 6px rgba(255, 107, 0, 0.85),
+    0 0 34px 12px rgba(255, 107, 0, 0.55);
+  filter: drop-shadow(0 0 10px rgba(255, 157, 66, 0.95));
 }
 
 /* "Libro" dei dettagli arma (tab Armi): un'illustrazione di sfondo (cornice dorata +

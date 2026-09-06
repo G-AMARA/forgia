@@ -1,11 +1,11 @@
-<div class="space-y-4 p-4 border border-gold/50 rounded-lg bg-fantasy-black/40">
+<div class="space-y-4">
   <div class="flex items-center justify-between flex-wrap gap-2">
     <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_title') }}</h3>
-    @if (canManage()) {
+    @if (canManage() && selectedMonsters().length === 0) {
       <button
         type="button"
         (click)="openPicker()"
-        class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
+        class="text-sm px-4 py-2 bg-forge-bronze text-forge-obsidian font-bold rounded hover:bg-forge-amber-glow transition-colors"
       >
         {{ localeService.t('bestiary_select_monsters_button') }}
       </button>
@@ -17,42 +17,58 @@
       {{ canManage() ? localeService.t('bestiary_no_selection_hint') : localeService.t('bestiary_empty_state') }}
     </p>
   } @else {
-    <!-- Raccoglitore di carte: effetto "cards" di Swiper (mazzo sfogliabile con le dita
-         o con le frecce), ogni mostro è una carta in stile TCG (immagine + cartiglio nome). -->
-    <div class="flex justify-center">
-      <swiper-container
-        init="true"
-        effect="cards"
-        grab-cursor="true"
-        navigation="true"
-        style="--swiper-navigation-color: #c7a45e"
-        class="block w-full max-w-60 aspect-3/4"
-        (swiperslidechange)="onSlideChange($event)"
-      >
-        @for (monster of selectedMonsters(); track monster.id) {
-          <swiper-slide class="flex flex-col rounded-2xl overflow-hidden border-4 border-gold bg-fantasy-black shadow-lg shadow-black/50">
-            <div class="flex-1 min-h-0 bg-fantasy-black/60 flex items-center justify-center overflow-hidden">
-              @if (monster.image_url) {
-                <img [src]="monster.image_url" [alt]="monster.name" class="w-full h-full object-cover" />
-              } @else {
-                <span class="text-slate-arcane text-5xl">🐲</span>
-              }
-            </div>
-            <div class="shrink-0 px-2 py-1.5 bg-linear-to-t from-fantasy-black to-fantasy-black/90 border-t-2 border-gold text-center">
-              <p class="font-display text-sm text-fantasy-gold truncate">{{ monster.name }}</p>
-              <p class="text-[10px] text-slate-arcane truncate">
-                {{ monster.type }}{{ monster.challenge_rating ? ' · GS ' + monster.challenge_rating : '' }}
-              </p>
-            </div>
-          </swiper-slide>
-        }
-      </swiper-container>
-    </div>
+    <!-- Compendio del Bestiario: carta (sinistra) + blocco dati (destra) come un unico
+         pannello in ferro/pietra vulcanica, non più due riquadri impilati e scollegati. -->
+    <div class="compendium-card grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
+      <div class="lg:col-span-4 flex flex-col items-center gap-3">
+        <!-- Raccoglitore di carte: effetto "cards" di Swiper (mazzo sfogliabile con le dita
+             o con le frecce), ogni mostro è una carta in stile TCG (immagine + cartiglio nome). -->
+        <swiper-container
+          init="true"
+          effect="cards"
+          grab-cursor="true"
+          navigation="true"
+          style="--swiper-navigation-color: #ff9d42; --swiper-navigation-size: 22px"
+          class="block w-full max-w-60 aspect-3/4"
+          (swiperslidechange)="onSlideChange($event)"
+        >
+          @for (monster of selectedMonsters(); track monster.id) {
+            <swiper-slide class="flex flex-col rounded-2xl overflow-hidden border-4 border-gold bg-fantasy-black shadow-lg shadow-black/50">
+              <div class="flex-1 min-h-0 bg-fantasy-black/60 flex items-center justify-center overflow-hidden">
+                @if (monster.image_url) {
+                  <img [src]="monster.image_url" [alt]="monster.name" class="w-full h-full object-cover" />
+                } @else {
+                  <span class="text-slate-arcane text-5xl">🐲</span>
+                }
+              </div>
+              <div class="shrink-0 px-2 py-1.5 bg-linear-to-t from-fantasy-black to-fantasy-black/90 border-t-2 border-gold text-center">
+                <p class="font-display text-sm text-fantasy-gold truncate">{{ monster.name }}</p>
+                <p class="text-[10px] text-slate-arcane truncate">
+                  {{ monster.type }}{{ monster.challenge_rating ? ' · GS ' + monster.challenge_rating : '' }}
+                </p>
+              </div>
+            </swiper-slide>
+          }
+        </swiper-container>
 
-    <!-- Pannello dettagli del mostro in cima al mazzo -->
-    @if (selectedMonster(); as monster) {
-      <app-monster-detail-card [monster]="monster" [canPlaceOnMap]="canPlaceOnMap()" (placeOnMap)="placeOnMap(monster)" />
-    }
+        @if (canManage()) {
+          <button
+            type="button"
+            (click)="openPicker()"
+            class="w-full max-w-60 text-sm px-4 py-2 bg-forge-bronze text-forge-obsidian font-bold rounded hover:bg-forge-amber-glow transition-colors"
+          >
+            {{ localeService.t('bestiary_select_monsters_button') }}
+          </button>
+        }
+      </div>
+
+      <!-- Pannello dettagli del mostro in cima al mazzo -->
+      <div class="lg:col-span-8">
+        @if (selectedMonster(); as monster) {
+          <app-monster-detail-card [monster]="monster" [canPlaceOnMap]="canPlaceOnMap()" (placeOnMap)="placeOnMap(monster)" />
+        }
+      </div>
+    </div>
   }
 </div>
 

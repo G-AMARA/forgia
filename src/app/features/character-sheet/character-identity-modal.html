@@ -3,7 +3,7 @@
        sull'intero schermo, non sulla larghezza della colonna stretta che la contiene nel
        DOM (dove le altre @sm:/@lg: della scheda si adattano invece via container query). -->
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm" (click)="identity.cancelEdit()">
-    <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone" (click)="$event.stopPropagation()">
+    <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto panel-forge rounded-lg p-6 text-fantasy-moonstone" (click)="$event.stopPropagation()">
       <h2 class="font-display text-2xl text-fantasy-gold mb-4">{{ localeService.t('edit_character_title') }}</h2>
 
       <div class="flex flex-col gap-4">

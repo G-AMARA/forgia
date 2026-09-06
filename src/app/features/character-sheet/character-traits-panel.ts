@@ -9,7 +9,7 @@ import { CharacterPrivilegesPanel } from './character-privileges-panel';
   selector: 'app-character-traits-panel',
   imports: [CharacterAbilityScores, CharacterPrivilegesPanel],
   template: `
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4 h-full">
       <app-character-ability-scores />
       <app-character-privileges-panel />
     </div>

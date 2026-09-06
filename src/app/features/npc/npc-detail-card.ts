@@ -18,10 +18,11 @@ export class NpcDetailCard {
 
   readonly placeOnMap = output<void>();
 
-  protected attitudeClass(attitude: NpcAttitude | null): string {
-    if (attitude === 'friendly') return 'border-forest text-forest';
-    if (attitude === 'hostile') return 'border-red-500 text-red-400';
-    if (attitude === 'neutral') return 'border-fantasy-gold text-fantasy-gold';
-    return '';
+  // Colore del valore in evidenza nella tessera .compendium-stat-tile (la tessera stessa
+  // fa già da badge, qui serve solo il colore del testo).
+  protected attitudeTextClass(attitude: NpcAttitude | null): string {
+    if (attitude === 'friendly') return 'text-forest';
+    if (attitude === 'hostile') return 'text-red-400';
+    return 'text-forge-gold-glow';
   }
 }

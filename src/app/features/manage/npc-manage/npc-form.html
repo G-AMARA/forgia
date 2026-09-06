@@ -3,7 +3,7 @@
   (click)="cancel()"
 >
   <div
-    class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-stone-textured panel-carved border-2 border-gold rounded-lg p-6 text-fantasy-moonstone"
+    class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto panel-forge rounded-lg p-6 text-fantasy-moonstone"
     (click)="$event.stopPropagation()"
   >
     <h2 class="font-display text-2xl text-fantasy-gold mb-4">
@@ -17,9 +17,9 @@
           <img [src]="imageUrl" alt="" class="w-20 h-20 rounded object-cover border-2 border-gold-bright" />
         }
         <div class="flex flex-col gap-1">
-          <label class="text-xs font-semibold">{{ localeService.t('npc_image_label') }}</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-forge-label">{{ localeService.t('npc_image_label') }}</label>
           <label
-            class="text-xs px-3 py-1.5 border border-gold rounded cursor-pointer hover:bg-gold hover:text-fantasy-black transition-colors self-start"
+            class="text-xs px-3 py-1.5 border border-forge-border-panel rounded cursor-pointer hover:border-forge-amber hover:text-forge-amber-glow transition-colors self-start"
             [class.opacity-50]="imageUploading()"
           >
             {{ imageUploading() ? localeService.t('loading') : localeService.t('upload_image_button') }}
@@ -30,31 +30,31 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('npc_name_label') }} <span class="text-red-300">*</span></label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-forge-label">{{ localeService.t('npc_name_label') }} <span class="text-red-300">*</span></label>
           <input
             type="text" [(ngModel)]="name" name="name" required
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            class="px-3 py-2 rounded input-forge"
           />
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('npc_role_label') }}</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-forge-label">{{ localeService.t('npc_role_label') }}</label>
           <input
             type="text" [(ngModel)]="title" name="title" placeholder="Locandiere, Capitano della Guardia..."
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            class="px-3 py-2 rounded input-forge"
           />
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('npc_location_label') }}</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-forge-label">{{ localeService.t('npc_location_label') }}</label>
           <input
             type="text" [(ngModel)]="location" name="location" placeholder="Locanda del Grifone, Gilda dei Ladri..."
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            class="px-3 py-2 rounded input-forge"
           />
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('npc_attitude_label') }}</label>
+          <label class="text-xs font-semibold uppercase tracking-wide text-forge-label">{{ localeService.t('npc_attitude_label') }}</label>
           <select
             [(ngModel)]="attitude" name="attitude"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
+            class="px-3 py-2 rounded input-forge"
           >
             <option value="">—</option>
             @for (a of attitudes; track a) {
@@ -65,23 +65,23 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold">{{ localeService.t('npc_description_label') }}</label>
+        <label class="text-xs font-semibold uppercase tracking-wide text-forge-label">{{ localeService.t('npc_description_label') }}</label>
         <textarea
           [(ngModel)]="description" name="description" rows="5"
-          class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-y"
+          class="px-3 py-2 rounded input-forge resize-y"
         ></textarea>
       </div>
 
-      <div class="flex justify-end gap-2 pt-2 border-t border-gold/30">
+      <div class="flex justify-end gap-2 pt-2 border-t border-forge-border-panel">
         <button
           type="button" (click)="cancel()"
-          class="px-4 py-2 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
+          class="px-4 py-2 border border-forge-border-panel text-forge-text-sub rounded hover:text-forge-text-main hover:border-forge-iron-light transition-colors"
         >
           {{ localeService.t('cancel_button') }}
         </button>
         <button
           type="submit" [disabled]="loading()"
-          class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
+          class="px-4 py-2 bg-forge-bronze text-forge-obsidian font-display font-bold rounded hover:bg-forge-amber-glow transition-colors disabled:opacity-50"
         >
           {{ editingNpc ? localeService.t('save_changes_button') : localeService.t('npc_add_button') }}
         </button>

@@ -1,34 +1,45 @@
-<div class="border-2 border-gold rounded-lg p-4 bg-fantasy-black/60 space-y-3">
+<div class="space-y-4">
   <div class="flex items-start justify-between gap-2 flex-wrap">
     <div>
-      <h4 class="font-display text-xl text-fantasy-gold">{{ npc().name }}</h4>
+      <h4 class="font-display text-2xl text-forge-gold-glow">{{ npc().name }}</h4>
       @if (npc().title) {
-        <p class="text-xs italic text-slate-arcane">{{ npc().title }}</p>
+        <p class="text-sm italic text-[#e6dfd5]/80 font-body">{{ npc().title }}</p>
       }
     </div>
     @if (canPlaceOnMap()) {
       <button
         type="button"
         (click)="placeOnMap.emit()"
-        class="text-xs px-3 py-1.5 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors shrink-0"
+        class="text-xs px-3 py-1.5 bg-forge-bronze text-forge-obsidian font-bold rounded hover:bg-forge-amber-glow transition-colors shrink-0"
       >
         🗺️ {{ localeService.t('play_place_npc_button') }}
       </button>
     }
   </div>
 
-  <div class="flex flex-wrap gap-2 text-xs">
-    @if (npc().location) {
-      <span class="px-2 py-0.5 rounded-full bg-gold/20 text-fantasy-moonstone">📍 {{ npc().location }}</span>
-    }
+  <!-- Badge valori: Relazione col party e Luogo, le due tessere realmente disponibili nel
+       modello dati del PNG (non esiste ancora un campo "Ceto"). -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     @if (npc().attitude) {
-      <span class="px-2 py-0.5 rounded-full border" [class]="attitudeClass(npc().attitude)">
-        {{ localeService.t('npc_attitude_' + npc().attitude) }}
-      </span>
+      <div class="compendium-stat-tile">
+        <span class="block text-[0.65rem] uppercase tracking-wide text-forge-label">{{ localeService.t('npc_attitude_label') }}</span>
+        <span class="block font-display text-lg font-bold" [class]="attitudeTextClass(npc().attitude)">
+          {{ localeService.t('npc_attitude_' + npc().attitude) }}
+        </span>
+      </div>
+    }
+    @if (npc().location) {
+      <div class="compendium-stat-tile">
+        <span class="block text-[0.65rem] uppercase tracking-wide text-forge-label">{{ localeService.t('npc_location_label') }}</span>
+        <span class="block font-display text-lg font-bold text-forge-gold-glow">📍 {{ npc().location }}</span>
+      </div>
     }
   </div>
 
   @if (npc().description) {
-    <p class="text-sm whitespace-pre-line">{{ npc().description }}</p>
+    <div class="compendium-info-box">
+      <h5 class="font-display text-sm text-forge-bronze uppercase tracking-wide mb-1">{{ localeService.t('npc_description_label') }}</h5>
+      <p class="text-sm whitespace-pre-line text-[#e6dfd5]">{{ npc().description }}</p>
+    </div>
   }
 </div>
