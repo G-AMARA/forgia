@@ -1,0 +1,62 @@
+<article
+  class="group relative rounded-xl overflow-hidden panel-forge transition-all hover:-translate-y-1 hover:shadow-2xl"
+  [class.ring-2]="isActive()" [class.ring-fantasy-gold]="isActive()" [class.glow-gold]="isActive()"
+>
+  <div class="relative h-32 bg-gradient-to-br" [class]="cover().gradient">
+    <img [src]="getCoverImagePath(cover())" [alt]="cover().label" class="w-full h-full object-cover" />
+    <div class="absolute inset-0 bg-gradient-to-t from-fantasy-black via-fantasy-black/10 to-transparent"></div>
+
+    @if (isActive()) {
+      <span class="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-fantasy-gold text-fantasy-black text-[0.65rem] font-display font-semibold tracking-wide shadow glow-gold">
+        ★ {{ localeService.t('active_label') }}
+      </span>
+    }
+
+    <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full border text-[0.65rem] font-semibold backdrop-blur-sm" [class]="statusBadgeClass()">
+      {{ localeService.t('campaign_status_' + campaign().status) }}
+    </span>
+
+    <h3 class="absolute bottom-2 left-3 right-3 font-display text-lg text-fantasy-moonstone [text-shadow:0_2px_4px_rgba(0,0,0,0.9)] truncate">
+      {{ campaign().name }}
+    </h3>
+  </div>
+
+  <div class="p-4 space-y-3">
+    @if (campaign().description) {
+      <p class="text-xs italic text-slate-arcane line-clamp-2">{{ campaign().description }}</p>
+    }
+
+    <div class="flex flex-wrap gap-1.5 text-[0.65rem]">
+      @if (nextSession(); as session) {
+        <span class="px-2 py-0.5 rounded-full bg-gold/10 text-fantasy-moonstone">📅 {{ session }}</span>
+      }
+      @if (campaign().max_players) {
+        <span class="px-2 py-0.5 rounded-full bg-gold/10 text-fantasy-moonstone">👥 {{ campaign().max_players }}</span>
+      }
+      <span class="px-2 py-0.5 rounded-full bg-gold/10 text-fantasy-moonstone">
+        {{ localeService.t('level_label') }} {{ campaign().starting_level }}
+      </span>
+    </div>
+
+    <div class="flex gap-2 pt-1">
+      @if (!isActive()) {
+        <button
+          type="button" (click)="select.emit()"
+          class="flex-1 text-xs px-3 py-2 rounded border border-gold text-fantasy-gold hover:bg-fantasy-gold hover:text-fantasy-black transition-colors font-display tracking-wide"
+        >
+          {{ localeService.t('enter_campaign') }}
+        </button>
+      } @else {
+        <span class="flex-1 text-xs px-3 py-2 rounded border border-fantasy-gold/40 text-center text-fantasy-gold/70 italic">
+          {{ localeService.t('active_campaign_label') }}
+        </span>
+      }
+      <button
+        type="button" (click)="remove.emit()"
+        class="text-xs px-3 py-2 rounded border border-red-800/60 text-red-300 hover:bg-red-900/60 hover:text-white transition-colors"
+      >
+        {{ localeService.t('delete_button') }}
+      </button>
+    </div>
+  </div>
+</article>

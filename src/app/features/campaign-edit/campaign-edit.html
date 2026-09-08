@@ -1,119 +1,34 @@
 @if (!campaignStore.current()) {
-    <p class="text-slate-arcane italic">{{ localeService.t('no_active_campaign') }}</p>
-  } @else {
-    <section class="panel-forge rounded-lg p-5 space-y-4 max-w-2xl">
-      <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('edit_campaign_title') }}</h2>
-  
-      <form (ngSubmit)="submit()" class="flex flex-col gap-4">
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('campaign_name_label') }}</label>
-          <input
-            type="text" name="name" [(ngModel)]="name" required
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-          />
-        </div>
-  
-        <div class="flex flex-col gap-1">
-          <label class="text-sm font-semibold">{{ localeService.t('campaign_description_label') }}</label>
-          <textarea
-            name="description" [(ngModel)]="description" rows="5" [maxlength]="maxDescriptionLength"
-            class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
-          ></textarea>
-          <span class="text-xs text-slate-arcane self-end">
-            {{ description.length }} / {{ maxDescriptionLength }}
-          </span>
-        </div>
-  
-        <div class="flex flex-col gap-2">
-          <label class="text-sm font-semibold">{{ localeService.t('cover_label') }}</label>
-          <div class="flex flex-wrap gap-2">
-            @for (cover of covers; track cover.key) {
-              <button
-                type="button"
-                (click)="coverKey = cover.key"
-                class="w-16 h-16 rounded-lg overflow-hidden border-2 transition-transform"
-                [class.border-fantasy-gold]="coverKey === cover.key"
-                [class.border-gold]="coverKey !== cover.key"
-                [class.scale-110]="coverKey === cover.key"
-                [title]="cover.label"
-              >
-                <img [src]="getCoverImagePath(cover)" [alt]="cover.label" class="w-full h-full object-cover" />
-              </button>
-            }
-          </div>
-        </div>
-  
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('campaign_status_label') }}</label>
-            <select [(ngModel)]="status" name="status" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
-              @for (s of statuses; track s) {
-                <option [value]="s">{{ localeService.t('campaign_status_' + s) }}</option>
-              }
-            </select>
-          </div>
+  <p class="text-slate-arcane italic">{{ localeService.t('no_active_campaign') }}</p>
+} @else {
+  <section class="space-y-6 max-w-4xl mx-auto">
+    <div class="space-y-1">
+      <button
+        type="button" (click)="goToHub()"
+        class="inline-flex items-center gap-1.5 text-sm text-slate-arcane hover:text-fantasy-gold transition-colors"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        </svg>
+        {{ localeService.t('back_to_hub_button') }}
+      </button>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('next_session_label') }}</label>
-            <input
-              type="datetime-local" name="nextSessionAt" [(ngModel)]="nextSessionAtLocal"
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-            />
-          </div>
+      <h2 class="font-display text-2xl uppercase tracking-wide text-fantasy-moonstone">
+        {{ localeService.t('edit_campaign_title') }} · <span class="text-fantasy-gold">{{ campaignStore.current()?.name }}</span>
+      </h2>
+    </div>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('max_players_label') }}</label>
-            <input
-              type="number" min="1" name="maxPlayers" [(ngModel)]="maxPlayers"
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-            />
-          </div>
+    <app-campaign-edit-form (saved)="goToHub()" (cancelled)="goToHub()"></app-campaign-edit-form>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('starting_level_label') }}</label>
-            <input
-              type="number" min="1" max="20" name="startingLevel" [(ngModel)]="startingLevel"
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-            />
-          </div>
-        </div>
-
-        <label class="flex items-center gap-2 text-sm font-semibold">
-          <input type="checkbox" name="isPublic" [(ngModel)]="isPublic" />
-          {{ localeService.t('campaign_public_label') }}
-        </label>
-
-        @if (auth.isAdmin()) {
-          <div class="flex flex-col gap-1 border-t border-gold/30 pt-4">
-            <label class="text-sm font-semibold">{{ localeService.t('master_label') }}</label>
-            <select
-              [(ngModel)]="ownerId" name="ownerId"
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-            >
-              @for (profile of gmOptions(); track profile.id) {
-                <option [value]="profile.id">{{ profile.nickname ?? profile.id }}</option>
-              }
-            </select>
-          </div>
-        }
-
-        <div class="flex gap-3">
-          <button
-            type="submit" [disabled]="loading()"
-            class="px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
-          >
-            {{ localeService.t('save_changes_button') }}
-          </button>
-  
-          <button
-            type="button" (click)="deleteCampaign()"
-            class="px-5 py-2 border border-red-300 text-red-300 rounded hover:bg-red-800 hover:text-white transition-colors"
-          >
-            {{ localeService.t('delete_button') }}
-          </button>
-        </div>
-  
-      </form>
-    </section>
-  }
-  
+    <div class="rounded-lg border border-red-900/50 bg-red-950/10 p-5 space-y-3">
+      <h4 class="font-display text-sm text-red-300 uppercase tracking-wide">⚠ {{ localeService.t('danger_zone_title') }}</h4>
+      <p class="text-xs text-slate-arcane">{{ localeService.t('danger_zone_delete_hint') }}</p>
+      <button
+        type="button" (click)="deleteCampaign()"
+        class="text-sm px-4 py-2 border border-red-700 text-red-300 rounded hover:bg-red-900/70 hover:text-white transition-colors"
+      >
+        {{ localeService.t('delete_campaign_button') }}
+      </button>
+    </div>
+  </section>
+}

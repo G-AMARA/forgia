@@ -404,7 +404,10 @@ export class CharacterStore {
     const { error } = await this.supabase.client.from('characters').delete().eq('id', characterId);
 
     if (!error) {
-      await this.loadForActiveCampaign();
+      // Cancella sia un PG base (colonna sinistra della Fucina, roster/forgeBases) sia un clone
+      // in campagna (roster della campagna attiva): ricarica entrambi, indipendentemente da
+      // quale dei due fosse characterId, altrimenti la lista non coinvolta resta stale.
+      await Promise.all([this.loadMyRoster(), this.loadForActiveCampaign()]);
     }
 
     return { error };

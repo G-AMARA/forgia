@@ -1,0 +1,100 @@
+<div class="panel-forge rounded-lg p-6 space-y-6">
+  <h3 class="font-display text-xl text-fantasy-gold">⚒️ {{ localeService.t('create_campaign_title') }}</h3>
+
+  <form (ngSubmit)="submit()" class="space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+      <!-- Colonna sinistra: info principali e visual -->
+      <div class="space-y-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-forge-label">{{ localeService.t('campaign_name_label') }}</label>
+          <input type="text" name="name" [(ngModel)]="name" required class="px-3 py-2 rounded" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-forge-label">{{ localeService.t('campaign_description_label') }}</label>
+          <textarea
+            name="description" [(ngModel)]="description" rows="4" [maxlength]="maxDescriptionLength"
+            class="px-3 py-2 rounded resize-none"
+          ></textarea>
+          <span class="text-xs text-slate-arcane self-end">{{ description.length }} / {{ maxDescriptionLength }}</span>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-semibold text-forge-label">{{ localeService.t('cover_label') }}</label>
+          <app-campaign-cover-picker [(coverKey)]="coverKey"></app-campaign-cover-picker>
+        </div>
+      </div>
+
+      <!-- Colonna destra: impostazioni e regole -->
+      <div class="compendium-card p-4 space-y-4">
+        <h4 class="font-display text-sm text-fantasy-gold uppercase tracking-wide">{{ localeService.t('campaign_settings_title') }}</h4>
+
+        <div class="flex flex-col gap-1">
+          <label class="flex items-center gap-1.5 text-sm font-semibold text-forge-label">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+            {{ localeService.t('campaign_status_label') }}
+          </label>
+          <select [(ngModel)]="status" name="status" class="px-3 py-2 rounded">
+            @for (s of statuses; track s) {
+              <option [value]="s">{{ localeService.t('campaign_status_' + s) }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="flex items-center gap-1.5 text-sm font-semibold text-forge-label">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            {{ localeService.t('next_session_label') }}
+          </label>
+          <input type="datetime-local" name="nextSessionAt" [(ngModel)]="nextSessionAtLocal" class="px-3 py-2 rounded" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="flex items-center gap-1.5 min-h-10 text-sm font-semibold text-forge-label">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+              {{ localeService.t('max_players_label') }}
+            </label>
+            <input type="number" min="1" name="maxPlayers" [(ngModel)]="maxPlayers" class="px-3 py-2 rounded" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="flex items-center gap-1.5 min-h-10 text-sm font-semibold text-forge-label">
+              <span class="shrink-0">🎲</span>
+              {{ localeService.t('starting_level_label') }}
+            </label>
+            <input type="number" min="1" max="20" name="startingLevel" [(ngModel)]="startingLevel" class="px-3 py-2 rounded" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-forge-border-panel">
+          <span class="text-sm font-semibold text-forge-label">{{ localeService.t('campaign_public_label') }}</span>
+          <button
+            type="button" role="switch" [attr.aria-checked]="isPublic" (click)="togglePublic()"
+            class="relative w-11 h-6 rounded-full transition-colors shrink-0"
+            [class.bg-fantasy-gold]="isPublic" [class.bg-forge-iron]="!isPublic"
+          >
+            <span
+              class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+              [class.translate-x-5]="isPublic"
+            ></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="submit" [disabled]="loading()"
+      class="w-full sm:w-auto sm:mx-auto flex justify-center items-center gap-2 px-10 py-3 rounded-lg font-display text-lg tracking-wide text-fantasy-black bg-gradient-to-r from-fantasy-gold via-gold-bright to-fantasy-gold border border-gold-bright shadow-lg hover:shadow-[0_0_25px_rgba(255,157,66,0.6)] hover:brightness-110 transition-all disabled:opacity-50 disabled:hover:shadow-lg"
+    >
+      ⚔️ {{ localeService.t('create_campaign_button') }}
+    </button>
+  </form>
+</div>

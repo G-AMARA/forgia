@@ -1,0 +1,55 @@
+<div class="panel-forge rounded-lg p-6 space-y-6">
+  <form (ngSubmit)="submit()" class="space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+      <!-- Colonna sinistra: info principali e visual -->
+      <div class="space-y-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-forge-label">{{ localeService.t('campaign_name_label') }}</label>
+          <input type="text" name="name" [(ngModel)]="name" required class="px-3 py-2 rounded" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-semibold text-forge-label">{{ localeService.t('campaign_description_label') }}</label>
+          <textarea
+            name="description" [(ngModel)]="description" rows="4" [maxlength]="maxDescriptionLength"
+            class="px-3 py-2 rounded resize-none"
+          ></textarea>
+          <span class="text-xs text-slate-arcane self-end">{{ description.length }} / {{ maxDescriptionLength }}</span>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-semibold text-forge-label">{{ localeService.t('cover_label') }}</label>
+          <app-campaign-cover-picker [(coverKey)]="coverKey"></app-campaign-cover-picker>
+        </div>
+      </div>
+
+      <!-- Colonna destra: impostazioni e regole -->
+      <app-campaign-settings-panel
+        [(status)]="status"
+        [(nextSessionAtLocal)]="nextSessionAtLocal"
+        [(maxPlayers)]="maxPlayers"
+        [(startingLevel)]="startingLevel"
+        [(isPublic)]="isPublic"
+        [(ownerId)]="ownerId"
+        [showGmSelector]="auth.isAdmin()"
+        [gmOptions]="gmOptions()"
+      ></app-campaign-settings-panel>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+      <button
+        type="submit" [disabled]="loading()"
+        class="px-10 py-3 rounded-lg font-display text-lg tracking-wide text-fantasy-black bg-gradient-to-r from-fantasy-gold via-gold-bright to-fantasy-gold border border-gold-bright shadow-lg hover:shadow-[0_0_25px_rgba(255,157,66,0.6)] hover:brightness-110 transition-all disabled:opacity-50"
+      >
+        ⚔️ {{ localeService.t('save_changes_button') }}
+      </button>
+      <button
+        type="button" (click)="cancel()"
+        class="px-8 py-3 rounded-lg font-display text-sm tracking-wide border border-gold/40 text-slate-arcane hover:text-fantasy-gold hover:border-gold transition-colors"
+      >
+        {{ localeService.t('cancel_button') }}
+      </button>
+    </div>
+  </form>
+</div>

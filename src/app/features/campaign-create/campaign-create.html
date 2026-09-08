@@ -1,142 +1,28 @@
-<section class="space-y-6">
-    <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('campaigns_title') }}</h2>
-  
+<section class="space-y-8">
+  <h2 class="font-display text-3xl text-fantasy-gold">{{ localeService.t('campaigns_title') }}</h2>
+
+  <div>
+    <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('your_campaigns') }}</h3>
+
     @if (campaignStore.campaigns().length > 0) {
-      <div>
-        <h3 class="font-display text-lg text-fantasy-moonstone mb-3">{{ localeService.t('your_campaigns') }}</h3>
-        <ul class="space-y-2">
-          @for (campaign of campaignStore.campaigns(); track campaign.id) {
-            <li
-              class="flex items-center justify-between gap-3 p-3 rounded border-2 bg-fantasy-black/60"
-              [class.border-fantasy-gold]="campaignStore.current()?.id === campaign.id"
-              [class.border-gold]="campaignStore.current()?.id !== campaign.id"
-            >
-              <div class="flex items-center gap-2">
-                @if (campaignStore.current()?.id === campaign.id) {
-                  <span class="w-2.5 h-2.5 rounded-full bg-forest inline-block" title="Campagna attiva"></span>
-                }
-                <span class="font-semibold">{{ campaign.name }}</span>
-                @if (campaignStore.current()?.id === campaign.id) {
-                  <em class="text-xs text-fantasy-gold">({{ localeService.t('active_label') }})</em>
-                }
-              </div>
-  
-              <div class="flex gap-2 shrink-0">
-                @if (campaignStore.current()?.id !== campaign.id) {
-                  <button
-                    (click)="campaignStore.selectCampaign(campaign)"
-                    class="text-xs px-3 py-1 border border-gold rounded hover:bg-gold hover:text-fantasy-black transition-colors"
-                  >
-                    {{ localeService.t('select_button') }}
-                  </button>
-                }
-                <button
-                  (click)="deleteCampaign(campaign.id, campaign.name)"
-                  class="text-xs px-3 py-1 border border-red-300 text-red-300 rounded hover:bg-red-800 hover:text-white transition-colors"
-                >
-                  {{ localeService.t('delete_button') }}
-                </button>
-              </div>
-            </li>
-          }
-        </ul>
-      </div>
-    }
-  
-    @if (auth.isMaster()) {
-      <div class="panel-forge rounded-lg p-5">
-        <h3 class="font-display text-lg text-fantasy-moonstone mb-4">{{ localeService.t('create_campaign_title') }}</h3>
-  
-        <form (ngSubmit)="submit()" class="flex flex-col gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('campaign_name_label') }}</label>
-            <input
-              type="text" name="name" [(ngModel)]="name" required
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-            />
-          </div>
-  
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold">{{ localeService.t('campaign_description_label') }}</label>
-            <textarea
-              name="description" [(ngModel)]="description" rows="5" [maxlength]="maxDescriptionLength"
-              class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold resize-none"
-            ></textarea>
-            <span class="text-xs text-slate-arcane self-end">
-              {{ description.length }} / {{ maxDescriptionLength }}
-            </span>
-          </div>
-  
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold">{{ localeService.t('cover_label') }}</label>
-            <div class="flex flex-wrap gap-2">
-              @for (cover of covers; track cover.key) {
-                <button
-                  type="button"
-                  (click)="coverKey = cover.key"
-                  class="w-14 h-14 rounded-lg overflow-hidden border-2 transition-transform"
-                  [class.border-fantasy-gold]="coverKey === cover.key"
-                  [class.border-gold]="coverKey !== cover.key"
-                  [class.scale-110]="coverKey === cover.key"
-                  [title]="cover.label"
-                >
-                  <img [src]="getCoverImagePath(cover)" [alt]="cover.label" class="w-full h-full object-cover" />
-                </button>
-              }
-            </div>
-          </div>
-  
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('campaign_status_label') }}</label>
-              <select [(ngModel)]="status" name="status" class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold">
-                @for (s of statuses; track s) {
-                  <option [value]="s">{{ localeService.t('campaign_status_' + s) }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('next_session_label') }}</label>
-              <input
-                type="datetime-local" name="nextSessionAt" [(ngModel)]="nextSessionAtLocal"
-                class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-              />
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('max_players_label') }}</label>
-              <input
-                type="number" min="1" name="maxPlayers" [(ngModel)]="maxPlayers"
-                class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-              />
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ localeService.t('starting_level_label') }}</label>
-              <input
-                type="number" min="1" max="20" name="startingLevel" [(ngModel)]="startingLevel"
-                class="px-3 py-2 rounded border border-gold bg-fantasy-black/40 focus:outline-none focus:ring-2 focus:ring-fantasy-gold"
-              />
-            </div>
-          </div>
-
-          <label class="flex items-center gap-2 text-sm font-semibold">
-            <input type="checkbox" name="isPublic" [(ngModel)]="isPublic" />
-            {{ localeService.t('campaign_public_label') }}
-          </label>
-
-          <button
-            type="submit" [disabled]="loading()"
-            class="self-start px-5 py-2 bg-fantasy-gold text-fantasy-black font-display tracking-wide rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-50"
-          >
-            {{ localeService.t('create_campaign_button') }}
-          </button>
-  
-        </form>
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        @for (campaign of campaignStore.campaigns(); track campaign.id) {
+          <app-campaign-card
+            [campaign]="campaign"
+            [isActive]="campaignStore.current()?.id === campaign.id"
+            (select)="campaignStore.selectCampaign(campaign)"
+            (remove)="deleteCampaign(campaign.id, campaign.name)"
+          ></app-campaign-card>
+        }
       </div>
     } @else {
-      <p class="text-slate-arcane italic">{{ localeService.t('master_only_notice') }}</p>
+      <p class="text-slate-arcane italic">{{ localeService.t('no_campaigns_yet') }}</p>
     }
-  </section>
-  
+  </div>
+
+  @if (auth.isMaster()) {
+    <app-campaign-create-form></app-campaign-create-form>
+  } @else {
+    <p class="text-slate-arcane italic">{{ localeService.t('master_only_notice') }}</p>
+  }
+</section>
