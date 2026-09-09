@@ -1,0 +1,52 @@
+// BUG REALE (non la specificità Tailwind ipotizzata in precedenza): src/tailwind.css riga
+// ~199 forza `background-color`/`border`/`color` su OGNI <input> dell'app con !important,
+// per uniformare i vecchi form della "Fucina" senza toccarne l'HTML. Verificato con un test
+// headless (Playwright + getComputedStyle): la classe .is-correct risultava applicata e la
+// regola matchava l'elemento, ma il valore calcolato restava comunque quello della regola
+// globale (#241e1a) perché !important batte qualunque specificità superiore che non sia
+// anch'essa !important. Le celle del cruciverba sono un caso speciale (griglia di gioco, non
+// un form): qui si esce deliberatamente da quella regola universale con lo stesso pattern
+// !important già usato altrove nel progetto per lo stesso motivo (vedi dungeon-run.scss).
+.cella-lettera {
+  background-color: #2b282e !important; // = --color-forge-iron
+  border: 2px solid #374151 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #f0ebd8 !important; // = --color-forge-text-main
+  font-family: inherit !important;
+}
+
+.cella-cursore {
+  background-color: #423e47 !important; // = --color-forge-iron-light
+}
+
+// .is-correct e .is-wrong sono sempre mutuamente esclusive (vedi celleBloccata()/celleErrata()
+// in dnd-crossword-grid.ts) e hanno sempre priorità sullo stato "cursore".
+.is-correct {
+  background-color: rgba(34, 197, 94, 0.3) !important;
+  border-color: #15803d !important;
+  color: #ffffff !important;
+}
+
+.is-wrong {
+  background-color: rgba(239, 68, 68, 0.3) !important;
+  border-color: #991b1b !important;
+  color: #fecaca !important;
+}
+
+// Bordo di chiusura rinforzato sulla fine di una parola quando la cella adiacente
+// appartiene a un'altra parola non incrociata qui (vedi bordoFineDestra()/bordoFineBasso()
+// in dnd-crossword-grid.ts, calcolati da fineOrizzontale/fineVerticale in
+// dnd-crossword-data.ts): senza questo bordo più spesso e scuro, la fine di una parola e
+// l'inizio di quella accanto si leggono a colpo d'occhio come un'unica striscia di lettere
+// continua (es. la fine di una verticale subito a sinistra dell'inizio di un'orizzontale).
+// Vanno dopo .is-correct/.is-wrong nel foglio di stile apposta: a parità di specificità e
+// di !important, l'ultima regola dichiarata vince, e questo bordo deve restare visibile
+// anche a risultato mostrato (non solo un colore di sfondo diverso a segnalarlo).
+.bordo-fine-destra {
+  border-right: 3px solid #1a1a1a !important;
+}
+
+.bordo-fine-basso {
+  border-bottom: 3px solid #1a1a1a !important;
+}

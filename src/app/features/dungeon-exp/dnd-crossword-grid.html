@@ -1,0 +1,44 @@
+<div class="flex flex-col items-center gap-2">
+  <p class="text-xs text-forge-text-sub">
+    Direzione: <span class="text-gold">{{ direzione() === 'orizzontale' ? 'Orizzontale →' : 'Verticale ↓' }}</span>
+    · Spazio o doppio click per cambiarla
+  </p>
+
+  <div
+    #contenitore
+    class="grid gap-[3px] bg-forge-obsidian p-[3px] rounded"
+    [style.grid-template-columns]="'repeat(' + griglia()[0].length + ', minmax(0, 1.9rem))'"
+  >
+    @for (riga of griglia(); track $index; let y = $index) {
+      @for (cella of riga; track $index; let x = $index) {
+        @if (cella.lettera) {
+          <div class="relative">
+            @if (cella.numero) {
+              <span class="absolute top-0 left-0.5 text-[8px] leading-none text-forge-text-sub z-10">{{ cella.numero }}</span>
+            }
+            <input
+              [id]="'cella-' + x + '-' + y"
+              type="text"
+              maxlength="1"
+              autocomplete="off"
+              [value]="celle()[y][x]"
+              [disabled]="mostraRisultato()"
+              (focus)="selezionaCella(x, y)"
+              (dblclick)="cambiaDirezione()"
+              (input)="gestisciInput($event, x, y)"
+              (keydown)="gestisciTasto($event, x, y)"
+              class="cella-lettera h-[1.9rem] w-[1.9rem] text-center text-sm font-semibold uppercase focus:outline-none focus:border-gold transition-colors disabled:cursor-default"
+              [class.cella-cursore]="cursoreX() === x && cursoreY() === y && !mostraRisultato()"
+              [class.is-correct]="celleCorretta(x, y)"
+              [class.is-wrong]="celleErrata(x, y)"
+              [class.bordo-fine-destra]="bordoDestra(x, y)"
+              [class.bordo-fine-basso]="bordoBasso(x, y)"
+            />
+          </div>
+        } @else {
+          <div class="h-[1.9rem] w-[1.9rem]"></div>
+        }
+      }
+    }
+  </div>
+</div>

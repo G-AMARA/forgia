@@ -1,0 +1,32 @@
+<section class="space-y-6">
+  <header class="text-center space-y-1">
+    <h1 class="font-display text-2xl text-gold tracking-wide">Dungeon EXP Hub</h1>
+    <p class="text-sm text-forge-text-sub">Sfida la Cripta, guadagna XP reale per la tua Araldica.</p>
+  </header>
+
+  @if (!giocoAttivo()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      @for (gioco of minigiochi; track gioco.id) {
+        <button
+          type="button"
+          (click)="avviaGioco(gioco.id)"
+          class="text-left panel-forge rounded-lg p-5 hover:border-gold transition-colors"
+        >
+          <span class="text-3xl">{{ gioco.icona }}</span>
+          <h2 class="mt-3 font-display text-lg text-gold">{{ gioco.nome }}</h2>
+          <p class="mt-1 text-sm text-forge-text-sub">{{ gioco.descrizione }}</p>
+        </button>
+      }
+    </div>
+  } @else if (giocoAttivo() === 'quiz') {
+    <app-dd-quiz (chiuso)="chiudiGioco()" />
+  } @else if (giocoAttivo() === 'run') {
+    @defer (when giocoAttivo() === 'run') {
+      <app-dungeon-run (chiuso)="chiudiGioco()" />
+    } @placeholder {
+      <p class="text-center text-forge-text-sub">Si apre il dungeon...</p>
+    }
+  } @else if (giocoAttivo() === 'crossword') {
+    <app-dnd-crossword (chiuso)="chiudiGioco()" />
+  }
+</section>

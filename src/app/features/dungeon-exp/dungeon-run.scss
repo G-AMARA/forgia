@@ -1,0 +1,35 @@
+// Tailwind copre l'aspect-ratio e i colori del contenitore (vedi dungeon-run.html), ma non
+// può raggiungere il <canvas> che Phaser inietta a runtime: non esiste nel template al
+// momento della compilazione, quindi non riceve mai l'attributo di scoping di Angular.
+// ::ng-deep resta la via pragmatica per questo caso specifico (stile libreria esterna).
+.dungeon-run-canvas {
+  aspect-ratio: 16 / 9;
+
+  ::ng-deep canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+.dungeon-run-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(2px);
+  animation: dungeon-run-overlay-in 0.2s ease-out;
+}
+
+@keyframes dungeon-run-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

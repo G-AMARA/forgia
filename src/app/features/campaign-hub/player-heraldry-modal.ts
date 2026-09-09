@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { Supabase } from '../../core/supabase';
 import { LocaleService } from '../../core/locale';
-import { getRankForSeconds, hoursToExp, RankTier } from '../../core/ranks';
+import { getRankForSeconds, secondsToExp, RankTier } from '../../core/ranks';
 
 // Popup "araldica altrui" aperto dal bottone oro sulle card del roster in campaign-hub
 // (chi non è owner/admin del PG vede il nickname del proprietario invece di "Rimuovi").
@@ -20,11 +20,12 @@ export class PlayerHeraldryModal implements OnInit {
   @Input({ required: true }) ownerNickname!: string;
   @Output() closed = new EventEmitter<void>();
 
-  protected readonly hoursToExp = hoursToExp;
+  protected readonly secondsToExp = secondsToExp;
 
   protected loading = signal(true);
   protected rank = signal<RankTier | null>(null);
-  protected navigationHours = signal(0);
+  // Secondi grezzi, non ore arrotondate: vedi il commento in Araldica.navigationSeconds.
+  protected navigationSeconds = signal(0);
 
   async ngOnInit() {
     const { data } = await this.supabase.client
@@ -34,7 +35,7 @@ export class PlayerHeraldryModal implements OnInit {
       .single();
 
     const seconds = data?.navigation_seconds ?? 0;
-    this.navigationHours.set(Math.floor(seconds / 3600));
+    this.navigationSeconds.set(seconds);
     this.rank.set(getRankForSeconds(seconds, data?.is_admin ?? false));
     this.loading.set(false);
   }

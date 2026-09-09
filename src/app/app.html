@@ -150,6 +150,17 @@
             @if (appNav.activeTab() === 'catalog') { <span class="nav-crack"></span> }
           </button>
           <button
+            class="nav-tab relative px-2.5 py-2 my-1 flex items-center gap-1.5 whitespace-nowrap font-display text-xs md:text-sm rounded transition-all"
+            [class]="appNav.activeTab() === 'dungeon-exp'
+              ? 'nav-tab-active'
+              : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
+            (click)="appNav.setTab('dungeon-exp')"
+          >
+            <span class="shrink-0">📜</span>
+            Dungeon EXP
+            @if (appNav.activeTab() === 'dungeon-exp') { <span class="nav-crack"></span> }
+          </button>
+          <button
             class="nav-tab relative px-2.5 py-2 my-1 flex items-center gap-1.5 whitespace-nowrap font-display text-xs md:text-sm rounded text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px transition-all"
             (click)="openAdventurers()"
           >
@@ -246,6 +257,15 @@
                   <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" />
                 </svg>
                 {{ localeService.t('tab_catalog') }}
+              </button>
+              <button
+                type="button"
+                (click)="selectMobileTab('dungeon-exp')"
+                class="w-full flex items-center gap-2 text-left px-3 py-2 text-xs uppercase tracking-wide font-display transition-colors"
+                [class]="appNav.activeTab() === 'dungeon-exp' ? 'bg-forge-iron nav-tab-active' : 'text-forge-text-sub hover:bg-forge-iron/60 hover:text-forge-text-main'"
+              >
+                <span class="shrink-0">📜</span>
+                Dungeon EXP
               </button>
               <button
                 type="button"
@@ -369,6 +389,9 @@
         }
         @case ('profile') {
           <app-profile></app-profile>
+        }
+        @case ('dungeon-exp') {
+          <app-dungeon-exp></app-dungeon-exp>
         }
       }
       </main>

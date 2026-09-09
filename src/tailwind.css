@@ -195,8 +195,12 @@ select option {
    file è inutile: qui si forza lo stesso aspetto (cuoio incassato + focus magma) su ogni
    <input>/<select>/<textarea> reale dell'app via selettore di tag, senza toccare l'HTML
    esistente. checkbox/radio/file/submit/button sono esclusi perché quasi sempre
-   ristilizzati a mano (es. i chip .chip-forge nascondono la checkbox reale). */
-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]),
+   ristilizzati a mano (es. i chip .chip-forge nascondono la checkbox reale). .cella-lettera
+   è esclusa allo stesso modo: le celle del cruciverba di Parole Crociate D&D
+   (dnd-crossword-grid.ts) sono caselle di un grid di gioco, non campi di un form, e hanno
+   bisogno di colorarsi di verde/rosso in base alla correttezza (vedi dnd-crossword-grid.scss)
+   — impossibile con questa regola universale già !important su ogni altra proprietà. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not(.cella-lettera),
 select,
 textarea {
   background-color: var(--color-forge-input) !important;

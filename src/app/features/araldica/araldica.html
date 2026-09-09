@@ -7,7 +7,7 @@
     >
       <div class="flex flex-col leading-tight text-right">
         @if (!auth.isAdmin()) {
-          <span class="text-[10px] uppercase text-slate-arcane">{{ hoursToExp(navigationHours()) }} exp</span>
+          <span class="text-[10px] uppercase text-slate-arcane">{{ secondsToExp(navigationSeconds()) }} exp</span>
         }
         <span class="font-display text-xs text-fantasy-gold">{{ r.name }}</span>
       </div>

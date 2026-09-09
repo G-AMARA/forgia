@@ -1,0 +1,70 @@
+<div class="panel-forge rounded-lg p-6 space-y-5 max-w-2xl mx-auto">
+  @if (caricamento()) {
+    <p class="text-center text-forge-text-sub">Si apre la cripta...</p>
+  } @else if (giaGiocatoOggi()) {
+    <div class="text-center space-y-4">
+      <p class="text-forge-text-main">Hai già affrontato la Cripta degli Enigmi oggi. Torna domani per un nuovo tentativo.</p>
+      <button type="button" (click)="chiudi()" class="px-4 py-2 rounded border border-gold text-gold hover:bg-gold hover:text-forge-obsidian transition-colors">
+        Torna alla selezione
+      </button>
+    </div>
+  } @else if (completato()) {
+    <div class="text-center space-y-4">
+      <p class="text-2xl">🏆</p>
+      <p class="text-forge-text-main">
+        Hai risposto correttamente a {{ corrette() }}/{{ domande.length }} domande!
+      </p>
+      <button type="button" (click)="chiudi()" class="px-4 py-2 rounded border border-gold text-gold hover:bg-gold hover:text-forge-obsidian transition-colors">
+        Torna alla selezione
+      </button>
+    </div>
+  } @else {
+    <div class="flex items-center justify-between text-xs text-forge-text-sub">
+      <span>Domanda {{ indice() + 1 }} / {{ domande.length }}</span>
+      <button type="button" (click)="chiudi()" class="hover:text-gold transition-colors">Esci ✕</button>
+    </div>
+
+    <h2 class="font-display text-lg text-gold">{{ domandaCorrente().testo }}</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      @for (opzione of domandaCorrente().opzioni; track $index) {
+        <button
+          type="button"
+          (click)="seleziona($index)"
+          [disabled]="confermata()"
+          class="text-left px-4 py-3 rounded border transition-colors"
+          [class]="
+            !confermata()
+              ? (rispostaSelezionata() === $index ? 'border-gold bg-forge-iron text-forge-text-main' : 'border-forge-iron-light text-forge-text-sub hover:border-gold/60')
+              : ($index === domandaCorrente().corretta
+                  ? 'border-forest bg-forest/20 text-forge-text-main'
+                  : ($index === rispostaSelezionata() ? 'border-fantasy-red bg-fantasy-red/20 text-forge-text-main' : 'border-forge-iron-light text-forge-text-sub'))
+          "
+        >
+          {{ opzione }}
+        </button>
+      }
+    </div>
+
+    <div class="flex justify-end">
+      @if (!confermata()) {
+        <button
+          type="button"
+          (click)="conferma()"
+          [disabled]="rispostaSelezionata() === null"
+          class="px-4 py-2 rounded bg-forge-amber text-forge-obsidian font-display disabled:opacity-40 disabled:cursor-not-allowed hover:bg-forge-amber-glow transition-colors"
+        >
+          Conferma
+        </button>
+      } @else {
+        <button
+          type="button"
+          (click)="avanti()"
+          class="px-4 py-2 rounded bg-forge-amber text-forge-obsidian font-display hover:bg-forge-amber-glow transition-colors"
+        >
+          {{ isUltimaDomanda() ? 'Completa' : 'Avanti' }}
+        </button>
+      }
+    </div>
+  }
+</div>

@@ -72,6 +72,16 @@ export class Auth {
   private _navigationSeconds = signal(0);
   readonly navigationSeconds = this._navigationSeconds.asReadonly();
 
+  // Aggiornamento ottimistico locale dopo un accredito XP riuscito (Dungeon Run/Quiz/
+  // Crociate, vedi core/dungeon-*.ts): il valore reale è già scritto su profiles dalla RPC,
+  // ma senza questo il resto dell'app (limiti PG/PNG in NpcStore/CharacterStore, badge
+  // rango nei modali eroe) resterebbe legato al valore letto all'ultimo login/reload finché
+  // non se ne fa uno nuovo. Araldica.ts ha una sua sottoscrizione realtime separata per la
+  // stessa ragione, ma solo per il proprio signal locale, non per questo che è app-wide.
+  addNavigationSeconds(secondi: number) {
+    this._navigationSeconds.update((s) => s + secondi);
+  }
+
   constructor() {
     // Controlla se c'è già una sessione attiva al caricamento dell'app
     this.supabase.client.auth.getSession().then(({ data }) => {

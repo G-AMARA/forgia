@@ -76,6 +76,18 @@ export function hoursToExp(hours: number): number {
   return hours * EXP_PER_HOUR;
 }
 
+// Come hoursToExp, ma dai secondi grezzi senza arrotondare prima alle ore intere: usata per
+// mostrare l'exp "live" di un utente (badge Araldica, leaderboard Avventurieri). Con
+// hoursToExp(Math.floor(secondi/3600)) un guadagno piccolo (es. i pochi minuti accreditati
+// da Dungeon Run/Quiz) spariva quasi sempre nell'arrotondamento, o al contrario appariva
+// come un salto pieno di +10 se faceva scattare un'ora intera già quasi raggiunta. Qui la
+// granularità è di 360 secondi (coerente con "1 xp Dungeon Run/Quiz = 360 secondi", vedi le
+// RPC award_dungeon_run_xp/award_dungeon_quiz_xp): stesso valore di hoursToExp sui multipli
+// esatti di un'ora, ma visibile anche a metà strada.
+export function secondsToExp(seconds: number): number {
+  return Math.floor(seconds / (3600 / EXP_PER_HOUR));
+}
+
 export interface RankGroupEntry {
   id: string;
   nickname: string;
@@ -102,7 +114,7 @@ export function groupByRank(
     const entry: RankGroupEntry = {
       id: profile.id,
       nickname: profile.nickname ?? '???',
-      exp: hoursToExp(Math.floor(profile.navigation_seconds / 3600)),
+      exp: secondsToExp(profile.navigation_seconds),
     };
     const bucket = buckets.get(tier.name);
     if (bucket) bucket.push(entry);

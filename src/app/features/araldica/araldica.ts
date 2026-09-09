@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { Supabase } from '../../core/supabase';
 import { Auth } from '../../core/auth';
-import { FATO_RANK, getRankForSeconds, hoursToExp, RANK_TIERS, rankIndex, RankTier } from '../../core/ranks';
+import { FATO_RANK, getRankForSeconds, hoursToExp, secondsToExp, RANK_TIERS, rankIndex, RankTier } from '../../core/ranks';
 
 @Component({
   selector: 'app-araldica',
@@ -14,13 +14,18 @@ export class Araldica implements OnInit, OnDestroy {
   protected auth = inject(Auth);
 
   protected rank = signal<RankTier | null>(null);
-  protected navigationHours = signal(0);
+  // Secondi grezzi, non ore arrotondate: la vecchia navigationHours faceva sparire i piccoli
+  // guadagni (Dungeon Run/Quiz) nell'arrotondamento. Vedi secondsToExp in core/ranks.ts.
+  protected navigationSeconds = signal(0);
   protected showLevelUp = signal(false);
   protected showRanksModal = signal(false);
 
   // Elenco decrescente (Fato in cima come rango speciale) per la modale dei ranghi.
   protected readonly rankList = [FATO_RANK, ...RANK_TIERS].slice().reverse();
+  // hoursToExp resta per la tabella statica delle soglie (tier.minHours, sempre un'ora
+  // intera); secondsToExp per l'exp "live" dell'utente, sui secondi effettivi.
   protected readonly hoursToExp = hoursToExp;
+  protected readonly secondsToExp = secondsToExp;
 
   private channel: RealtimeChannel | null = null;
 
@@ -62,7 +67,7 @@ export class Araldica implements OnInit, OnDestroy {
     const newRank = getRankForSeconds(seconds, this.auth.isAdmin());
     const newIndex = rankIndex(newRank);
 
-    this.navigationHours.set(Math.floor(seconds / 3600));
+    this.navigationSeconds.set(seconds);
 
     // Livello salito rispetto alla sessione precedente = rispetto all'ultimo rango
     // noto persistito in localStorage. null significa prima visita mai su questo

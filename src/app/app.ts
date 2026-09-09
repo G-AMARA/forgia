@@ -16,6 +16,7 @@ import { EquipmentList } from './features/equipment-list/equipment-list';
 import { WeaponList } from './features/weapon-list/weapon-list';
 import { Manage } from './features/manage/manage';
 import { Profile } from './features/profile/profile';
+import { DungeonExp } from './features/dungeon-exp/dungeon-exp';
 import { Araldica } from './features/araldica/araldica';
 import { Adventurers } from './features/adventurers/adventurers';
 import { GenericModalComponent } from './shared/modal/generic-adviser-modal/generic-adviser-modal';
@@ -46,6 +47,7 @@ import { DiceRoller } from './shared/dice-roller/dice-roller';
     WeaponList,
     Manage,
     Profile,
+    DungeonExp,
     Araldica,
     Adventurers,
     GenericModalComponent,

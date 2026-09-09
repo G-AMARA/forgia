@@ -1,0 +1,98 @@
+<div class="panel-forge rounded-lg p-4 space-y-3 max-w-3xl mx-auto">
+  <div class="flex items-center justify-between text-xs text-forge-text-sub">
+    <span>Gemme: {{ gemmeRaccolte() }}/{{ gemmeTotali }}</span>
+    @if (abilitaClasseAttiva(); as classe) {
+      <span>{{ classe.icona }} {{ classe.nome }}</span>
+      <span [class]="tempoRimanente() <= 10 ? 'text-fantasy-red font-semibold' : ''">
+        ⏱️ Tempo: {{ tempoRimanente() }}s
+      </span>
+    }
+    <button type="button" (click)="chiudi()" class="hover:text-gold transition-colors">Esci ✕</button>
+  </div>
+
+  <div class="dungeon-run-canvas relative rounded overflow-hidden bg-forge-obsidian" #canvasContainer>
+    @if (stato() === 'caricamento') {
+      <div class="dungeon-run-overlay">
+        <p class="text-forge-text-sub">Si apre il dungeon...</p>
+      </div>
+    } @else if (stato() === 'bloccato') {
+      <div class="dungeon-run-overlay text-center space-y-4 p-6">
+        <p class="text-forge-text-main">Hai già affrontato Dungeon Run oggi. Torna domani per un nuovo tentativo.</p>
+        <button type="button" (click)="chiudi()" class="px-4 py-2 rounded border border-gold text-gold hover:bg-gold hover:text-forge-obsidian transition-colors">
+          Torna alla selezione
+        </button>
+      </div>
+    } @else if (stato() === 'selezione-classe') {
+      <div class="dungeon-run-overlay p-4">
+        <p class="text-forge-text-main font-display text-lg mb-3 shrink-0">Scegli la tua classe</p>
+        <div class="grid grid-cols-2 gap-4 w-full max-w-lg">
+          @for (classe of classi; track classe.id) {
+            <button
+              type="button"
+              (click)="selezionaClasse(classe.id)"
+              class="flex flex-col items-center text-center panel-forge rounded-lg p-4 hover:border-gold transition-colors"
+            >
+              <img [src]="classe.spritePreview" [alt]="classe.nome" class="h-16 w-auto [image-rendering:pixelated]" />
+              <p class="font-display text-base text-gold mt-2">{{ classe.icona }} {{ classe.nome }}</p>
+              <p class="text-[11px] text-forge-text-sub mt-1">{{ classe.descrizioneClasse }}</p>
+              <p class="text-[11px] text-forge-text-main mt-2 font-semibold">{{ classe.abilita }} (F)</p>
+              <p class="text-[10px] text-forge-text-sub mt-0.5">{{ classe.descrizioneAbilita }}</p>
+            </button>
+          }
+        </div>
+      </div>
+    } @else if (stato() === 'terminata' && risultato(); as r) {
+      <div class="dungeon-run-overlay text-center space-y-3 p-6">
+        <p class="text-2xl">{{ r.vittoria ? '🏆' : '💀' }}</p>
+        <p class="text-forge-text-main">
+          {{ r.vittoria ? 'COMPLIMENTI PER AVER SUPERATO IL DUNGEON!' : (r.tempoScaduto ? 'Tempo scaduto nel dungeon!' : 'Sei caduto nel dungeon...') }}
+        </p>
+        <p class="text-sm text-forge-text-sub">
+          {{ r.gemme }} monete raccolte · +{{ r.vittoria ? r.gemme + 10 : r.gemme }} XP guadagnati
+        </p>
+        <div class="flex flex-wrap justify-center gap-3">
+          <button type="button" (click)="riavvia()" class="px-4 py-2 rounded bg-forge-amber text-forge-obsidian font-display hover:bg-forge-amber-glow transition-colors">
+            Riprova
+          </button>
+          <button type="button" (click)="tornaAllaSelezione()" class="px-4 py-2 rounded border border-gold text-gold hover:bg-gold hover:text-forge-obsidian transition-colors">
+            Torna alla selezione
+          </button>
+          <button type="button" (click)="chiudi()" class="px-4 py-2 rounded border border-forge-iron-light text-forge-text-sub hover:border-gold hover:text-gold transition-colors">
+            ESCI DAL DUNGEON
+          </button>
+        </div>
+        <p class="text-[10px] text-forge-text-sub/70 max-w-xs mx-auto">
+          * Uscendo dal dungeon la partita terminerà e verranno assegnati i punti esperienza guadagnati finora. Potrai giocare di nuovo domani.
+        </p>
+      </div>
+    }
+  </div>
+
+  @if (stato() === 'gioco' || stato() === 'pausa') {
+    <div class="space-y-2">
+      <div class="flex items-center gap-2 text-[11px] text-forge-text-sub">
+        <span class="shrink-0">{{ abilitaClasseAttiva()?.abilita }} (F)</span>
+        <div class="flex-1 h-1.5 rounded-full bg-forge-iron overflow-hidden">
+          <div class="h-full bg-forge-amber transition-all" [style.width.%]="cooldownPronto() * 100"></div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-xs text-forge-text-sub">Frecce/WASD, Spazio salta, F abilità.</p>
+        <div class="flex gap-2 shrink-0">
+          @if (stato() === 'gioco') {
+            <button type="button" (click)="pausa()" class="px-3 py-1.5 text-xs rounded border border-forge-iron-light text-forge-text-sub hover:border-gold hover:text-gold transition-colors">
+              Pausa
+            </button>
+          } @else {
+            <button type="button" (click)="riprendi()" class="px-3 py-1.5 text-xs rounded border border-gold text-gold hover:bg-gold hover:text-forge-obsidian transition-colors">
+              Riprendi
+            </button>
+          }
+          <button type="button" (click)="riavvia()" class="px-3 py-1.5 text-xs rounded border border-forge-iron-light text-forge-text-sub hover:border-gold hover:text-gold transition-colors">
+            Riavvia
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
