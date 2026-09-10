@@ -1,40 +1,7 @@
 import { Component, computed, inject, OnInit, output, signal } from '@angular/core';
 import { DungeonQuiz } from '../../core/dungeon-quiz';
 import { Modal } from '../../core/modal';
-
-interface Domanda {
-  testo: string;
-  opzioni: string[];
-  corretta: number;
-}
-
-const DOMANDE: Domanda[] = [
-  {
-    testo: 'Quale tipo di danno è spesso il più efficace contro i non-morti?',
-    opzioni: ['Radiante', 'Necrotico', 'Psichico', 'Tuono'],
-    corretta: 0,
-  },
-  {
-    testo: "Come si chiama il piano d'ombra usato per viaggi rapidi tra le distanze?",
-    opzioni: ['Piano Etereo', 'Piano Ombra', 'Abisso', 'Limbo'],
-    corretta: 1,
-  },
-  {
-    testo: "Quale classe intrattiene un patto con un'entità extraplanare per i suoi poteri?",
-    opzioni: ['Mago', 'Chierico', 'Warlock', 'Bardo'],
-    corretta: 2,
-  },
-  {
-    testo: 'Qual è il dado di danno di una Spada Lunga impugnata a due mani?',
-    opzioni: ['1d6', '1d8', '1d10', '1d12'],
-    corretta: 2,
-  },
-  {
-    testo: 'Quale caratteristica determina i punti ferita massimi di un personaggio?',
-    opzioni: ['Destrezza', 'Costituzione', 'Saggezza', 'Forza'],
-    corretta: 1,
-  },
-];
+import { domandeDelGiorno } from './dd-quiz-data';
 
 @Component({
   selector: 'app-dd-quiz',
@@ -47,7 +14,7 @@ export class DdQuiz implements OnInit {
 
   readonly chiuso = output<void>();
 
-  protected readonly domande = DOMANDE;
+  protected readonly domande = domandeDelGiorno();
   protected readonly caricamento = signal(true);
   protected readonly giaGiocatoOggi = signal(false);
   protected readonly indice = signal(0);

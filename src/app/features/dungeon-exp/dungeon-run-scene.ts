@@ -22,7 +22,7 @@ import { CLASSI_DND, type ClasseId, type DungeonRunCallbacks, type DungeonRunIni
 // servita dalla radice / perché Angular pubblica public/ così). Sorgenti native 16px:
 // SCALA le porta a un fattore di gioco leggibile sul canvas 800x450, TILE è la dimensione
 // risultante di un blocco (16 * SCALA) usata per allineare la mappa a griglia.
-const BASE_ASSET = '/dungeon-run/frames/';
+const BASE_ASSET = 'dungeon-run/frames/';
 const SCALA = 2.5;
 const TILE = 16 * SCALA;
 
