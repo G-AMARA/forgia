@@ -2,13 +2,16 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, inject, output, signal
 import type { default as PhaserType } from 'phaser';
 import { DungeonRun } from '../../core/dungeon-run';
 import { Modal } from '../../core/modal';
-import { CLASSI_DND, NUMERO_GEMME_TOTALI, type ClasseId } from './dungeon-run-data';
+import { CLASSI_DND, NUMERO_GEMME_TOTALI, livelloDelGiorno, type ClasseId } from './dungeon-run-data';
 import type { DungeonRunScene } from './dungeon-run-scene';
 
 type StatoPartita = 'caricamento' | 'bloccato' | 'selezione-classe' | 'gioco' | 'pausa' | 'terminata';
 type RisultatoLivello = { vittoria: boolean; gemme: number; tempoScaduto: boolean };
 
-const DURATA_LIVELLO_SECONDI = 60;
+// Livello del giorno deciso una sola volta al caricamento del componente (vedi
+// LIVELLI_DUNGEON/livelloDelGiorno in dungeon-run-data.ts): stesso percorso per tutta la
+// sessione anche a cavallo di un "Riprova", cambia solo al prossimo giorno di calendario.
+const LIVELLO_OGGI = livelloDelGiorno();
 
 // Componente "guscio" per Phaser: nessuna logica di gioco qui (vive in DungeonRunScene),
 // solo ciclo di vita Angular, HUD/overlay in Tailwind e il ponte verso il backend Supabase
@@ -31,11 +34,12 @@ export class DungeonRunGame implements AfterViewInit, OnDestroy {
 
   protected readonly classi = CLASSI_DND;
   protected readonly gemmeTotali = NUMERO_GEMME_TOTALI;
+  protected readonly nomeLivelloOggi = LIVELLO_OGGI.nome;
   protected readonly stato = signal<StatoPartita>('caricamento');
   protected readonly classeSelezionata = signal<ClasseId | null>(null);
   protected readonly gemmeRaccolte = signal(0);
   protected readonly cooldownPronto = signal(1);
-  protected readonly tempoRimanente = signal(DURATA_LIVELLO_SECONDI);
+  protected readonly tempoRimanente = signal(LIVELLO_OGGI.durataSecondi);
   protected readonly risultato = signal<RisultatoLivello | null>(null);
 
   private game: PhaserType.Game | null = null;
@@ -85,7 +89,7 @@ export class DungeonRunGame implements AfterViewInit, OnDestroy {
     this.distruggiGiocoCorrente();
     this.gemmeRaccolte.set(0);
     this.cooldownPronto.set(1);
-    this.tempoRimanente.set(DURATA_LIVELLO_SECONDI);
+    this.tempoRimanente.set(LIVELLO_OGGI.durataSecondi);
     this.risultato.set(null);
     this.stato.set('caricamento');
     void this.avviaGioco(classeId);
@@ -112,7 +116,7 @@ export class DungeonRunGame implements AfterViewInit, OnDestroy {
     this.classeSelezionata.set(null);
     this.gemmeRaccolte.set(0);
     this.cooldownPronto.set(1);
-    this.tempoRimanente.set(DURATA_LIVELLO_SECONDI);
+    this.tempoRimanente.set(LIVELLO_OGGI.durataSecondi);
     this.risultato.set(null);
     this.stato.set('selezione-classe');
   }

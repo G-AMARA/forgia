@@ -24,7 +24,8 @@
       </div>
     } @else if (stato() === 'selezione-classe') {
       <div class="dungeon-run-overlay p-4">
-        <p class="text-forge-text-main font-display text-lg mb-3 shrink-0">Scegli la tua classe</p>
+        <p class="text-forge-text-main font-display text-lg shrink-0">Scegli la tua classe</p>
+        <p class="text-[11px] text-forge-text-sub mb-3 shrink-0">Livello del giorno: {{ nomeLivelloOggi }}</p>
         <div class="grid grid-cols-2 gap-4 w-full max-w-lg">
           @for (classe of classi; track classe.id) {
             <button

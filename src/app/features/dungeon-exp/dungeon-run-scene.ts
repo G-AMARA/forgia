@@ -1,5 +1,19 @@
 import Phaser from 'phaser';
-import { CLASSI_DND, type ClasseId, type DungeonRunCallbacks, type DungeonRunInitData } from './dungeon-run-data';
+import {
+  ALTEZZA_MONDO,
+  CLASSI_DND,
+  GIOCATORE_SPAWN_X,
+  GIOCATORE_SPAWN_Y,
+  SCALA_DUNGEON,
+  TERRENO_Y,
+  TIER_BASSO,
+  TILE_DUNGEON,
+  livelloDelGiorno,
+  type ClasseId,
+  type DungeonRunCallbacks,
+  type DungeonRunInitData,
+  type LivelloDungeon,
+} from './dungeon-run-data';
 
 // Dati e logica di gioco di "Dungeon Run" isolati dal componente Angular (DungeonRun):
 // una Phaser.Scene non è un componente Angular, ma la regola di CLAUDE.md "logica fuori
@@ -23,8 +37,10 @@ import { CLASSI_DND, type ClasseId, type DungeonRunCallbacks, type DungeonRunIni
 // SCALA le porta a un fattore di gioco leggibile sul canvas 800x450, TILE è la dimensione
 // risultante di un blocco (16 * SCALA) usata per allineare la mappa a griglia.
 const BASE_ASSET = 'dungeon-run/frames/';
-const SCALA = 2.5;
-const TILE = 16 * SCALA;
+// SCALA/TILE/TERRENO_Y/TIER_BASSO restano definiti in dungeon-run-data.ts: sono condivisi con
+// LIVELLI_DUNGEON, che li usa per calcolare le coordinate di ogni percorso (vedi quel file).
+const SCALA = SCALA_DUNGEON;
+const TILE = TILE_DUNGEON;
 
 // Solo 2 classi selezionabili (vedi CLASSI_DND in dungeon-run-data.ts): il Guerriero usa lo
 // sprite di un cavaliere in armatura pesante (knight_f), coerente con la sua ambientazione
@@ -36,102 +52,25 @@ const SPRITE_PERSONAGGIO: Record<ClasseId, { idle: string; run: string }> = {
 
 // Salto: v²/(2·gravità) determina l'altezza massima raggiungibile. Con la gravità di
 // dungeon-run.ts (800) questo dà ~169px di altezza e ~1.3s di tempo in aria (quindi ~220px
-// di gittata orizzontale a velocità di corsa): molto più dei pozzi (80px) e dei dislivelli
-// fra le piattaforme (70px, vedi TIER_BASSO/TIER_ALTO), per garantire ogni salto al primo
-// tentativo anche se non perfettamente calcolato.
+// di gittata orizzontale a velocità di corsa): molto più dei pozzi (80px, larghezza fissa su
+// TUTTI i livelli di LIVELLI_DUNGEON) e dei dislivelli fra le piattaforme (70px, vedi
+// TIER_BASSO/TIER_ALTO in dungeon-run-data.ts), per garantire ogni salto al primo tentativo
+// anche se non perfettamente calcolato — vale per il livello più facile come per il più duro.
 const FORZA_SALTO = -520;
 
-const LARGHEZZA_MONDO = 3200;
-const ALTEZZA_MONDO = 450;
-const TERRENO_Y = 410;
+// Meccanica arcade frenetica: il livello del giorno determina la durata effettiva (più corta
+// nei livelli difficili, vedi durataSecondi in LIVELLI_DUNGEON); questo è solo il fallback
+// prima che create() imposti il valore vero.
+const DURATA_LIVELLO_FALLBACK = 60;
 
-// Meccanica arcade frenetica: 60 secondi per raggiungere il forziere, altrimenti game over
-// per tempo scaduto (vedi il TimerEvent creato in create() e controllato al suo scadere).
-const DURATA_LIVELLO_SECONDI = 60;
-
-// Spawn del player: NON i valori (50, 500) di un livello generico, ma quelli coerenti con
-// questa mappa (inizio del primo segmento di terreno, poco sopra TERRENO_Y=410).
-const GIOCATORE_SPAWN_X = 80;
-const GIOCATORE_SPAWN_Y = TERRENO_Y - 100;
-
-// Segmenti di terreno solido: i vuoti fra un segmento e il successivo sono le trappole
-// "pozzo" richieste dai requisiti (cadere fuori dal mondo = game over, vedi update()).
-// Larghezze/x tutte multiple di TILE (40) per allinearsi ai blocchi wall_mid da 16px. Ogni
-// pozzo è largo 80px (2 tegole): con FORZA_SALTO/gravità attuali un salto in corsa copre
-// ~220px in orizzontale, quindi resta ampio margine anche al primo tentativo.
-const SEGMENTI_TERRENO = [
-  { x: 0, larghezza: 640 },
-  { x: 720, larghezza: 520 },
-  { x: 1320, larghezza: 360 },
-  { x: 1760, larghezza: 480 },
-  { x: 2320, larghezza: 880 },
-];
-
-// Piattaforme fluttuanti su due sole quote (canvas basso, 450px). TIER_BASSO è 130px sopra
-// il terreno: tolto lo spessore della piattaforma stessa (TILE=40, metà sopra/metà sotto il
-// centro), restano ~110px liberi fra il pavimento e il suo bordo inferiore — più dell'altezza
-// del personaggio (16x28 nativi * SCALA 2.5 = 70px), così ci si può camminare sotto senza
-// incastrarsi. TIER_ALTO altri 100px sopra TIER_BASSO: entrambi i dislivelli restano ben
-// dentro l'altezza di salto singola (~169px, vedi FORZA_SALTO).
-// IMPORTANTE: una piattaforma TIER_ALTO è raggiungibile SOLO se sta a poca distanza
-// orizzontale (max ~80px) da una piattaforma TIER_BASSO adiacente, da cui rilanciarsi con
-// un secondo salto — un salto singolo da terra (410) a TIER_ALTO richiederebbe superare
-// ~230px, ben oltre i 169px di altezza massima. Le piattaforme 6 e 8 stavano isolate sopra
-// terreno pieno, senza alcuna piattaforma bassa vicina da cui rilanciarsi: la moneta lì
-// sopra era di fatto irraggiungibile. Ora sono TIER_BASSO come tutte le altre; solo le due
-// coppie (1→2 e 3→4) restano a due quote, con un gap orizzontale ridotto apposta.
-const TIER_BASSO = TERRENO_Y - 130;
-const TIER_ALTO = TIER_BASSO - 100;
-const PIATTAFORME = [
-  { x: 280, y: TIER_BASSO, larghezza: 160 },
-  { x: 480, y: TIER_ALTO, larghezza: 120 }, // gap di 40px da platform1: staccabile con un salto corto
-  { x: 800, y: TIER_BASSO, larghezza: 160 },
-  { x: 1040, y: TIER_ALTO, larghezza: 120 }, // gap di 80px da platform3
-  { x: 1400, y: TIER_BASSO, larghezza: 160 },
-  { x: 1800, y: TIER_BASSO, larghezza: 160 },
-  { x: 2050, y: TIER_BASSO, larghezza: 160 },
-  { x: 2500, y: TIER_BASSO, larghezza: 200 },
-];
-
-// Sempre su un segmento di terreno pieno (mai su una piattaforma stretta o su un pozzo).
-const POSIZIONI_SPINE = [
-  { x: 900, y: TERRENO_Y - TILE / 2 },
-  { x: 1900, y: TERRENO_Y - TILE / 2 },
-  { x: 2600, y: TERRENO_Y - TILE / 2 },
-];
-
-// 6 goblin (3 in più rispetto a prima), sia sul terreno principale sia su due piattaforme:
-// il raggio di pattuglia (distanza) resta sempre ben dentro il segmento/piattaforma di
-// appartenenza, altrimenti il nemico cammina fuori bordo e cade nel pozzo accanto (nessuna
-// collisione sul fondo del mondo, vedi update()), sparendo per il resto della partita.
-const POSIZIONI_NEMICI = [
-  { x: 350, y: TERRENO_Y - 60, distanza: 150 }, // terreno, segmento 0-640
-  { x: 800, y: TIER_BASSO - 60, distanza: 60 }, // piattaforma 720-880
-  { x: 1500, y: TERRENO_Y - 60, distanza: 120 }, // terreno, segmento 1320-1680
-  { x: 1880, y: TIER_BASSO - 60, distanza: 60 }, // piattaforma 1800-1960
-  { x: 2600, y: TERRENO_Y - 60, distanza: 180 }, // terreno, segmento 2320-3200
-  { x: 2950, y: TERRENO_Y - 60, distanza: 100 }, // terreno, stesso segmento, verso il forziere
-];
-
-// 10 gemme totali: deve restare sincronizzato con NUMERO_GEMME_TOTALI (dungeon-run-data.ts)
-// e con il limite p_gemme <= 10 della RPC award_dungeon_run_xp. Ogni gemma fluttua ~60px
-// sopra la piattaforma/terreno più vicino.
-const POSIZIONI_GEMME = [
-  { x: 280, y: TIER_BASSO - 60 }, { x: 540, y: TIER_ALTO - 60 },
-  { x: 550, y: TERRENO_Y - 60 }, { x: 800, y: TIER_BASSO - 60 },
-  { x: 1100, y: TIER_ALTO - 60 }, { x: 1450, y: TIER_BASSO - 60 },
-  { x: 1880, y: TIER_BASSO - 60 }, { x: 2130, y: TIER_BASSO - 60 },
-  { x: 2600, y: TIER_BASSO - 60 }, { x: 2900, y: TERRENO_Y - 60 },
-];
-
-const FORZIERE_X = 3120;
 const FORZIERE_TEXTURE_CHIUSO = 'chest_full_open_anim_f0';
 
-type Nemico = { sprite: Phaser.Physics.Arcade.Sprite; minX: number; maxX: number };
+type Nemico = { sprite: Phaser.Physics.Arcade.Sprite; minX: number; maxX: number; velocitaPattuglia: number };
 
 export class DungeonRunScene extends Phaser.Scene {
   private classeId!: ClasseId;
   private callbacks!: DungeonRunCallbacks;
+  private livello!: LivelloDungeon;
   private cooldownAbilitaMs = 0;
   private giocatore!: Phaser.Physics.Arcade.Sprite;
   private forziere!: Phaser.Physics.Arcade.Sprite;
@@ -155,7 +94,7 @@ export class DungeonRunScene extends Phaser.Scene {
   private direzione = 1;
   private prossimoUsoAbilita = 0;
   private prossimoAggiornamentoHud = 0;
-  private secondiRimanenti = DURATA_LIVELLO_SECONDI;
+  private secondiRimanenti = DURATA_LIVELLO_FALLBACK;
   private timerLivello!: Phaser.Time.TimerEvent;
 
   constructor() {
@@ -165,6 +104,7 @@ export class DungeonRunScene extends Phaser.Scene {
   init(data: DungeonRunInitData) {
     this.classeId = data.classeId;
     this.callbacks = data.callbacks;
+    this.livello = livelloDelGiorno();
     this.cooldownAbilitaMs = CLASSI_DND.find((c) => c.id === this.classeId)?.cooldownMs ?? 3000;
   }
 
@@ -189,30 +129,30 @@ export class DungeonRunScene extends Phaser.Scene {
     this.creaTextureProcedurali();
     this.creaAmbientazione();
 
-    this.physics.world.setBounds(0, 0, LARGHEZZA_MONDO, ALTEZZA_MONDO);
+    this.physics.world.setBounds(0, 0, this.livello.larghezzaMondo, ALTEZZA_MONDO);
     // Nessuna collisione sul lato inferiore: cadere in un pozzo deve far uscire il
     // giocatore dal mondo (intercettato in update()), non fermarlo su un bordo invisibile.
     this.physics.world.setBoundsCollision(true, true, true, false);
 
     this.gruppoTerreno = this.physics.add.staticGroup();
-    for (const segmento of SEGMENTI_TERRENO) {
+    for (const segmento of this.livello.segmentiTerreno) {
       this.creaBloccoSolido(this.gruppoTerreno, segmento.x, TERRENO_Y + TILE / 2, segmento.larghezza);
     }
 
     this.gruppoPiattaforme = this.physics.add.staticGroup();
-    for (const p of PIATTAFORME) {
+    for (const p of this.livello.piattaforme) {
       this.creaBloccoSolido(this.gruppoPiattaforme, p.x, p.y, p.larghezza);
     }
 
     this.gruppoSpine = this.physics.add.staticGroup();
-    for (const s of POSIZIONI_SPINE) {
+    for (const s of this.livello.posizioniSpine) {
       const spina = this.gruppoSpine.create(s.x, s.y, 'floor_spikes_anim_f0') as Phaser.Physics.Arcade.Sprite;
       spina.setScale(SCALA).refreshBody();
       spina.play('spina-anim');
     }
 
     const gruppoForziere = this.physics.add.staticGroup();
-    this.forziere = gruppoForziere.create(FORZIERE_X, TERRENO_Y - TILE / 2, FORZIERE_TEXTURE_CHIUSO) as Phaser.Physics.Arcade.Sprite;
+    this.forziere = gruppoForziere.create(this.livello.forziereX, TERRENO_Y - TILE / 2, FORZIERE_TEXTURE_CHIUSO) as Phaser.Physics.Arcade.Sprite;
     this.forziere.setScale(SCALA).refreshBody();
 
     const spritePersonaggio = SPRITE_PERSONAGGIO[this.classeId];
@@ -256,7 +196,7 @@ export class DungeonRunScene extends Phaser.Scene {
     this.physics.add.overlap(this.giocatore, this.gruppoSpine, () => this.terminaLivello(false));
     this.physics.add.overlap(this.giocatore, this.forziere, () => this.apriForziere());
 
-    this.cameras.main.setBounds(0, 0, LARGHEZZA_MONDO, ALTEZZA_MONDO);
+    this.cameras.main.setBounds(0, 0, this.livello.larghezzaMondo, ALTEZZA_MONDO);
     this.cameras.main.startFollow(this.giocatore, true, 0.08, 0.08);
 
     if (this.input.keyboard) {
@@ -272,7 +212,7 @@ export class DungeonRunScene extends Phaser.Scene {
     // forziere, altrimenti game over per tempo scaduto (vedi timerLivello.callback). Il
     // TimerEvent segue il ciclo di vita della scena: scene.pause() (pulsante Pausa) lo
     // sospende insieme al resto in automatico, non serve gestirlo a mano.
-    this.secondiRimanenti = DURATA_LIVELLO_SECONDI;
+    this.secondiRimanenti = this.livello.durataSecondi;
     this.callbacks.onTimerUpdate(this.secondiRimanenti);
     this.timerLivello = this.time.addEvent({
       delay: 1000,
@@ -342,11 +282,11 @@ export class DungeonRunScene extends Phaser.Scene {
 
     for (const nemico of this.nemici) {
       if (nemico.sprite.x <= nemico.minX) {
-        nemico.sprite.setVelocityX(60);
+        nemico.sprite.setVelocityX(nemico.velocitaPattuglia);
         nemico.sprite.flipX = false;
       }
       if (nemico.sprite.x >= nemico.maxX) {
-        nemico.sprite.setVelocityX(-60);
+        nemico.sprite.setVelocityX(-nemico.velocitaPattuglia);
         nemico.sprite.flipX = true;
       }
     }
@@ -450,16 +390,16 @@ export class DungeonRunScene extends Phaser.Scene {
   // ————— Nemici, gemme e forziere —————
 
   private creaNemici() {
-    for (const pos of POSIZIONI_NEMICI) {
+    for (const pos of this.livello.posizioniNemici) {
       const sprite = this.gruppoNemici.create(pos.x, pos.y, 'goblin_run_anim_f0') as Phaser.Physics.Arcade.Sprite;
       sprite.setScale(SCALA);
       sprite.play('nemico-run');
-      sprite.setVelocityX(60);
+      sprite.setVelocityX(pos.velocita);
       (sprite.body as Phaser.Physics.Arcade.Body).setSize(12, 12).setOffset(2, 3);
       this.physics.add.collider(sprite, this.gruppoTerreno);
       this.physics.add.collider(sprite, this.gruppoPiattaforme);
       this.physics.add.collider(this.giocatore, sprite, () => this.terminaLivello(false));
-      this.nemici.push({ sprite, minX: pos.x - pos.distanza, maxX: pos.x + pos.distanza });
+      this.nemici.push({ sprite, minX: pos.x - pos.distanza, maxX: pos.x + pos.distanza, velocitaPattuglia: pos.velocita });
     }
   }
 
@@ -467,7 +407,7 @@ export class DungeonRunScene extends Phaser.Scene {
   // corpi statici, quindi vanno risincronizzate manualmente con refreshBody() a ogni frame
   // del tween, altrimenti la hitbox resterebbe ferma alla posizione originale.
   private creaGemme() {
-    POSIZIONI_GEMME.forEach((posizione, indice) => {
+    this.livello.posizioniGemme.forEach((posizione, indice) => {
       const gemma = this.gruppoGemme.create(posizione.x, posizione.y, 'coin_anim_f0') as Phaser.Physics.Arcade.Sprite;
       gemma.setScale(SCALA).refreshBody();
       gemma.play('gemma-spin');
@@ -531,11 +471,11 @@ export class DungeonRunScene extends Phaser.Scene {
     colonna.fillRoundedRect(0, 0, 36, ALTEZZA_MONDO, 8);
     colonna.generateTexture('colonna', 36, ALTEZZA_MONDO);
     colonna.destroy();
-    for (let x = 150; x < LARGHEZZA_MONDO; x += 500) {
+    for (let x = 150; x < this.livello.larghezzaMondo; x += 500) {
       this.add.image(x, 0, 'colonna').setOrigin(0, 0).setScrollFactor(0.4).setDepth(-10);
     }
 
-    for (let x = 250; x < LARGHEZZA_MONDO; x += 450) {
+    for (let x = 250; x < this.livello.larghezzaMondo; x += 450) {
       const bagliore = this.add.image(x, TERRENO_Y - 40, 'bagliore-torcia').setDepth(-6);
       this.add.image(x, TERRENO_Y - 16, 'supporto-torcia').setDepth(-5);
       this.tweens.add({
