@@ -83,6 +83,10 @@ export class DungeonRunScene extends Phaser.Scene {
   private tastoD!: Phaser.Input.Keyboard.Key;
   private tastoSpazio!: Phaser.Input.Keyboard.Key;
   private tastoF!: Phaser.Input.Keyboard.Key;
+  // Direzione dal joystick virtuale (DungeonTouchControlsComponent, vedi dungeon-run.ts):
+  // si combina con l'input da tastiera in update(), non lo sostituisce, così la scena resta
+  // identica su desktop e mobile.
+  private direzioneTattile: -1 | 0 | 1 = 0;
   private nemici: Nemico[] = [];
   private gruppoNemici!: Phaser.Physics.Arcade.Group;
   private gruppoProiettili!: Phaser.Physics.Arcade.Group;
@@ -238,6 +242,12 @@ export class DungeonRunScene extends Phaser.Scene {
     this.events.on(Phaser.Scenes.Events.RESUME, () => {
       this.inPausa = false;
     });
+
+    // Consegna la propria istanza al componente Angular solo ora che create() è completa
+    // (giocatore e resto dello stato sono pronti): scene.add(..., true, ...) in
+    // dungeon-run.ts è asincrono rispetto al boot del gioco, quindi un game.scene.getScene()
+    // chiamato subito dopo scene.add() restituirebbe ancora null.
+    this.callbacks.onSceneReady(this);
   }
 
   override update() {
@@ -249,8 +259,8 @@ export class DungeonRunScene extends Phaser.Scene {
     }
 
     const velocita = 160;
-    const sinistra = this.cursori.left.isDown || this.tastoA.isDown;
-    const destra = this.cursori.right.isDown || this.tastoD.isDown;
+    const sinistra = this.cursori.left.isDown || this.tastoA.isDown || this.direzioneTattile === -1;
+    const destra = this.cursori.right.isDown || this.tastoD.isDown || this.direzioneTattile === 1;
     if (sinistra) {
       this.giocatore.setVelocityX(-velocita);
       this.giocatore.flipX = true;
@@ -290,6 +300,25 @@ export class DungeonRunScene extends Phaser.Scene {
         nemico.sprite.flipX = true;
       }
     }
+  }
+
+  // ————— Input tattile (mobile) —————
+  // Chiamati da dungeon-run.ts in risposta agli eventi del joystick virtuale
+  // (DungeonTouchControlsComponent). saltaTattile()/usaAbilitaTattile() replicano le stesse
+  // guardie del salto/abilità da tastiera (blocked.down, abilitaPronta()) invece di forzare
+  // l'azione, per non concedere su mobile un salto o un'abilità altrimenti non validi.
+
+  impostaMovimentoTattile(direzione: -1 | 0 | 1) {
+    this.direzioneTattile = direzione;
+  }
+
+  saltaTattile() {
+    const corpo = this.giocatore.body as Phaser.Physics.Arcade.Body;
+    if (corpo.blocked.down) this.giocatore.setVelocityY(FORZA_SALTO);
+  }
+
+  usaAbilitaTattile() {
+    if (this.abilitaPronta()) this.usaAbilita();
   }
 
   // ————— Abilità di classe (tasto F) —————

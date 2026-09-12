@@ -70,21 +70,20 @@ export class App {
   private navigationTracker = inject(NavigationTracker);
   protected diceRollerOpen = signal(false);
   protected mobileNavOpen = signal(false);
+  // Sceglie quale delle due varianti di header/nav (mobile "app-like" vs desktop lineare)
+  // montare nel DOM. Un semplice hidden/lg:hidden via CSS non basta: entrambe le varianti
+  // contengono <app-araldica>, che al suo ngOnInit apre un canale Supabase Realtime con
+  // nome fisso (profile-rank-<userId>) — due istanze sempre montate in parallelo farebbero
+  // collidere il secondo subscribe() sullo stesso canale. Con @if/@else sul segnale, in
+  // ogni momento ne esiste una sola istanza viva (1024px = soglia "lg" di Tailwind).
+  protected readonly isDesktopLayout = signal(App.matchesDesktopBreakpoint());
 
   private adventurersPanel = viewChild(Adventurers);
 
-  // Etichetta della tab attiva sul pulsante del menu mobile: fallback su "Menu" per le
-  // tab raggiungibili in altri modi (badge campagna, menu utente...) che non hanno una
-  // voce propria in questo menu.
-  private readonly mobileTabLabelKeys: Partial<Record<Tab, string>> = {
-    board: 'tab_board',
-    campaign: 'tab_campaign',
-    characters: 'tab_characters',
-    catalog: 'tab_catalog',
-    manage: 'tab_manage',
-  };
-
   constructor() {
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+    desktopQuery.addEventListener('change', (e) => this.isDesktopLayout.set(e.matches));
+
     // URL richiesto dal browser al caricamento (prima che il redirect '' -> 'dashboard'
     // o la guardia di autenticazione possano intervenire). Serve a distinguere un
     // refresh/link diretto su una pagina specifica da un vero login.
@@ -142,11 +141,6 @@ export class App {
     this.router.navigate(['/dashboard']);
   }
 
-  mobileTabLabel(): string {
-    const key = this.mobileTabLabelKeys[this.appNav.activeTab()];
-    return key ? this.localeService.t(key) : this.localeService.t('nav_menu_label');
-  }
-
   selectMobileTab(tab: Tab) {
     this.mobileNavOpen.set(false);
     if (tab === 'board') {
@@ -169,5 +163,9 @@ export class App {
 
   closeDiceRoller() {
     this.diceRollerOpen.set(false);
+  }
+
+  private static matchesDesktopBreakpoint(): boolean {
+    return window.matchMedia('(min-width: 1024px)').matches;
   }
 }

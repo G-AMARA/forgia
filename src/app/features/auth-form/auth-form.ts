@@ -33,6 +33,11 @@ export class AuthForm {
     this.appNav.setTab('profile');
   }
 
+  showLegalNotice() {
+    this.userMenuOpen.set(false);
+    this.modal.notice(this.localeService.t('footer_disclaimer'), this.localeService.t('legal_notice_title'));
+  }
+
   @Input() variant: 'header' | 'landing' = 'header';
 
   email = '';

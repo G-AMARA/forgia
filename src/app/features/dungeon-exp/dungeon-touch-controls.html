@@ -1,0 +1,16 @@
+<div class="flex flex-col items-center gap-1 select-none">
+  <div
+    #base
+    class="relative w-24 h-24 rounded-full bg-fantasy-black/30 border border-gold/40 backdrop-blur-sm touch-none"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerUp($event)"
+  >
+    <div
+      class="absolute top-1/2 left-1/2 w-10 h-10 rounded-full bg-fantasy-gold/60 border border-gold pointer-events-none"
+      [style.transform]="'translate(-50%, -50%) translate(' + stickX() + 'px, ' + stickY() + 'px)'"
+    ></div>
+  </div>
+  <span class="text-[9px] uppercase tracking-wide text-fantasy-gold/70">Trascina · tocca = potere</span>
+</div>

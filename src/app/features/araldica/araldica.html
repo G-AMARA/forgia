@@ -9,7 +9,10 @@
         @if (!auth.isAdmin()) {
           <span class="text-[10px] uppercase text-slate-arcane">{{ secondsToExp(navigationSeconds()) }} exp</span>
         }
-        <span class="font-display text-xs text-fantasy-gold">{{ r.name }}</span>
+        <!-- Nome del rango: nascosto sotto lg per un header mobile cortissimo — restano
+        sempre visibili solo EXP e icona (vedi sotto), il nome si legge comunque aprendo
+        la modale ranghi al tocco. -->
+        <span class="hidden lg:block font-display text-xs text-fantasy-gold">{{ r.name }}</span>
       </div>
       <img [src]="r.icon" [alt]="r.name" [title]="r.name" class="w-8 h-8 rounded-full" />
     </button>

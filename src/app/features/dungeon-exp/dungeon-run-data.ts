@@ -307,6 +307,12 @@ export interface DungeonRunCallbacks {
   onCooldownUpdate: (prontezza: number) => void;
   onTimerUpdate: (secondiRimanenti: number) => void;
   onGameEnd: (risultato: { vittoria: boolean; gemme: number; tempoScaduto: boolean }) => void;
+  // `unknown` invece di DungeonRunScene: questo file NON deve importare Phaser (vedi nota in
+  // testa a dungeon-run-scene.ts), il componente Angular fa il cast dopo aver ricevuto la
+  // scena. Serve perché scene.add(..., true, ...) è asincrono rispetto al boot del gioco:
+  // subito dopo scene.add() game.scene.getScene() restituisce ancora null, quindi la scena
+  // si comunica da sé (a create() completata) invece di farsela "andare a prendere" da fuori.
+  onSceneReady: (scene: unknown) => void;
 }
 
 export interface DungeonRunInitData {

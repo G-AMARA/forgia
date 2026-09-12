@@ -3,6 +3,7 @@ import type { default as PhaserType } from 'phaser';
 import { DungeonRun } from '../../core/dungeon-run';
 import { Modal } from '../../core/modal';
 import { CLASSI_DND, NUMERO_GEMME_TOTALI, livelloDelGiorno, type ClasseId } from './dungeon-run-data';
+import { DungeonTouchControlsComponent } from './dungeon-touch-controls';
 import type { DungeonRunScene } from './dungeon-run-scene';
 
 type StatoPartita = 'caricamento' | 'bloccato' | 'selezione-classe' | 'gioco' | 'pausa' | 'terminata';
@@ -21,6 +22,7 @@ const LIVELLO_OGGI = livelloDelGiorno();
 @Component({
   selector: 'app-dungeon-run',
   standalone: true,
+  imports: [DungeonTouchControlsComponent],
   templateUrl: './dungeon-run.html',
   styleUrl: './dungeon-run.scss',
 })
@@ -132,6 +134,17 @@ export class DungeonRunGame implements AfterViewInit, OnDestroy {
     return this.classi.find((c) => c.id === this.classeSelezionata());
   }
 
+  // Ponte fra il joystick virtuale (mobile) e le controparti "tattili" esposte dalla scena.
+  protected onMovimentoTattile(direzione: -1 | 0 | 1) {
+    this.scenaAttiva?.impostaMovimentoTattile(direzione);
+  }
+  protected onSaltoTattile() {
+    this.scenaAttiva?.saltaTattile();
+  }
+  protected onAbilitaTattile() {
+    this.scenaAttiva?.usaAbilitaTattile();
+  }
+
   private async avviaGioco(classeId: ClasseId) {
     if (this.avvioInCorso) return;
     this.avvioInCorso = true;
@@ -164,9 +177,11 @@ export class DungeonRunGame implements AfterViewInit, OnDestroy {
         onCooldownUpdate: (prontezza: number) => this.cooldownPronto.set(prontezza),
         onTimerUpdate: (secondi: number) => this.tempoRimanente.set(secondi),
         onGameEnd: (esito: RisultatoLivello) => this.gestisciFineGioco(esito),
+        // Vedi commento su onSceneReady in dungeon-run-data.ts: game.scene.getScene() non è
+        // affidabile subito dopo scene.add(), la scena si annuncia da sé a create() ultimata.
+        onSceneReady: (scene: unknown) => (this.scenaAttiva = scene as DungeonRunScene),
       },
     });
-    this.scenaAttiva = this.game.scene.getScene('dungeon-run') as DungeonRunScene;
 
     this.stato.set('gioco');
     this.avvioInCorso = false;

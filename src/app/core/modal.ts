@@ -85,6 +85,26 @@ export class Modal {
     });
   }
 
+  // Variante neutra (né successo né errore) per contenuti puramente informativi come il
+  // disclaimer Fan Content Policy: riusa il tipo 'warning' già previsto in ModalVariant ma
+  // finora privo di un metodo dedicato.
+  notice(message: string, title: string): Promise<boolean> {
+    this.resolver?.(false);
+    this.resolver = null;
+
+    this.state.set({
+      title,
+      imageSrc: null,
+      modalMessage: message,
+      variant: 'warning',
+      confirmLabel: this.localeService.t('confirmLabel'),
+      showCancelButton: false,
+    });
+    return new Promise<boolean>((resolve) => {
+      this.resolver = resolve;
+    });
+  }
+
   respond(result: boolean) {
     this.resolver?.(result);
     this.resolver = null;
