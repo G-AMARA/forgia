@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Supabase } from './supabase';
 import { Auth } from './auth';
-import { getNpcLimitForSeconds } from './ranks';
+import { getCampaignAdditionLimitForSeconds } from './ranks';
 
 export type NpcAttitude = 'friendly' | 'neutral' | 'hostile';
 
@@ -33,12 +33,22 @@ export class NpcStore {
   // corrente (vedi core/ranks.ts): il conteggio è globale, non per campagna, perché il
   // catalogo PNG stesso è globale. Rispecchia il limite applicato lato RLS
   // (get_npc_creation_limit), qui solo per la UI (disabilitare il bottone in anticipo).
-  readonly myNpcLimit = computed(() => getNpcLimitForSeconds(this.auth.navigationSeconds(), this.auth.isAdmin()));
+  readonly myNpcLimit = computed(() => getCampaignAdditionLimitForSeconds(this.auth.navigationSeconds(), this.auth.isAdmin()));
   readonly myNpcCount = computed(() => {
     const userId = this.auth.user()?.id;
     return userId ? this.catalog().filter((n) => n.created_by === userId).length : 0;
   });
+  // Limite GLOBALE (sopra): protegge il catalogo condiviso da un utente che ne crea troppi
+  // in totale, sommando su tutte le sue campagne. Non basta da solo: un utente sotto quella
+  // soglia globale potrebbe comunque collegare PNG illimitati a UNA campagna pescandoli dal
+  // catalogo (Npc.openPicker/NpcPicker.toggle), aggirando di fatto il senso della quota.
+  // myNpcCampaignCount è quindi il conteggio PER QUESTA campagna (selectedIds riflette solo
+  // la campagna caricata, vedi loadSelectionForCampaign), stessa logica di
+  // BestiaryStore.myBestiaryCount/MapAlbumsStore.myMapCount: entrambi i limiti vanno
+  // rispettati, sia per "Crea PNG" (NpcForm.submit) sia per "Seleziona PNG" (NpcPicker.toggle).
+  readonly myNpcCampaignCount = computed(() => this.selectedIds().size);
   readonly canCreateNpc = computed(() => this.myNpcCount() < this.myNpcLimit());
+  readonly canAddNpcToCampaign = computed(() => this.myNpcCampaignCount() < this.myNpcLimit());
 
   async loadCatalog() {
     this.loading.set(true);

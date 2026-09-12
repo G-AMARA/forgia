@@ -4,6 +4,7 @@ import { Auth } from '../../core/auth';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { CampaignTokens, TOKEN_PLACEHOLDER_AVATAR } from '../../core/campaign-tokens';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 import { BoardViewport } from '../play/components/interactive-board/board-viewport';
 import { ensureSwiperRegistered } from '../../core/swiper-register';
 import { MonsterDetailCard } from './monster-detail-card';
@@ -26,6 +27,10 @@ export class Bestiary implements OnInit {
   // il pulsante "Piazza sulla Mappa" non compare (vedi canPlaceOnMap).
   private viewport = inject(BoardViewport, { optional: true });
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
+  // Il template non risolve i globali JS: serve esposto per nascondere la quota quando il
+  // rango è Fato (BestiaryStore.myBestiaryLimit()), come Npc.Infinity.
+  protected readonly Infinity = Infinity;
 
   @Input() campaignId!: string;
 
@@ -87,6 +92,21 @@ export class Bestiary implements OnInit {
 
     if (!token) return;
     this.tokensChanged.emit();
+  }
+
+  // Rimozione diretta dalla card di dettaglio (in cima al mazzo), senza dover riaprire il
+  // picker e ritrovare/deselezionare lo stesso mostro da lì: stessa mutazione di
+  // MonsterPicker.toggle sul ramo "già selezionato", solo raggiunta da un altro punto della UI.
+  async removeFromCampaign(monster: BestiaryMonster) {
+    const { error } = await this.bestiaryStore.removeFromCampaign(this.campaignId, monster.id);
+    if (error) {
+      this.modal.error(error.message);
+      return;
+    }
+    const count = this.selectedMonsters().length;
+    if (this.selectedIndex() >= count) {
+      this.selectedIndex.set(Math.max(0, count - 1));
+    }
   }
 
   openPicker() {

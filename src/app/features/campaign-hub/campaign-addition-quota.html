@@ -1,0 +1,60 @@
+@if (canManage()) {
+  <div class="panel-forge rounded-lg p-3 flex items-start justify-between gap-3">
+    <div class="flex flex-col gap-1 text-xs text-forge-text-sub">
+      @if (npcStore.myNpcLimit() !== Infinity) {
+        <span>🧑 {{ npcStore.myNpcCampaignCount() }}/{{ npcStore.myNpcLimit() }} {{ localeService.t('npc_quota_label') }}</span>
+      }
+      @if (bestiaryStore.myBestiaryLimit() !== Infinity) {
+        <span>🐲 {{ bestiaryStore.myBestiaryCount() }}/{{ bestiaryStore.myBestiaryLimit() }} {{ localeService.t('bestiary_quota_label') }}</span>
+      }
+      @if (mapAlbumsStore.myMapImageLimit() !== Infinity) {
+        <span>🗺️ {{ mapAlbumsStore.myMapImageCount() }}/{{ mapAlbumsStore.myMapImageLimit() }} {{ localeService.t('map_quota_label') }}</span>
+      }
+    </div>
+    <button
+      type="button"
+      (click)="openInfo()"
+      [attr.aria-label]="localeService.t('addition_quota_info_button_label')"
+      [title]="localeService.t('addition_quota_info_button_label')"
+      class="shrink-0 w-7 h-7 flex items-center justify-center rounded-full border border-forge-border-panel text-forge-text-sub hover:text-gold hover:border-gold transition-colors"
+    >
+      ℹ️
+    </button>
+  </div>
+}
+
+@if (showInfo()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+    (click)="closeInfo()"
+  >
+    <div class="relative w-full max-w-sm panel-forge rounded-lg p-6 text-fantasy-moonstone" (click)="$event.stopPropagation()">
+      <h3 class="font-display text-lg mb-1 text-fantasy-gold">{{ localeService.t('addition_quota_modal_title') }}</h3>
+      <p class="text-[11px] text-forge-text-sub mb-4">{{ localeService.t('addition_quota_modal_subtitle') }}</p>
+
+      <ul class="space-y-2 max-h-[60vh] overflow-y-auto">
+        @for (tier of rankTiers; track tier.name) {
+          <li
+            class="flex items-center gap-3 p-2 rounded border border-gold/30"
+            [class.bg-fantasy-gold]="myRank().name === tier.name"
+            [class.text-fantasy-black]="myRank().name === tier.name"
+          >
+            <img [src]="tier.icon" [alt]="tier.name" class="w-8 h-8 rounded-full shrink-0" />
+            <span class="font-display text-sm flex-1">{{ tier.name }}</span>
+            <span class="text-xs font-semibold">{{ limitForTier(tier) }}</span>
+          </li>
+        }
+      </ul>
+
+      <div class="flex justify-end mt-6">
+        <button
+          type="button"
+          (click)="closeInfo()"
+          class="px-4 py-2 bg-fantasy-gold text-fantasy-black font-display rounded border-2 border-gold hover:bg-fantasy-moonstone transition-colors"
+        >
+          {{ localeService.t('close_button') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

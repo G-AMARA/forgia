@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { ActiveCampaign } from '../../core/active-campaign';
+import { ActiveCampaign, Campaign } from '../../core/active-campaign';
+import { AppNav } from '../../core/app-nav';
 import { Auth } from '../../core/auth';
 import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
@@ -20,6 +21,12 @@ export class CampaignCreate {
   protected auth = inject(Auth);
   protected localeService = inject(LocaleService);
   private modal = inject(Modal);
+  private appNav = inject(AppNav);
+
+  protected enterCampaign(campaign: Campaign) {
+    this.campaignStore.selectCampaign(campaign);
+    this.appNav.setTab('hub');
+  }
 
   protected async deleteCampaign(campaignId: string, campaignName: string) {
     const confirmed = await this.modal.confirm(

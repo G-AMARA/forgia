@@ -10,7 +10,7 @@
           <app-campaign-card
             [campaign]="campaign"
             [isActive]="campaignStore.current()?.id === campaign.id"
-            (select)="campaignStore.selectCampaign(campaign)"
+            (select)="enterCampaign(campaign)"
             (remove)="deleteCampaign(campaign.id, campaign.name)"
           ></app-campaign-card>
         }

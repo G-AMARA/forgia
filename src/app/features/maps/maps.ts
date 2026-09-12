@@ -51,6 +51,8 @@ export class Maps implements OnInit {
     this.selectedAlbumId.set(null);
   }
 
+  // Creare un album non ha un tetto: è solo un contenitore organizzativo, la quota vale
+  // sulle IMMAGINI (vedi MapAlbumDetail.onFileSelected/MapAlbumsStore.canAddMapImage).
   async createAlbum() {
     const name = this.newAlbumName.trim();
     if (!name) return;

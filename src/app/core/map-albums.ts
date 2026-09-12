@@ -1,5 +1,7 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { Supabase } from './supabase';
+import { Auth } from './auth';
+import { getCampaignAdditionLimitForSeconds } from './ranks';
 
 export interface MapAlbumImage {
   id: string;
@@ -35,9 +37,23 @@ function mapRow(row: any): MapAlbum {
 @Injectable({ providedIn: 'root' })
 export class MapAlbumsStore {
   private supabase = inject(Supabase);
+  private auth = inject(Auth);
 
   readonly albums = signal<MapAlbum[]>([]);
   readonly loading = signal(false);
+
+  // Quota di IMMAGINI caricabili in UNA campagna (MapAlbumDetail.onFileSelected) in base al
+  // rango araldico dell'utente corrente (vedi core/ranks.ts): sommata su TUTTI gli album
+  // della campagna caricata (loadAlbums), non per singolo album — un Adepto può fare 1
+  // album con 3 immagini o 3 album con 1 immagine ciascuno, l'importante è non superare il
+  // totale. La creazione di ALBUM invece resta libera (nessun tetto, sono solo un
+  // contenitore organizzativo). Rispecchia il limite applicato lato RLS
+  // (get_campaign_addition_limit su map_album_images, vedi
+  // sql/2026-09-12_map_images_quota.sql), qui solo per la UI (disabilitare l'upload in
+  // anticipo).
+  readonly myMapImageLimit = computed(() => getCampaignAdditionLimitForSeconds(this.auth.navigationSeconds(), this.auth.isAdmin()));
+  readonly myMapImageCount = computed(() => this.albums().reduce((sum, a) => sum + a.images.length, 0));
+  readonly canAddMapImage = computed(() => this.myMapImageCount() < this.myMapImageLimit());
 
   async loadAlbums(campaignId: string) {
     this.loading.set(true);

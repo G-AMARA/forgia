@@ -73,10 +73,13 @@ export class NpcForm implements OnInit {
       return;
     }
 
-    // Il limite vero è imposto lato RLS (get_npc_creation_limit): questo controllo evita
-    // solo un errore di permessi poco chiaro se la quota si è esaurita nel frattempo
-    // (es. un altro tab dello stesso utente).
-    if (!this.editingId && this.campaignId && !this.npcStore.canCreateNpc()) {
+    // Due limiti indipendenti da rispettare (vedi NpcStore): canCreateNpc è il tetto
+    // GLOBALE sul catalogo condiviso (get_campaign_addition_limit su npc_characters),
+    // canAddNpcToCampaign è il tetto PER QUESTA campagna (stessa RLS su
+    // campaign_npc_characters, a cui createNpc collega subito il nuovo PNG). Il limite vero
+    // è imposto lato RLS: questo controllo evita solo un errore di permessi poco chiaro se
+    // la quota si è esaurita nel frattempo (es. un altro tab dello stesso utente).
+    if (!this.editingId && this.campaignId && (!this.npcStore.canCreateNpc() || !this.npcStore.canAddNpcToCampaign())) {
       this.modal.error(this.localeService.t('npc_quota_reached_hint'));
       return;
     }

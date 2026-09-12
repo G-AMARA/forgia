@@ -21,6 +21,14 @@ export class NpcPicker {
   }
 
   async toggle(npc: NpcCharacter) {
+    // Il limite vero è imposto lato RLS (get_campaign_addition_limit su
+    // campaign_npc_characters): questo controllo evita solo un errore di permessi poco
+    // chiaro se la quota si è esaurita nel frattempo (stesso guard di MonsterPicker.toggle).
+    if (!this.isSelected(npc) && !this.npcStore.canAddNpcToCampaign()) {
+      this.modal.error(this.localeService.t('npc_quota_reached_hint'));
+      return;
+    }
+
     const { error } = this.isSelected(npc)
       ? await this.npcStore.removeFromCampaign(this.campaignId, npc.id)
       : await this.npcStore.addToCampaign(this.campaignId, npc.id);

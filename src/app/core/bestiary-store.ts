@@ -1,6 +1,7 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { Supabase } from './supabase';
 import { Auth } from './auth';
+import { getCampaignAdditionLimitForSeconds } from './ranks';
 
 export interface TraitBlock {
   name: string;
@@ -55,6 +56,16 @@ export class BestiaryStore {
   readonly catalog = signal<BestiaryMonster[]>([]);
   readonly selectedIds = signal<Set<string>>(new Set());
   readonly loading = signal(false);
+
+  // Quota di mostri selezionabili nel Bestiario di UNA campagna (Bestiary.openPicker) in
+  // base al rango araldico dell'utente corrente (vedi core/ranks.ts): a differenza dei PNG
+  // (catalogo/conteggio globali), qui il conteggio è per singola campagna, perché
+  // selectedIds() riflette già solo la selezione della campagna caricata (vedi
+  // loadSelectionForCampaign). Rispecchia il limite applicato lato RLS
+  // (get_campaign_addition_limit), qui solo per la UI (disabilitare l'aggiunta in anticipo).
+  readonly myBestiaryLimit = computed(() => getCampaignAdditionLimitForSeconds(this.auth.navigationSeconds(), this.auth.isAdmin()));
+  readonly myBestiaryCount = computed(() => this.selectedIds().size);
+  readonly canAddMonsterToCampaign = computed(() => this.myBestiaryCount() < this.myBestiaryLimit());
 
   async loadCatalog() {
     this.loading.set(true);

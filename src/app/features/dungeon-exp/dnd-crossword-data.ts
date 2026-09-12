@@ -24,83 +24,87 @@ export interface CrosswordPuzzle {
   parole: ParolaCrociata[];
 }
 
-// v2: GOBLIN(verticale, col.5)/NANO e ELFO(orizzontale, riga 4)/LICH toccavano la parola
-// parallela adiacente senza una cella nera di separazione (NANO iniziava esattamente dove
-// finiva GOBLIN nella stessa colonna, LICH esattamente dove finiva ELFO nella stessa riga):
-// il risultato era una sola striscia di lettere continua che sembrava un'unica parola
-// invece di due. NANO e LICH sono state spostate su righe/colonne proprie, isolate, e la
-// disposizione è stata validata con uno script che verifica sia i conflitti di lettere alle
-// intersezioni sia l'assenza di parole parallele adiacenti senza gap.
+// v3: le parole erano piazzate senza alcuna intersezione reale fra loro (coordinate scelte a
+// mano senza verificare le lettere condivise): sembravano un cruciverba solo perché disposte
+// su una griglia, ma erano di fatto blocchi isolati che non si incrociavano MAI, il che
+// smentiva il senso stesso di "parole CROCIATE". Le disposizioni qui sotto sono generate e
+// validate con uno script (non incluso nel bundle, è un tool di autoring) che garantisce tre
+// invarianti per ogni puzzle: 1) ogni parola condivide almeno una lettera con un'altra parola
+// e il grafo delle intersezioni risultante è un UNICO componente connesso (si può raggiungere
+// ogni parola dalle altre passando per le lettere in comune); 2) nessun conflitto di lettera
+// nelle celle condivise; 3) nessuna riga/colonna contiene una sequenza di celle occupate
+// adiacenti che mescoli due parole diverse (o una parola e una cella "orfana" priva di un id)
+// senza una cella nera di separazione, altrimenti sembrerebbero fuse in un'unica parola.
 const PUZZLE_DND_1: CrosswordPuzzle = {
   id: 'dnd-crossword-1',
-  righe: 13,
-  colonne: 11,
+  righe: 9,
+  colonne: 14,
   parole: [
-    { numero: 1, risposta: 'MAGO', direzione: 'orizzontale', x: 0, y: 0, indizio: 'Classe che scaglia incantesimi attingendo allo studio arcano' },
-    { numero: 2, risposta: 'ORCO', direzione: 'verticale', x: 3, y: 0, indizio: 'Umanoide brutale, spesso in orda, classico nemico di basso livello' },
-    { numero: 3, risposta: 'DRAGO', direzione: 'orizzontale', x: 2, y: 1, indizio: 'Creatura leggendaria e sputafuoco, incubo di ogni regno' },
-    { numero: 4, risposta: 'GOBLIN', direzione: 'verticale', x: 5, y: 1, indizio: 'Piccolo umanoide verde e vigliacco, nemico da manuale base' },
-    { numero: 5, risposta: 'CHIERICO', direzione: 'verticale', x: 9, y: 2, indizio: 'Classe che canalizza il potere della propria divinità in incantesimi di cura' },
-    { numero: 6, risposta: 'NANO', direzione: 'verticale', x: 10, y: 3, indizio: 'Razza robusta, maestra di forgia e miniera' },
-    { numero: 7, risposta: 'ELFO', direzione: 'orizzontale', x: 4, y: 4, indizio: 'Razza longeva ed elegante, affine a magia e arco' },
-    { numero: 8, risposta: 'FULMINE', direzione: 'verticale', x: 6, y: 4, indizio: 'Incantesimo che scatena una scarica elettrica lungo una linea' },
-    { numero: 9, risposta: 'LICH', direzione: 'verticale', x: 2, y: 5, indizio: 'Non-morto incantatore che lega la propria anima a un phylactery' },
-    { numero: 10, risposta: 'PALADINO', direzione: 'verticale', x: 7, y: 5, indizio: 'Guerriero sacro legato da un giuramento solenne' },
-    { numero: 11, risposta: 'LADRO', direzione: 'orizzontale', x: 6, y: 6, indizio: 'Classe furtiva, esperta di trappole, serrature e attacchi a sorpresa' },
-    { numero: 12, risposta: 'CURA', direzione: 'orizzontale', x: 2, y: 7, indizio: 'Incantesimo che ripristina i punti ferita' },
+    { numero: 1, risposta: 'FULMINE', direzione: 'verticale', x: 2, y: 0, indizio: 'Incantesimo che scatena una scarica elettrica lungo una linea' },
+    { numero: 2, risposta: 'LADRO', direzione: 'orizzontale', x: 5, y: 0, indizio: 'Classe furtiva, esperta di trappole, serrature e attacchi a sorpresa' },
+    { numero: 3, risposta: 'DRAGO', direzione: 'verticale', x: 7, y: 0, indizio: 'Creatura leggendaria e sputafuoco, incubo di ogni regno' },
+    { numero: 4, risposta: 'LICH', direzione: 'verticale', x: 0, y: 2, indizio: 'Non-morto incantatore che lega la propria anima a un phylactery' },
+    { numero: 5, risposta: 'CURA', direzione: 'verticale', x: 4, y: 2, indizio: 'Incantesimo che ripristina i punti ferita' },
+    { numero: 6, risposta: 'MAGO', direzione: 'orizzontale', x: 6, y: 2, indizio: 'Classe che scaglia incantesimi attingendo allo studio arcano' },
+    { numero: 7, risposta: 'ORCO', direzione: 'verticale', x: 9, y: 2, indizio: 'Umanoide brutale, spesso in orda, classico nemico di basso livello' },
+    { numero: 8, risposta: 'CHIERICO', direzione: 'orizzontale', x: 0, y: 4, indizio: 'Classe che canalizza il potere della propria divinità in incantesimi di cura' },
+    { numero: 9, risposta: 'ELFO', direzione: 'verticale', x: 11, y: 4, indizio: 'Razza longeva ed elegante, affine a magia e arco' },
+    { numero: 10, risposta: 'GOBLIN', direzione: 'orizzontale', x: 8, y: 5, indizio: 'Piccolo umanoide verde e vigliacco, nemico da manuale base' },
+    { numero: 11, risposta: 'NANO', direzione: 'verticale', x: 13, y: 5, indizio: 'Razza robusta, maestra di forgia e miniera' },
+    { numero: 12, risposta: 'PALADINO', direzione: 'orizzontale', x: 4, y: 7, indizio: 'Guerriero sacro legato da un giuramento solenne' },
   ],
 };
 
 const PUZZLE_DND_2: CrosswordPuzzle = {
   id: 'dnd-crossword-2',
-  righe: 14,
-  colonne: 17,
+  righe: 12,
+  colonne: 16,
   parole: [
-    { numero: 1, risposta: 'LUPO', direzione: 'orizzontale', x: 0, y: 0, indizio: 'Animale predatore, spesso evocato da druidi e ranger come compagno' },
-    { numero: 2, risposta: 'ORSO', direzione: 'verticale', x: 3, y: 0, indizio: 'Bestione della foresta, temuto per la forza bruta e gli artigli' },
-    { numero: 3, risposta: 'FATA', direzione: 'verticale', x: 11, y: 0, indizio: 'Piccola creatura magica del feywild, dispettosa e sfuggente' },
-    { numero: 4, risposta: 'VAMPIRO', direzione: 'orizzontale', x: 10, y: 1, indizio: 'Non-morto aristocratico che si nutre di sangue, teme la luce del sole' },
-    { numero: 5, risposta: 'SPADA', direzione: 'orizzontale', x: 3, y: 2, indizio: "Arma da mischia per eccellenza, in tutte le sue varianti" },
-    { numero: 6, risposta: 'ELMO', direzione: 'orizzontale', x: 0, y: 3, indizio: "Protezione per la testa, parte dell'armatura pesante" },
-    { numero: 7, risposta: 'BARBARO', direzione: 'verticale', x: 1, y: 5, indizio: 'Classe che canalizza la Furia in battaglia, ignorando il dolore' },
-    { numero: 8, risposta: 'STREGONE', direzione: 'verticale', x: 9, y: 6, indizio: 'Classe che scaglia magia innata, nel sangue fin dalla nascita' },
-    { numero: 9, risposta: 'TROLL', direzione: 'orizzontale', x: 0, y: 7, indizio: 'Mostro rigenerante che teme solo fuoco e acido' },
-    { numero: 10, risposta: 'MAZZA', direzione: 'verticale', x: 6, y: 7, indizio: 'Arma contundente semplice, prediletta da chierici che non versano sangue' },
-    { numero: 11, risposta: 'SCUDO', direzione: 'orizzontale', x: 12, y: 8, indizio: 'Oggetto difensivo imbracciato, aumenta la Classe Armatura' },
-    { numero: 12, risposta: 'ANELLO', direzione: 'orizzontale', x: 7, y: 13, indizio: 'Gioiello magico indossabile, spesso fonte di poteri straordinari' },
+    { numero: 1, risposta: 'TROLL', direzione: 'verticale', x: 8, y: 0, indizio: 'Mostro rigenerante che teme solo fuoco e acido' },
+    { numero: 2, risposta: 'ANELLO', direzione: 'verticale', x: 3, y: 3, indizio: 'Gioiello magico indossabile, spesso fonte di poteri straordinari' },
+    { numero: 3, risposta: 'LUPO', direzione: 'orizzontale', x: 8, y: 4, indizio: 'Animale predatore, spesso evocato da druidi e ranger come compagno' },
+    { numero: 4, risposta: 'ORSO', direzione: 'verticale', x: 11, y: 4, indizio: 'Bestione della foresta, temuto per la forza bruta e gli artigli' },
+    { numero: 5, risposta: 'STREGONE', direzione: 'orizzontale', x: 0, y: 5, indizio: 'Classe che scaglia magia innata, nel sangue fin dalla nascita' },
+    { numero: 6, risposta: 'ELMO', direzione: 'verticale', x: 7, y: 5, indizio: "Protezione per la testa, parte dell'armatura pesante" },
+    { numero: 7, risposta: 'BARBARO', direzione: 'verticale', x: 13, y: 5, indizio: 'Classe che canalizza la Furia in battaglia, ignorando il dolore' },
+    { numero: 8, risposta: 'MAZZA', direzione: 'verticale', x: 15, y: 5, indizio: 'Arma contundente semplice, prediletta da chierici che non versano sangue' },
+    { numero: 9, risposta: 'SPADA', direzione: 'orizzontale', x: 11, y: 6, indizio: "Arma da mischia per eccellenza, in tutte le sue varianti" },
+    { numero: 10, risposta: 'VAMPIRO', direzione: 'orizzontale', x: 5, y: 7, indizio: 'Non-morto aristocratico che si nutre di sangue, teme la luce del sole' },
+    { numero: 11, risposta: 'FATA', direzione: 'orizzontale', x: 12, y: 9, indizio: 'Piccola creatura magica del feywild, dispettosa e sfuggente' },
+    { numero: 12, risposta: 'SCUDO', direzione: 'orizzontale', x: 9, y: 11, indizio: 'Oggetto difensivo imbracciato, aumenta la Classe Armatura' },
   ],
 };
 
 const PUZZLE_DND_3: CrosswordPuzzle = {
   id: 'dnd-crossword-3',
-  righe: 14,
-  colonne: 16,
+  righe: 10,
+  colonne: 13,
   parole: [
-    { numero: 1, risposta: 'GNOMO', direzione: 'orizzontale', x: 0, y: 0, indizio: 'Razza piccola e ingegnosa, spesso illusionista o inventore' },
-    { numero: 2, risposta: 'FRECCIA', direzione: 'verticale', x: 10, y: 0, indizio: 'Proiettile scoccato dall’arco, si porta in faretra' },
-    { numero: 3, risposta: 'DEMONE', direzione: 'verticale', x: 15, y: 0, indizio: 'Creatura malvagia proveniente dagli Abissi, corrotta e crudele' },
-    { numero: 4, risposta: 'GRIFONE', direzione: 'orizzontale', x: 9, y: 1, indizio: 'Creatura per metà aquila e per metà leone, cavalcatura alata' },
-    { numero: 5, risposta: 'ARPIA', direzione: 'orizzontale', x: 1, y: 2, indizio: 'Creatura per metà donna e metà uccello, canto ammaliante e letale' },
-    { numero: 6, risposta: 'ASCIA', direzione: 'orizzontale', x: 0, y: 4, indizio: 'Arma da mischia tagliente, spesso impugnata a due mani da un barbaro' },
-    { numero: 7, risposta: 'MANTELLO', direzione: 'verticale', x: 9, y: 6, indizio: "Indumento che copre le spalle, a volte incantato per l'invisibilità" },
-    { numero: 8, risposta: 'LANCIA', direzione: 'verticale', x: 1, y: 7, indizio: 'Arma d’asta con portata maggiore della spada' },
-    { numero: 9, risposta: 'CORAZZA', direzione: 'orizzontale', x: 1, y: 10, indizio: 'Armatura pesante che copre il torso, forgiata in metallo' },
+    { numero: 1, risposta: 'CORAZZA', direzione: 'verticale', x: 12, y: 0, indizio: 'Armatura pesante che copre il torso, forgiata in metallo' },
+    { numero: 2, risposta: 'MANTELLO', direzione: 'orizzontale', x: 5, y: 1, indizio: "Indumento che copre le spalle, a volte incantato per l'invisibilità" },
+    { numero: 3, risposta: 'ASCIA', direzione: 'verticale', x: 6, y: 1, indizio: 'Arma da mischia tagliente, spesso impugnata a due mani da un barbaro' },
+    { numero: 4, risposta: 'LANCIA', direzione: 'verticale', x: 10, y: 1, indizio: 'Arma d’asta con portata maggiore della spada' },
+    { numero: 5, risposta: 'DEMONE', direzione: 'verticale', x: 1, y: 3, indizio: 'Creatura malvagia proveniente dagli Abissi, corrotta e crudele' },
+    { numero: 6, risposta: 'GRIFONE', direzione: 'verticale', x: 4, y: 3, indizio: 'Creatura per metà aquila e per metà leone, cavalcatura alata' },
+    { numero: 7, risposta: 'ARPIA', direzione: 'orizzontale', x: 3, y: 4, indizio: 'Creatura per metà donna e metà uccello, canto ammaliante e letale' },
+    { numero: 8, risposta: 'GNOMO', direzione: 'orizzontale', x: 0, y: 7, indizio: 'Razza piccola e ingegnosa, spesso illusionista o inventore' },
+    { numero: 9, risposta: 'FRECCIA', direzione: 'orizzontale', x: 2, y: 9, indizio: 'Proiettile scoccato dall’arco, si porta in faretra' },
   ],
 };
 
 const PUZZLE_DND_4: CrosswordPuzzle = {
   id: 'dnd-crossword-4',
-  righe: 11,
-  colonne: 14,
+  righe: 15,
+  colonne: 15,
   parole: [
-    { numero: 1, risposta: 'SIRENA', direzione: 'orizzontale', x: 0, y: 0, indizio: 'Creatura acquatica dal canto ammaliante, insidia i marinai' },
-    { numero: 2, risposta: 'IDRA', direzione: 'verticale', x: 1, y: 0, indizio: 'Rettile multi-testa: tagliane una e ne rispuntano due, a meno di bruciare la ferita' },
-    { numero: 3, risposta: 'NINFA', direzione: 'verticale', x: 9, y: 0, indizio: 'Spirito della natura legato a un luogo, un bosco o una sorgente' },
-    { numero: 4, risposta: 'KOBOLD', direzione: 'orizzontale', x: 0, y: 4, indizio: 'Piccolo umanoide rettiliano, vive in tana e ama le trappole' },
-    { numero: 5, risposta: 'RUNA', direzione: 'verticale', x: 8, y: 4, indizio: "Simbolo magico inciso su un oggetto, ne potenzia l'incantamento" },
-    { numero: 6, risposta: 'PUGNALE', direzione: 'orizzontale', x: 7, y: 5, indizio: 'Arma da mischia leggera, ideale per un attacco furtivo' },
-    { numero: 7, risposta: 'GEMMA', direzione: 'verticale', x: 1, y: 6, indizio: 'Pietra preziosa, componente materiale di molti incantesimi' },
-    { numero: 8, risposta: 'TALISMANO', direzione: 'orizzontale', x: 0, y: 10, indizio: 'Oggetto magico portafortuna, protegge chi lo indossa' },
+    { numero: 1, risposta: 'PUGNALE', direzione: 'verticale', x: 6, y: 0, indizio: 'Arma da mischia leggera, ideale per un attacco furtivo' },
+    { numero: 2, risposta: 'RUNA', direzione: 'verticale', x: 8, y: 3, indizio: "Simbolo magico inciso su un oggetto, ne potenzia l'incantamento" },
+    { numero: 3, risposta: 'SIRENA', direzione: 'orizzontale', x: 3, y: 6, indizio: 'Creatura acquatica dal canto ammaliante, insidia i marinai' },
+    { numero: 4, risposta: 'IDRA', direzione: 'verticale', x: 4, y: 6, indizio: 'Rettile multi-testa: tagliane una e ne rispuntano due, a meno di bruciare la ferita' },
+    { numero: 5, risposta: 'NINFA', direzione: 'verticale', x: 7, y: 6, indizio: 'Spirito della natura legato a un luogo, un bosco o una sorgente' },
+    { numero: 6, risposta: 'GEMMA', direzione: 'orizzontale', x: 0, y: 9, indizio: 'Pietra preziosa, componente materiale di molti incantesimi' },
+    { numero: 7, risposta: 'KOBOLD', direzione: 'verticale', x: 14, y: 9, indizio: 'Piccolo umanoide rettiliano, vive in tana e ama le trappole' },
+    { numero: 8, risposta: 'TALISMANO', direzione: 'orizzontale', x: 6, y: 10, indizio: 'Oggetto magico portafortuna, protegge chi lo indossa' },
   ],
 };
 

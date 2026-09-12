@@ -15,8 +15,10 @@ export class NpcDetailCard {
 
   readonly npc = input.required<NpcCharacter>();
   readonly canPlaceOnMap = input(false);
+  readonly canManage = input(false);
 
   readonly placeOnMap = output<void>();
+  readonly remove = output<void>();
 
   // Colore del valore in evidenza nella tessera .compendium-stat-tile (la tessera stessa
   // fa già da badge, qui serve solo il colore del testo).

@@ -12,7 +12,7 @@
       <p class="text-sm italic text-slate-arcane">{{ localeService.t('loading') }}</p>
     } @else if (rank(); as r) {
       <div class="flex flex-col items-center gap-2">
-        <img [src]="r.icon" [alt]="r.name" class="w-16 h-16 rounded-full border-2 border-gold-bright" />
+        <img [src]="r.icon" [alt]="r.name" class="w-16 h-16 rounded-full" />
         <span class="font-display text-base text-fantasy-gold">{{ r.name }}</span>
         @if (r.minHours >= 0) {
           <span class="text-xs uppercase text-slate-arcane">{{ secondsToExp(navigationSeconds()) }} exp</span>

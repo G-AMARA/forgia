@@ -14,6 +14,7 @@ import { Maps } from '../maps/maps';
 import { AddHeroModal } from './add-hero-modal';
 import { PlayerHeraldryModal } from './player-heraldry-modal';
 import { EditHeroModal } from './edit-hero-modal';
+import { CampaignAdditionQuota } from './campaign-addition-quota';
 
 type CampaignSection = 'npc' | 'bestiary' | 'maps';
 
@@ -25,7 +26,7 @@ interface HeraldryModalTarget {
 @Component({
   selector: 'app-campaign-hub',
   standalone: true,
-  imports: [Bestiary, Npc, Maps, AddHeroModal, PlayerHeraldryModal, EditHeroModal],
+  imports: [Bestiary, Npc, Maps, AddHeroModal, PlayerHeraldryModal, EditHeroModal, CampaignAdditionQuota],
   templateUrl: './campaign-hub.html',
 })
 export class CampaignHub {

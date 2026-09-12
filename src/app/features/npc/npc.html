@@ -5,14 +5,14 @@
       <div class="flex items-center gap-3 flex-wrap">
         @if (npcStore.myNpcLimit() !== Infinity) {
           <span class="text-xs text-slate-arcane">
-            {{ npcStore.myNpcCount() }}/{{ npcStore.myNpcLimit() }} {{ localeService.t('npc_quota_label') }}
+            {{ npcStore.myNpcCampaignCount() }}/{{ npcStore.myNpcLimit() }} {{ localeService.t('npc_quota_label') }}
           </span>
         }
         <button
           type="button"
           (click)="openCreateForm()"
-          [disabled]="!npcStore.canCreateNpc()"
-          [title]="npcStore.canCreateNpc() ? '' : localeService.t('npc_quota_reached_hint')"
+          [disabled]="!npcStore.canCreateNpc() || !npcStore.canAddNpcToCampaign()"
+          [title]="npcStore.canCreateNpc() && npcStore.canAddNpcToCampaign() ? '' : localeService.t('npc_quota_reached_hint')"
           class="text-sm px-4 py-2 border border-forge-border-panel rounded text-forge-text-sub hover:text-forge-text-main hover:border-forge-iron-light transition-colors disabled:opacity-40 disabled:hover:border-forge-border-panel disabled:hover:text-forge-text-sub"
         >
           {{ localeService.t('npc_create_button') }}
@@ -82,7 +82,13 @@
       <!-- Pannello dettagli del PNG in cima al mazzo -->
       <div class="lg:col-span-8">
         @if (selectedNpc(); as npc) {
-          <app-npc-detail-card [npc]="npc" [canPlaceOnMap]="canPlaceOnMap()" (placeOnMap)="placeOnMap(npc)" />
+          <app-npc-detail-card
+            [npc]="npc"
+            [canPlaceOnMap]="canPlaceOnMap()"
+            [canManage]="canManage()"
+            (placeOnMap)="placeOnMap(npc)"
+            (remove)="removeFromCampaign(npc)"
+          />
         }
       </div>
     </div>

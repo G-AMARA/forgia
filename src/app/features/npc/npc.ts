@@ -4,6 +4,7 @@ import { Auth } from '../../core/auth';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { CampaignTokens, TOKEN_PLACEHOLDER_AVATAR } from '../../core/campaign-tokens';
 import { LocaleService } from '../../core/locale';
+import { Modal } from '../../core/modal';
 import { BoardViewport } from '../play/components/interactive-board/board-viewport';
 import { ensureSwiperRegistered } from '../../core/swiper-register';
 import { NpcDetailCard } from './npc-detail-card';
@@ -27,6 +28,7 @@ export class Npc implements OnInit {
   // il pulsante "Piazza sulla Mappa" non compare (vedi canPlaceOnMap).
   private viewport = inject(BoardViewport, { optional: true });
   protected localeService = inject(LocaleService);
+  private modal = inject(Modal);
   // Il template non risolve i globali JS: serve esposto per nascondere la quota quando il
   // rango è Fato (NpcStore.myNpcLimit()).
   protected readonly Infinity = Infinity;
@@ -91,6 +93,20 @@ export class Npc implements OnInit {
 
     if (!token) return;
     this.tokensChanged.emit();
+  }
+
+  // Rimozione diretta dalla card di dettaglio (in cima al mazzo), stesso motivo di
+  // Bestiary.removeFromCampaign: evita di dover riaprire il picker per togliere un solo PNG.
+  async removeFromCampaign(npc: NpcCharacter) {
+    const { error } = await this.npcStore.removeFromCampaign(this.campaignId, npc.id);
+    if (error) {
+      this.modal.error(error.message);
+      return;
+    }
+    const count = this.selectedNpcs().length;
+    if (this.selectedIndex() >= count) {
+      this.selectedIndex.set(Math.max(0, count - 1));
+    }
   }
 
   openPicker() {

@@ -24,19 +24,22 @@ export const RANK_TIERS: RankTier[] = [
 // assoluta sul calcolo normale (stesso controllo fatto lato DB in get_user_rank).
 export const FATO_RANK: RankTier = { minHours: -1, name: 'Fato', icon: 'icons/fato.png', key: 'fato' };
 
-// Quota di PNG creabili in campagna (Npc.createNpc) per rango araldico: 1 per Adepto,
-// poi 3/6/9/12/15/18 di 3 in 3 salendo di rango. Fato (admin) è l'unico caso illimitato,
-// riconosciuto dallo stesso identifier FATO_RANK usato da getRankForSeconds. Deve restare
-// in sync con la function SQL get_npc_creation_limit (vedi sql/2026-09-05_npc_creation_limit.sql),
-// che applica lo stesso limite lato RLS.
-export function npcLimitForTier(tier: RankTier): number {
+// Quota di elementi "aggiungibili in campagna" per rango araldico — PNG creati (globale,
+// Npc.createNpc), mostri selezionati nel Bestiario e album creati in Mappe (entrambi per
+// singola campagna, vedi BestiaryStore.myBestiaryLimit/MapAlbumsStore.myMapLimit): stessa
+// identica progressione per tutti e tre, 1 per Adepto poi 3/5/7/9/11/13 (+2 per rango
+// salito). Fato (admin) è l'unico caso illimitato, riconosciuto dallo stesso identifier
+// FATO_RANK usato da getRankForSeconds. Deve restare in sync con la function SQL
+// get_campaign_addition_limit (vedi sql/2026-09-12_campaign_addition_limits.sql), che
+// applica lo stesso limite lato RLS su tutte e tre le tabelle.
+export function campaignAdditionLimitForTier(tier: RankTier): number {
   if (tier === FATO_RANK) return Infinity;
   const index = RANK_TIERS.indexOf(tier);
-  return index <= 0 ? 1 : index * 3;
+  return index <= 0 ? 1 : index * 2 + 1;
 }
 
-export function getNpcLimitForSeconds(seconds: number, isAdmin: boolean): number {
-  return npcLimitForTier(getRankForSeconds(seconds, isAdmin));
+export function getCampaignAdditionLimitForSeconds(seconds: number, isAdmin: boolean): number {
+  return campaignAdditionLimitForTier(getRankForSeconds(seconds, isAdmin));
 }
 
 // Quota di PG creabili nel parco personale (CharacterStore.roster) per rango araldico:

@@ -17,8 +17,10 @@ export class MonsterDetailCard {
 
   readonly monster = input.required<BestiaryMonster>();
   readonly canPlaceOnMap = input(false);
+  readonly canManage = input(false);
 
   readonly placeOnMap = output<void>();
+  readonly remove = output<void>();
 
   // Formula standard D&D 5e: modificatore = floor((punteggio - 10) / 2). Non salvato su
   // DB, calcolato al volo qui come già avviene in character-sheet/character-create.

@@ -15,13 +15,17 @@ import { MapImageCard } from './map-image-card';
   templateUrl: './map-album-detail.html',
 })
 export class MapAlbumDetail {
-  private mapAlbumsStore = inject(MapAlbumsStore);
+  protected mapAlbumsStore = inject(MapAlbumsStore);
   protected localeService = inject(LocaleService);
   private modal = inject(Modal);
 
   readonly album = input.required<MapAlbum>();
   readonly canManage = input(false);
   readonly back = output<void>();
+
+  // Il template non risolve i globali JS: serve esposto per nascondere la quota quando il
+  // rango è Fato (MapAlbumsStore.myMapImageLimit()), come Npc.Infinity.
+  protected readonly Infinity = Infinity;
 
   protected uploading = signal(false);
   protected captionDraft = '';
@@ -30,6 +34,16 @@ export class MapAlbumDetail {
     const fileInput = event.target as HTMLInputElement;
     const file = fileInput.files?.[0];
     if (!file) return;
+
+    // Il limite vero è imposto lato RLS (get_campaign_addition_limit su
+    // map_album_images): questo controllo evita solo un errore di permessi poco chiaro se
+    // la quota si è esaurita nel frattempo, e soprattutto evita di sprecare un upload su
+    // Storage per un'immagine che poi l'insert rifiuterebbe comunque.
+    if (!this.mapAlbumsStore.canAddMapImage()) {
+      this.modal.error(this.localeService.t('map_quota_reached_hint'));
+      fileInput.value = '';
+      return;
+    }
 
     this.uploading.set(true);
 

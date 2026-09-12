@@ -21,6 +21,14 @@ export class MonsterPicker {
   }
 
   async toggle(monster: BestiaryMonster) {
+    // Il limite vero è imposto lato RLS (get_campaign_addition_limit): questo controllo
+    // evita solo un errore di permessi poco chiaro se la quota si è esaurita nel frattempo
+    // (stesso guard di NpcForm.submit per i PNG).
+    if (!this.isSelected(monster) && !this.bestiaryStore.canAddMonsterToCampaign()) {
+      this.modal.error(this.localeService.t('bestiary_quota_reached_hint'));
+      return;
+    }
+
     const { error } = this.isSelected(monster)
       ? await this.bestiaryStore.removeFromCampaign(this.campaignId, monster.id)
       : await this.bestiaryStore.addToCampaign(this.campaignId, monster.id);

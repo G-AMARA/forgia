@@ -10,18 +10,30 @@
   </div>
 
   @if (canManage()) {
-    <div class="compendium-card flex flex-col sm:flex-row gap-2 items-start sm:items-center p-3">
-      <label
-        class="text-xs px-3 py-2 border border-forge-border-panel rounded cursor-pointer text-forge-text-sub hover:border-forge-amber hover:text-forge-amber-glow transition-colors shrink-0"
-        [class.opacity-50]="uploading()"
-      >
-        {{ uploading() ? localeService.t('loading') : localeService.t('choose_image_label') }}
-        <input type="file" accept="image/*" class="hidden" [disabled]="uploading()" (change)="onFileSelected($event)" />
-      </label>
-      <input
-        type="text" [(ngModel)]="captionDraft" maxlength="30" [placeholder]="localeService.t('map_image_caption_placeholder')"
-        class="flex-1 w-full px-3 py-2 rounded input-forge text-sm"
-      />
+    <div class="compendium-card flex flex-col gap-2 p-3">
+      @if (mapAlbumsStore.myMapImageLimit() !== Infinity) {
+        <span class="text-xs text-slate-arcane">
+          {{ mapAlbumsStore.myMapImageCount() }}/{{ mapAlbumsStore.myMapImageLimit() }} {{ localeService.t('map_quota_label') }}
+        </span>
+      }
+      <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+        <label
+          class="text-xs px-3 py-2 border border-forge-border-panel rounded cursor-pointer text-forge-text-sub hover:border-forge-amber hover:text-forge-amber-glow transition-colors shrink-0"
+          [class.opacity-50]="uploading() || !mapAlbumsStore.canAddMapImage()"
+          [title]="mapAlbumsStore.canAddMapImage() ? '' : localeService.t('map_quota_reached_hint')"
+        >
+          {{ uploading() ? localeService.t('loading') : localeService.t('choose_image_label') }}
+          <input
+            type="file" accept="image/*" class="hidden"
+            [disabled]="uploading() || !mapAlbumsStore.canAddMapImage()"
+            (change)="onFileSelected($event)"
+          />
+        </label>
+        <input
+          type="text" [(ngModel)]="captionDraft" maxlength="30" [placeholder]="localeService.t('map_image_caption_placeholder')"
+          class="flex-1 w-full px-3 py-2 rounded input-forge text-sm"
+        />
+      </div>
     </div>
   }
 

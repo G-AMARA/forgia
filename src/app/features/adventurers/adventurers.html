@@ -45,7 +45,7 @@
                 <ul class="space-y-1.5">
                   @for (entry of group.entries; track entry.id) {
                     <li class="flex items-center gap-2 text-sm">
-                      <img [src]="group.tier.icon" [alt]="group.tier.name" class="w-6 h-6 rounded-full border border-gold-bright shrink-0" />
+                      <img [src]="group.tier.icon" [alt]="group.tier.name" class="w-6 h-6 rounded-full shrink-0" />
                       <span class="flex-1 truncate">{{ entry.nickname }}</span>
                       <span class="text-[11px] uppercase text-slate-arcane">{{ entry.exp }} exp</span>
                     </li>

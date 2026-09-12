@@ -1,14 +1,23 @@
 <div class="space-y-4">
   <div class="flex items-center justify-between flex-wrap gap-2">
     <h3 class="font-display text-lg text-fantasy-gold">{{ localeService.t('bestiary_title') }}</h3>
-    @if (canManage() && selectedMonsters().length === 0) {
-      <button
-        type="button"
-        (click)="openPicker()"
-        class="text-sm px-4 py-2 bg-forge-bronze text-forge-obsidian font-bold rounded hover:bg-forge-amber-glow transition-colors"
-      >
-        {{ localeService.t('bestiary_select_monsters_button') }}
-      </button>
+    @if (canManage()) {
+      <div class="flex items-center gap-3 flex-wrap">
+        @if (bestiaryStore.myBestiaryLimit() !== Infinity) {
+          <span class="text-xs text-slate-arcane">
+            {{ bestiaryStore.myBestiaryCount() }}/{{ bestiaryStore.myBestiaryLimit() }} {{ localeService.t('bestiary_quota_label') }}
+          </span>
+        }
+        @if (selectedMonsters().length === 0) {
+          <button
+            type="button"
+            (click)="openPicker()"
+            class="text-sm px-4 py-2 bg-forge-bronze text-forge-obsidian font-bold rounded hover:bg-forge-amber-glow transition-colors"
+          >
+            {{ localeService.t('bestiary_select_monsters_button') }}
+          </button>
+        }
+      </div>
     }
   </div>
 
@@ -65,7 +74,13 @@
       <!-- Pannello dettagli del mostro in cima al mazzo -->
       <div class="lg:col-span-8">
         @if (selectedMonster(); as monster) {
-          <app-monster-detail-card [monster]="monster" [canPlaceOnMap]="canPlaceOnMap()" (placeOnMap)="placeOnMap(monster)" />
+          <app-monster-detail-card
+            [monster]="monster"
+            [canPlaceOnMap]="canPlaceOnMap()"
+            [canManage]="canManage()"
+            (placeOnMap)="placeOnMap(monster)"
+            (remove)="removeFromCampaign(monster)"
+          />
         }
       </div>
     </div>

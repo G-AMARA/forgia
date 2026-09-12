@@ -153,6 +153,8 @@
       </div>
   
       <!-- Sezioni future -->
+      <app-campaign-addition-quota [campaignId]="campaignStore.current()!.id"></app-campaign-addition-quota>
+
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         @if (isOwner() || auth.isAdmin()) {
           <button

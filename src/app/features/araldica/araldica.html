@@ -11,7 +11,7 @@
         }
         <span class="font-display text-xs text-fantasy-gold">{{ r.name }}</span>
       </div>
-      <img [src]="r.icon" [alt]="r.name" [title]="r.name" class="w-8 h-8 rounded-full border-2 border-gold-bright" />
+      <img [src]="r.icon" [alt]="r.name" [title]="r.name" class="w-8 h-8 rounded-full" />
     </button>
 
     @if (showLevelUp()) {
@@ -40,7 +40,7 @@
             [class.bg-fantasy-gold]="rank()?.name === tier.name"
             [class.text-fantasy-black]="rank()?.name === tier.name"
           >
-            <img [src]="tier.icon" [alt]="tier.name" class="w-8 h-8 rounded-full border-2 border-gold-bright shrink-0" />
+            <img [src]="tier.icon" [alt]="tier.name" class="w-8 h-8 rounded-full shrink-0" />
             <span class="font-display text-sm flex-1">{{ tier.name }}</span>
             @if (tier.minHours < 0) {
               <span class="text-[10px] uppercase text-right leading-tight">Speciale</span>
