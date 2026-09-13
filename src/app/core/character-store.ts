@@ -206,6 +206,20 @@ export class CharacterStore {
     return { raceTranslations, classTranslations, backgroundTranslations };
   }
 
+  // Conteggio PG base (stessa definizione di forgeBases: owner_id + campaign_id nullo) di UN
+  // utente arbitrario, per la sua scheda profilo pubblica. A differenza di loadMyRoster() non
+  // tocca `roster`/`forgeBases`, che restano scoping esclusivo sull'utente loggato: è solo
+  // una lettura una-tantum per il numero mostrato nella card.
+  async countForgedHeroes(userId: string): Promise<number> {
+    const { count } = await this.supabase.client
+      .from('characters')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', userId)
+      .is('campaign_id', null);
+
+    return count ?? 0;
+  }
+
   // Carica il parco personaggi dell'utente corrente (CharacterCreate "fabbrica" +
   // picker "Aggiungi il tuo Eroe"): tutti i PG posseduti, assegnati o no a una campagna.
   async loadMyRoster() {

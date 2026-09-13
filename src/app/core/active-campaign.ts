@@ -75,6 +75,21 @@ export class ActiveCampaign {
     }
   }
 
+  // Conteggio campagne (in corso/concluse) di UN utente arbitrario, per la sua scheda
+  // profilo pubblica. A differenza di loadCampaigns() non tocca il signal `campaigns`, che
+  // resta scoping esclusivo sull'utente loggato: è solo una lettura una-tantum per la card.
+  async countCampaignsByStatus(userId: string): Promise<{ inProgress: number; completed: number }> {
+    const { data, error } = await this.supabase.client
+      .from('campaigns')
+      .select('status')
+      .eq('owner_id', userId);
+
+    if (error || !data) return { inProgress: 0, completed: 0 };
+
+    const completed = data.filter((c) => c.status === 'completed').length;
+    return { inProgress: data.length - completed, completed };
+  }
+
   async createCampaign(input: {
     name: string;
     description: string;

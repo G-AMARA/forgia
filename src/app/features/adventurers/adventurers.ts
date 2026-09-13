@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Auth } from '../../core/auth';
+import { AppNav } from '../../core/app-nav';
 import { LocaleService } from '../../core/locale';
 import { groupByRank, RankGroup } from '../../core/ranks';
 import { AraldicaPerksTab } from './araldica-perks-tab';
@@ -15,6 +16,7 @@ import { AraldicaPerksTab } from './araldica-perks-tab';
 })
 export class Adventurers {
   private auth = inject(Auth);
+  private appNav = inject(AppNav);
   protected localeService = inject(LocaleService);
 
   protected isOpen = signal(false);
@@ -33,5 +35,10 @@ export class Adventurers {
 
   protected close() {
     this.isOpen.set(false);
+  }
+
+  protected goToProfile(userId: string) {
+    this.close();
+    this.appNav.openProfile(userId);
   }
 }

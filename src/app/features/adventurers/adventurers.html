@@ -44,10 +44,16 @@
                 </h4>
                 <ul class="space-y-1.5">
                   @for (entry of group.entries; track entry.id) {
-                    <li class="flex items-center gap-2 text-sm">
-                      <img [src]="group.tier.icon" [alt]="group.tier.name" class="w-6 h-6 rounded-full shrink-0" />
-                      <span class="flex-1 truncate">{{ entry.nickname }}</span>
-                      <span class="text-[11px] uppercase text-slate-arcane">{{ entry.exp }} exp</span>
+                    <li>
+                      <button
+                        type="button"
+                        (click)="goToProfile(entry.id)"
+                        class="w-full flex items-center gap-2 text-sm rounded px-1 py-0.5 -mx-1 hover:bg-fantasy-gold/10 transition-colors text-left"
+                      >
+                        <img [src]="group.tier.icon" [alt]="group.tier.name" class="w-6 h-6 rounded-full shrink-0" />
+                        <span class="flex-1 truncate">{{ entry.nickname }}</span>
+                        <span class="text-[11px] uppercase text-slate-arcane">{{ entry.exp }} exp</span>
+                      </button>
                     </li>
                   }
                 </ul>

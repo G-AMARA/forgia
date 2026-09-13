@@ -30,7 +30,7 @@ export class AuthForm {
 
   goToSettings() {
     this.userMenuOpen.set(false);
-    this.appNav.setTab('profile');
+    this.appNav.openProfile();
   }
 
   showLegalNotice() {

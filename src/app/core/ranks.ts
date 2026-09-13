@@ -91,6 +91,31 @@ export function secondsToExp(seconds: number): number {
   return Math.floor(seconds / (3600 / EXP_PER_HOUR));
 }
 
+export interface RankProgress {
+  tier: RankTier;
+  // Null quando tier è già il massimo raggiungibile (ultimo di RANK_TIERS, o Fato).
+  next: RankTier | null;
+  // 0-100: percentuale di avanzamento tra tier e next. 100 se non c'è un next.
+  percent: number;
+}
+
+// Progresso EXP verso il prossimo rango, per la barra araldica del profilo. Stessa idea di
+// getXpProgress (core/xp-progression.ts) ma sui ranghi araldici invece che sui livelli D&D.
+export function getRankProgress(seconds: number, isAdmin: boolean): RankProgress {
+  const tier = getRankForSeconds(seconds, isAdmin);
+  const next = tier === FATO_RANK ? null : RANK_TIERS[rankIndex(tier) + 1] ?? null;
+
+  if (!next) {
+    return { tier, next: null, percent: 100 };
+  }
+
+  const hours = seconds / 3600;
+  const span = next.minHours - tier.minHours;
+  const percent = span > 0 ? Math.max(0, Math.min(100, ((hours - tier.minHours) / span) * 100)) : 100;
+
+  return { tier, next, percent };
+}
+
 export interface RankGroupEntry {
   id: string;
   nickname: string;

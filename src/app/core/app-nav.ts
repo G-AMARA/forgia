@@ -29,11 +29,23 @@ export class AppNav {
   activeTab = signal<Tab>(readStoredTab());
   expandedCatalogSection = signal<string | null>('races');
 
+  // Id dell'utente mostrato dalla tab 'profile': null = il proprio profilo (comportamento
+  // di sempre). Valorizzato da openProfile() quando si atterra sulla scheda di un altro
+  // utente (es. click su un nome nella modale Avventurieri).
+  readonly viewedProfileId = signal<string | null>(null);
+
   setTab(tab: Tab) {
     this.activeTab.set(tab);
     if (!NON_PERSISTED_TABS.includes(tab)) {
       sessionStorage.setItem(STORAGE_KEY, tab);
     }
+  }
+
+  // Apre la tab 'profile': senza argomenti mostra il proprio profilo (e resetta un'eventuale
+  // scheda altrui rimasta impostata), con uno userId mostra la scheda pubblica di quell'utente.
+  openProfile(userId: string | null = null) {
+    this.viewedProfileId.set(userId);
+    this.setTab('profile');
   }
 
   toggleCatalogSection(section: string) {

@@ -21,6 +21,18 @@ export interface AdventurerProfile {
   navigation_seconds: number;
 }
 
+// Riga di profiles per la scheda profilo pubblica di UN utente arbitrario (click su un nome
+// nella modale Avventurieri): stessi campi di AdventurerProfile più quelli che servono a
+// mostrare rango/ruolo, letti dalla stessa RLS "Lettura pubblica profili" (qual: true).
+export interface PublicProfile {
+  id: string;
+  nickname: string | null;
+  avatar_url: string | null;
+  navigation_seconds: number;
+  is_master: boolean;
+  is_admin: boolean;
+}
+
 export type Role = 'player' | 'master' | 'admin';
 
 const VIEW_ROLE_KEY_PREFIX = 'fanta-view-role-';
@@ -325,6 +337,18 @@ export class Auth {
       .order('navigation_seconds', { ascending: false });
 
     return { data: data ?? [], error };
+  }
+
+  // Pubblico (RLS "Lettura pubblica profili" è qual: true): dati di un singolo utente per la
+  // sua scheda profilo vista da un altro utente (sola lettura, vedi PublicProfileCard).
+  async getPublicProfile(userId: string): Promise<{ data: PublicProfile | null; error: { message: string } | null }> {
+    const { data, error } = await this.supabase.client
+      .from('profiles')
+      .select('id, nickname, avatar_url, navigation_seconds, is_master, is_admin')
+      .eq('id', userId)
+      .single();
+
+    return { data: data ?? null, error };
   }
 
   async updateUserRole(targetId: string, isMaster: boolean, isAdmin: boolean) {
