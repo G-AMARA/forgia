@@ -131,6 +131,16 @@ export class Dashboard implements OnInit {
     return formatDateTime(iso, this.localeService.locale());
   }
 
+  // Anteprima sulla card: la descrizione per intero si legge entrando nella campagna
+  // (Campaign Hub la mostra senza troncamento), qui serve solo a tenere le card corte.
+  readonly descriptionPreviewLength = 350;
+
+  truncateDescription(description: string | null): string | null {
+    if (!description) return null;
+    if (description.length <= this.descriptionPreviewLength) return description;
+    return description.slice(0, this.descriptionPreviewLength).trimEnd() + '…';
+  }
+
   async deleteCampaign(event: Event, campaign: BoardCampaign) {
     event.stopPropagation(); // evita che il click apra anche enterCampaign()
 

@@ -183,6 +183,7 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
 
     inbox_tab_invites: 'Inviti Campagna',
     inbox_tab_news: 'Comunicazioni',
+    inbox_tab_notifications: 'Notifiche',
     inbox_invite_dm_label: 'Dungeon Master',
     inbox_invite_campaign_label: 'Campagna',
     inbox_invite_players_label: 'Giocatori',
@@ -190,6 +191,7 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     inbox_decline_button: 'Rifiuta',
     inbox_no_invites: 'Nessun invito in sospeso.',
     inbox_no_news: 'Nessuna comunicazione al momento.',
+    inbox_no_notifications: 'Nessuna notifica al momento.',
     inbox_campaign_full_title: 'Campagna al completo',
     inbox_campaign_full_message: 'La campagna ha già raggiunto il numero massimo di partecipanti: non è stato possibile completare l\'iscrizione.',
 
@@ -513,6 +515,13 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     invite_status_pending: 'Inviato',
     invite_status_accepted: 'Accettato',
     invite_status_declined: 'Rifiutato',
+
+    players_panel_title: 'Avventurieri',
+    players_empty: 'Nessun avventuriero ha ancora un personaggio in questa campagna.',
+    players_column_character: 'Personaggio',
+    players_column_player: 'Giocatore',
+    players_column_action: 'Azione',
+    players_remove_button: 'Allontana',
     subtab_general: "Identità",
     subtab_combat: 'Abilità',
     subtab_inventory: 'Equipaggiamento',
@@ -939,6 +948,7 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
 
     inbox_tab_invites: 'Campaign Invites',
     inbox_tab_news: 'Announcements',
+    inbox_tab_notifications: 'Notifications',
     inbox_invite_dm_label: 'Dungeon Master',
     inbox_invite_campaign_label: 'Campaign',
     inbox_invite_players_label: 'Players',
@@ -946,6 +956,7 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     inbox_decline_button: 'Decline',
     inbox_no_invites: 'No pending invites.',
     inbox_no_news: 'No announcements right now.',
+    inbox_no_notifications: 'No notifications right now.',
     inbox_campaign_full_title: 'Campaign full',
     inbox_campaign_full_message: 'This campaign has already reached its maximum number of participants: your enrollment could not be completed.',
 
@@ -1269,6 +1280,13 @@ const DICTIONARY: Record<Locale, Record<string, string>> = {
     invite_status_pending: 'Sent',
     invite_status_accepted: 'Accepted',
     invite_status_declined: 'Declined',
+
+    players_panel_title: 'Adventurers',
+    players_empty: 'No adventurer has a character in this campaign yet.',
+    players_column_character: 'Character',
+    players_column_player: 'Player',
+    players_column_action: 'Action',
+    players_remove_button: 'Remove',
     subtab_general: 'General',
     subtab_combat: 'Combat',
     subtab_inventory: 'Equipment',

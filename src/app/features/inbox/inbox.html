@@ -25,6 +25,19 @@
     >
       {{ localeService.t('inbox_tab_news') }}
     </button>
+    <button
+      type="button"
+      (click)="selectTab('notifications')"
+      class="px-3 sm:px-4 py-2 text-sm font-display border-b-2 transition-colors"
+      [class]="activeTab() === 'notifications'
+        ? 'border-fantasy-gold text-fantasy-gold'
+        : 'border-transparent text-forge-text-sub hover:text-forge-text-main'"
+    >
+      {{ localeService.t('inbox_tab_notifications') }}
+      @if (inboxStore.unreadNotificationsCount() > 0) {
+        <span class="ml-1 text-[10px] align-top text-forge-amber-glow">({{ inboxStore.unreadNotificationsCount() }})</span>
+      }
+    </button>
   </div>
 
   <div class="flex-1 overflow-y-auto space-y-3 pb-4">
@@ -36,12 +49,20 @@
           <app-campaign-invite-card [invite]="invite" (accept)="accept($event)" (decline)="decline($event)" />
         }
       }
-    } @else {
+    } @else if (activeTab() === 'news') {
       @if (inboxStore.news().length === 0) {
         <p class="text-sm text-slate-arcane italic">{{ localeService.t('inbox_no_news') }}</p>
       } @else {
         @for (item of inboxStore.news(); track item.id) {
           <app-news-card [news]="item" (read)="markRead($event)" />
+        }
+      }
+    } @else {
+      @if (inboxStore.notifications().length === 0) {
+        <p class="text-sm text-slate-arcane italic">{{ localeService.t('inbox_no_notifications') }}</p>
+      } @else {
+        @for (item of inboxStore.notifications(); track item.id) {
+          <app-news-card [news]="item" (read)="markNotificationRead($event)" />
         }
       }
     }

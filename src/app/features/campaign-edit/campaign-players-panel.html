@@ -1,0 +1,40 @@
+<div class="compendium-card p-4 space-y-4">
+  <h4 class="font-display text-sm text-fantasy-gold uppercase tracking-wide">{{ localeService.t('players_panel_title') }}</h4>
+
+  @if (loading()) {
+    <p class="text-sm text-slate-arcane italic">{{ localeService.t('loading') }}</p>
+  } @else if (players().length === 0) {
+    <p class="text-sm text-slate-arcane italic">{{ localeService.t('players_empty') }}</p>
+  } @else {
+    <table class="w-full text-sm table-fixed">
+      <thead>
+        <tr class="border-b border-forge-iron-light text-left text-forge-text-sub text-xs uppercase tracking-wide">
+          <th class="py-2 pr-2 font-normal">{{ localeService.t('players_column_character') }}</th>
+          <th class="py-2 px-2 font-normal">{{ localeService.t('players_column_player') }}</th>
+          <th class="py-2 pl-2 font-normal text-right w-24 whitespace-nowrap">{{ localeService.t('players_column_action') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (player of players(); track player.characterId) {
+          <tr class="border-b border-forge-iron-light/50 last:border-0">
+            <td class="py-2 pr-2 text-forge-text-main truncate">{{ player.characterName }}</td>
+            <td class="py-2 px-2 text-forge-text-main">
+              <span class="flex items-center gap-1.5 min-w-0">
+                <img [src]="player.rankIcon" alt="" class="w-5 h-5 rounded-full shrink-0" />
+                <span class="truncate">{{ player.nickname }}</span>
+              </span>
+            </td>
+            <td class="py-2 pl-2 text-right">
+              <button
+                type="button" (click)="remove(player)"
+                class="text-xs px-2.5 py-1.5 bg-red-900/80 text-white rounded hover:bg-red-800 transition-colors whitespace-nowrap"
+              >
+                {{ localeService.t('players_remove_button') }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

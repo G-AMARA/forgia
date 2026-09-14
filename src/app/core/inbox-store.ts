@@ -5,6 +5,7 @@ import { Auth } from './auth';
 export interface CampaignInvite {
   id: string;
   campaignId: string;
+  dmId: string;
   dmNickname: string;
   campaignName: string;
   coverKey: string;
@@ -23,6 +24,10 @@ export interface PlatformNews {
   body: string;
   unread: boolean;
 }
+
+// Notifiche personali reali (tabella notifications, sql/2026-09-14_notifications.sql):
+// stessa forma di PlatformNews, così riusa app-news-card senza un componente dedicato.
+export type DmNotification = PlatformNews;
 
 // Le comunicazioni admin (tab "Comunicazioni") restano mock in attesa di una tabella
 // dedicata: stessa forma che avrà la risposta reale. Gli inviti campagna invece sono reali,
@@ -52,16 +57,23 @@ export class InboxStore {
     },
   ]);
 
-  readonly unreadCount = computed(() => this.invites().length + this.news().filter((n) => n.unread).length);
+  readonly notifications = signal<DmNotification[]>([]);
+  readonly unreadNotificationsCount = computed(() => this.notifications().filter((n) => n.unread).length);
+
+  readonly unreadCount = computed(
+    () => this.invites().length + this.news().filter((n) => n.unread).length + this.unreadNotificationsCount()
+  );
 
   constructor() {
     effect(() => {
       const userId = this.auth.user()?.id;
       if (userId) {
         this.loadInvites();
+        this.loadNotifications();
         this.applyNewsReadState(userId);
       } else {
         this.invites.set([]);
+        this.notifications.set([]);
       }
     });
   }
@@ -142,6 +154,7 @@ export class InboxStore {
         return {
           id: row.id,
           campaignId: campaign.id,
+          dmId: campaign.owner_id,
           dmNickname: nicknameMap[campaign.owner_id] ?? '???',
           campaignName: campaign.name,
           coverKey: campaign.cover_key,
@@ -180,9 +193,24 @@ export class InboxStore {
 
     if (!error) {
       this.invites.update((list) => list.filter((i) => i.id !== invite.id));
+      if (!isFull) {
+        await this.notifyDmOfAcceptance(invite);
+      }
     }
 
     return { error, full: !error && isFull };
+  }
+
+  // Avvisa il Master nel suo Centro Messaggi (tab "Notifiche") che l'invito è stato
+  // accettato. Fire-and-forget: un eventuale errore non deve bloccare l'iscrizione alla
+  // campagna, già confermata sopra.
+  private async notifyDmOfAcceptance(invite: CampaignInvite) {
+    const nickname = this.auth.nickname() ?? 'Un avventuriero';
+    await this.supabase.client.from('notifications').insert({
+      user_id: invite.dmId,
+      title: 'Invito accettato',
+      body: `${nickname} ha accettato il tuo invito nella campagna "${invite.campaignName}".`,
+    });
   }
 
   async declineInvite(id: string): Promise<{ error: { message: string } | null }> {
@@ -214,6 +242,44 @@ export class InboxStore {
       .maybeSingle();
 
     return !!data;
+  }
+
+  async loadNotifications() {
+    const userId = this.auth.user()?.id;
+    if (!userId) {
+      this.notifications.set([]);
+      return;
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('notifications')
+      .select('id, title, body, created_at, read')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      this.notifications.set([]);
+      return;
+    }
+
+    this.notifications.set(
+      data.map((row) => ({
+        id: row.id,
+        title: row.title,
+        date: new Date(row.created_at).toLocaleDateString('it-IT'),
+        body: row.body,
+        unread: !row.read,
+      }))
+    );
+  }
+
+  async markNotificationRead(id: string) {
+    this.notifications.update((list) => list.map((n) => (n.id === id ? { ...n, unread: false } : n)));
+
+    const { error } = await this.supabase.client.from('notifications').update({ read: true }).eq('id', id);
+    if (error) {
+      this.notifications.update((list) => list.map((n) => (n.id === id ? { ...n, unread: true } : n)));
+    }
   }
 
   markAsRead(id: string) {

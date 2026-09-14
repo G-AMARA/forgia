@@ -5,13 +5,13 @@
 // statico, caricando l'intera libreria non appena si apre il minigioco invece che solo
 // dopo la scelta della classe (unico punto in cui avviaGioco() fa l'import() dinamico).
 
-import { indiceGiornoLocale } from './daily-rotation';
+import { generaLivelloDelGiorno } from './procedural/dungeon-run-generator';
 
 export const NUMERO_GEMME_TOTALI = 10;
 
 // Costanti geometriche condivise da TUTTI i livelli (fisica del salto e quote di terreno/
 // piattaforma non dipendono dal giorno, solo il PERCORSO sì): vivono qui, non nella scena
-// Phaser, perché servono anche per calcolare le coordinate di LIVELLI_DUNGEON qui sotto.
+// Phaser, perché servono anche al generatore procedurale (procedural/dungeon-run-generator.ts).
 export const SCALA_DUNGEON = 2.5;
 export const TILE_DUNGEON = 16 * SCALA_DUNGEON; // 40
 export const TERRENO_Y = 410;
@@ -58,15 +58,10 @@ export interface LivelloDungeon {
   forziereX: number;
 }
 
-// 4 percorsi distinti, uno per giorno di calendario (mezzanotte locale, stesso meccanismo di
-// SET_DOMANDE_DND/CRUCIVERBA_DND, vedi indiceGiornoLocale in daily-rotation.ts), a ciclo dopo
-// 4 giorni: niente più stesso identico dungeon ogni giorno. Ogni livello è più impegnativo del
-// precedente (più pozzi, più nemici e più veloci, più piattaforme in quota, più spine, timer
-// più corto, mappa più lunga), ma tutti i pozzi restano larghi 80px (2 tegole) come nel livello
-// originale: con FORZA_SALTO/gravità di dungeon-run-scene.ts un salto in corsa copre ~220px
-// in orizzontale, quindi anche il livello più duro resta superabile al primo tentativo. Stesso
-// discorso per il gap fra una piattaforma TIER_BASSO e la TIER_ALTO adiacente da cui rilanciarsi
-// (~40px, mai isolata): vedi il commento originale, qui riapplicato identico su ogni coppia.
+// Percorso originale del minigioco: oggi i livelli sono generati proceduralmente da
+// procedural/dungeon-run-generator.ts (contenuto sempre diverso, difficoltà a ciclo di 4
+// giorni via tierDifficolta), ma questo layout — validato a mano — resta come unico fallback
+// statico se il generatore non riesce a produrre un livello valido entro i tentativi previsti.
 const LIVELLO_1: LivelloDungeon = {
   nome: "L'Ingresso della Cripta",
   larghezzaMondo: 2600,
@@ -103,162 +98,11 @@ const LIVELLO_1: LivelloDungeon = {
   forziereX: 2520,
 };
 
-const LIVELLO_2: LivelloDungeon = {
-  nome: 'I Corridoi del Custode',
-  larghezzaMondo: 2900,
-  durataSecondi: 65,
-  segmentiTerreno: [
-    { x: 0, larghezza: 600 },
-    { x: 680, larghezza: 480 },
-    { x: 1240, larghezza: 440 },
-    { x: 1760, larghezza: 460 },
-    { x: 2300, larghezza: 600 },
-  ],
-  piattaforme: [
-    { x: 260, y: TIER_BASSO, larghezza: 160 },
-    { x: 820, y: TIER_BASSO, larghezza: 140 }, // gap 40px dalla successiva (TIER_ALTO)
-    { x: 1000, y: TIER_ALTO, larghezza: 100 },
-    { x: 1350, y: TIER_BASSO, larghezza: 160 },
-    { x: 1850, y: TIER_BASSO, larghezza: 160 },
-    { x: 2450, y: TIER_BASSO, larghezza: 200 },
-  ],
-  posizioniSpine: [
-    { x: 900, y: TERRENO_Y - TILE_DUNGEON / 2 },
-    { x: 2000, y: TERRENO_Y - TILE_DUNGEON / 2 },
-  ],
-  posizioniNemici: [
-    { x: 300, y: TERRENO_Y - 60, distanza: 150, velocita: 55 },
-    { x: 830, y: TIER_BASSO - 60, distanza: 60, velocita: 55 },
-    { x: 1450, y: TERRENO_Y - 60, distanza: 120, velocita: 60 },
-    { x: 1950, y: TERRENO_Y - 60, distanza: 120, velocita: 65 },
-    { x: 2600, y: TERRENO_Y - 60, distanza: 150, velocita: 65 },
-  ],
-  posizioniGemme: [
-    { x: 260, y: TIER_BASSO - 60 },
-    { x: 460, y: TERRENO_Y - 60 },
-    { x: 830, y: TIER_BASSO - 60 },
-    { x: 1050, y: TIER_ALTO - 60 },
-    { x: 1350, y: TIER_BASSO - 60 },
-    { x: 1550, y: TERRENO_Y - 60 },
-    { x: 1850, y: TIER_BASSO - 60 },
-    { x: 2100, y: TERRENO_Y - 60 },
-    { x: 2450, y: TIER_BASSO - 60 },
-    { x: 2700, y: TERRENO_Y - 60 },
-  ],
-  forziereX: 2820,
-};
-
-// Percorso ORIGINALE del minigioco, invariato: vedi la nota architetturale nei commenti di
-// dungeon-run-scene.ts per i vincoli di sicurezza (pozzi 80px, coppie TIER_BASSO/TIER_ALTO a
-// ~40-80px) già verificati su questo layout — riusato identico per non introdurne di nuovi.
-const LIVELLO_3: LivelloDungeon = {
-  nome: 'Le Segrete del Custode',
-  larghezzaMondo: 3200,
-  durataSecondi: 60,
-  segmentiTerreno: [
-    { x: 0, larghezza: 640 },
-    { x: 720, larghezza: 520 },
-    { x: 1320, larghezza: 360 },
-    { x: 1760, larghezza: 480 },
-    { x: 2320, larghezza: 880 },
-  ],
-  piattaforme: [
-    { x: 280, y: TIER_BASSO, larghezza: 160 },
-    { x: 480, y: TIER_ALTO, larghezza: 120 },
-    { x: 800, y: TIER_BASSO, larghezza: 160 },
-    { x: 1040, y: TIER_ALTO, larghezza: 120 },
-    { x: 1400, y: TIER_BASSO, larghezza: 160 },
-    { x: 1800, y: TIER_BASSO, larghezza: 160 },
-    { x: 2050, y: TIER_BASSO, larghezza: 160 },
-    { x: 2500, y: TIER_BASSO, larghezza: 200 },
-  ],
-  posizioniSpine: [
-    { x: 900, y: TERRENO_Y - TILE_DUNGEON / 2 },
-    { x: 1900, y: TERRENO_Y - TILE_DUNGEON / 2 },
-    { x: 2600, y: TERRENO_Y - TILE_DUNGEON / 2 },
-  ],
-  posizioniNemici: [
-    { x: 350, y: TERRENO_Y - 60, distanza: 150, velocita: 60 },
-    { x: 800, y: TIER_BASSO - 60, distanza: 60, velocita: 60 },
-    { x: 1500, y: TERRENO_Y - 60, distanza: 120, velocita: 60 },
-    { x: 1880, y: TIER_BASSO - 60, distanza: 60, velocita: 60 },
-    { x: 2600, y: TERRENO_Y - 60, distanza: 180, velocita: 60 },
-    { x: 2950, y: TERRENO_Y - 60, distanza: 100, velocita: 60 },
-  ],
-  posizioniGemme: [
-    { x: 280, y: TIER_BASSO - 60 },
-    { x: 540, y: TIER_ALTO - 60 },
-    { x: 550, y: TERRENO_Y - 60 },
-    { x: 800, y: TIER_BASSO - 60 },
-    { x: 1100, y: TIER_ALTO - 60 },
-    { x: 1450, y: TIER_BASSO - 60 },
-    { x: 1880, y: TIER_BASSO - 60 },
-    { x: 2130, y: TIER_BASSO - 60 },
-    { x: 2600, y: TIER_BASSO - 60 },
-    { x: 2900, y: TERRENO_Y - 60 },
-  ],
-  forziereX: 3120,
-};
-
-const LIVELLO_4: LivelloDungeon = {
-  nome: 'Il Cuore Oscuro del Dungeon',
-  larghezzaMondo: 3500,
-  durataSecondi: 50,
-  segmentiTerreno: [
-    { x: 0, larghezza: 560 },
-    { x: 640, larghezza: 440 },
-    { x: 1160, larghezza: 360 },
-    { x: 1600, larghezza: 400 },
-    { x: 2080, larghezza: 440 },
-    { x: 2600, larghezza: 900 },
-  ],
-  piattaforme: [
-    { x: 250, y: TIER_BASSO, larghezza: 140 },
-    { x: 430, y: TIER_ALTO, larghezza: 100 }, // gap 40px da platform1
-    { x: 700, y: TIER_BASSO, larghezza: 120 },
-    { x: 860, y: TIER_ALTO, larghezza: 100 }, // gap 40px da platform3
-    { x: 1180, y: TIER_BASSO, larghezza: 160 },
-    { x: 1650, y: TIER_BASSO, larghezza: 160 },
-    { x: 1850, y: TIER_ALTO, larghezza: 100 }, // gap 40px da platform6
-    { x: 2120, y: TIER_BASSO, larghezza: 160 },
-    { x: 2650, y: TIER_BASSO, larghezza: 160 },
-    { x: 2950, y: TIER_BASSO, larghezza: 200 },
-  ],
-  posizioniSpine: [
-    { x: 900, y: TERRENO_Y - TILE_DUNGEON / 2 },
-    { x: 1750, y: TERRENO_Y - TILE_DUNGEON / 2 },
-    { x: 2300, y: TERRENO_Y - TILE_DUNGEON / 2 },
-    { x: 3100, y: TERRENO_Y - TILE_DUNGEON / 2 },
-  ],
-  posizioniNemici: [
-    { x: 280, y: TERRENO_Y - 60, distanza: 130, velocita: 75 },
-    { x: 740, y: TIER_BASSO - 60, distanza: 40, velocita: 70 },
-    { x: 960, y: TERRENO_Y - 60, distanza: 100, velocita: 75 },
-    { x: 1300, y: TERRENO_Y - 60, distanza: 130, velocita: 80 },
-    { x: 1700, y: TIER_BASSO - 60, distanza: 40, velocita: 75 },
-    { x: 1900, y: TERRENO_Y - 60, distanza: 90, velocita: 80 },
-    { x: 2300, y: TERRENO_Y - 60, distanza: 130, velocita: 85 },
-    { x: 3000, y: TERRENO_Y - 60, distanza: 180, velocita: 90 },
-  ],
-  posizioniGemme: [
-    { x: 250, y: TIER_BASSO - 60 },
-    { x: 470, y: TIER_ALTO - 60 },
-    { x: 520, y: TERRENO_Y - 60 },
-    { x: 740, y: TIER_BASSO - 60 },
-    { x: 900, y: TIER_ALTO - 60 },
-    { x: 1300, y: TERRENO_Y - 60 },
-    { x: 1700, y: TIER_BASSO - 60 },
-    { x: 1900, y: TIER_ALTO - 60 },
-    { x: 2300, y: TERRENO_Y - 60 },
-    { x: 3000, y: TERRENO_Y - 60 },
-  ],
-  forziereX: 3420,
-};
-
-export const LIVELLI_DUNGEON: LivelloDungeon[] = [LIVELLO_1, LIVELLO_2, LIVELLO_3, LIVELLO_4];
-
+// LIVELLO_1 resta come unico fallback statico: se il generatore procedurale (vedi
+// procedural/dungeon-run-generator.ts) esaurisce tutti i tentativi senza produrre un livello
+// che passa validaLivello(), questo layout — già verificato a mano — viene usato al suo posto.
 export function livelloDelGiorno(oggi: Date = new Date()): LivelloDungeon {
-  return LIVELLI_DUNGEON[indiceGiornoLocale(oggi) % LIVELLI_DUNGEON.length];
+  return generaLivelloDelGiorno(oggi, LIVELLO_1);
 }
 
 export type ClasseId = 'mago' | 'guerriero';

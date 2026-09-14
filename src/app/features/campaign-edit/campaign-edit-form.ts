@@ -8,16 +8,17 @@ import { toDatetimeLocalValue, fromDatetimeLocalValue } from '../../core/datetim
 import { CampaignCoverPicker } from '../../shared/campaign-cover-picker/campaign-cover-picker';
 import { CampaignSettingsPanel } from '../../shared/campaign-settings-panel/campaign-settings-panel';
 import { CampaignInvitesPanel } from './campaign-invites-panel';
+import { CampaignPlayersPanel } from './campaign-players-panel';
 
 // Form "Modifica campagna" (CampaignEdit): non naviga da sé, emette saved/cancelled e lascia
 // al genitore decidere dove andare (torna al Campaign Hub in entrambi i casi, vedi
-// CampaignEdit.goToHub), stesso pattern di CharacterCreateForm. Ospita anche il pannello
-// Inviti (sotto la card "Impostazioni & Regole", dentro la stessa card di gestione campagna,
-// non come sezione separata).
+// CampaignEdit.goToHub), stesso pattern di CharacterCreateForm. Ospita anche i pannelli
+// Inviti e Avventurieri (sotto la card "Impostazioni & Regole", dentro la stessa card di
+// gestione campagna, non come sezioni separate).
 @Component({
   selector: 'app-campaign-edit-form',
   standalone: true,
-  imports: [FormsModule, CampaignCoverPicker, CampaignSettingsPanel, CampaignInvitesPanel],
+  imports: [FormsModule, CampaignCoverPicker, CampaignSettingsPanel, CampaignInvitesPanel, CampaignPlayersPanel],
   templateUrl: './campaign-edit-form.html',
 })
 export class CampaignEditForm implements OnInit {

@@ -20,9 +20,9 @@ export class Inbox {
   private readonly appNav = inject(AppNav);
   private readonly modal = inject(Modal);
 
-  protected readonly activeTab = signal<'invites' | 'news'>('invites');
+  protected readonly activeTab = signal<'invites' | 'news' | 'notifications'>('invites');
 
-  protected selectTab(tab: 'invites' | 'news') {
+  protected selectTab(tab: 'invites' | 'news' | 'notifications') {
     this.activeTab.set(tab);
   }
 
@@ -56,5 +56,9 @@ export class Inbox {
 
   protected markRead(id: string) {
     this.inboxStore.markAsRead(id);
+  }
+
+  protected markNotificationRead(id: string) {
+    this.inboxStore.markNotificationRead(id);
   }
 }

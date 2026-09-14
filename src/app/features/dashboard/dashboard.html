@@ -55,8 +55,8 @@
                   {{ localeService.t('master_label') }}: <strong>{{ campaign.masterNickname }}</strong>
                 </p>
 
-                @if (campaign.description) {
-                  <p class="text-sm italic text-forge-text-main/80 font-body">{{ campaign.description }}</p>
+                @if (truncateDescription(campaign.description); as preview) {
+                  <p class="text-sm italic text-forge-text-main/80 font-body">{{ preview }}</p>
                 }
 
                 <div class="flex flex-wrap gap-1.5 text-[0.65rem]">

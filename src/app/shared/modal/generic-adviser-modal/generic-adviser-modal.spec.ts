@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { GenericAdviserModal } from './generic-adviser-modal';
+import { GenericModalComponent } from './generic-adviser-modal';
 
-describe('GenericAdviserModal', () => {
-  let component: GenericAdviserModal;
-  let fixture: ComponentFixture<GenericAdviserModal>;
+describe('GenericModalComponent', () => {
+  let component: GenericModalComponent;
+  let fixture: ComponentFixture<GenericModalComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [GenericAdviserModal],
+      imports: [GenericModalComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(GenericAdviserModal);
+    fixture = TestBed.createComponent(GenericModalComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
