@@ -53,7 +53,7 @@ export class DdCrossword implements OnInit, OnDestroy {
   protected readonly paroleSbagliate = computed(() => this.totaleParole - this.paroleCorrette());
   // Mostrato subito nel pannello di risultato: stessa formula del server
   // (DungeonCrossword.awardResult), l'accredito reale avviene solo all'uscita.
-  protected readonly xpCalcolato = computed(() => Math.max(0, this.paroleCorrette() * 2 - this.paroleSbagliate()));
+  protected readonly xpCalcolato = computed(() => this.paroleCorrette() * 5);
 
   private timerId: ReturnType<typeof setInterval> | null = null;
 

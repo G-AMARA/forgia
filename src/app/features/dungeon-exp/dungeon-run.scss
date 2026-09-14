@@ -2,8 +2,16 @@
 // può raggiungere il <canvas> che Phaser inietta a runtime: non esiste nel template al
 // momento della compilazione, quindi non riceve mai l'attributo di scoping di Angular.
 // ::ng-deep resta la via pragmatica per questo caso specifico (stile libreria esterna).
+// Niente aspect-ratio fisso qui: prima di scegliere la classe (stati caricamento/bloccato/
+// selezione-classe) non esiste ancora nessun <canvas> Phaser (vedi avviaGioco() in
+// dungeon-run.ts, il game nasce solo dopo selezionaClasse()), quindi forzare un rettangolo
+// 16:9 in quella fase serviva solo a tagliare con overflow-hidden il contenuto della
+// schermata di selezione ogni volta che superava quell'altezza — su mobile, con la griglia a
+// 2 colonne di card classe, capitava quasi sempre (sprite/testo delle card visibilmente
+// troncati). min-height evita solo che il box collassi mentre lo stato 'caricamento' mostra
+// una singola riga di testo.
 .dungeon-run-canvas {
-  aspect-ratio: 16 / 9;
+  min-height: 11rem;
 
   ::ng-deep canvas {
     display: block;
@@ -12,17 +20,38 @@
   }
 }
 
+// Applicata solo quando un <canvas> Phaser è realmente montato dietro l'overlay (stati
+// gioco/pausa/terminata, vedi binding in dungeon-run.html): qui il 16:9 va rispettato perché
+// il canvas esistente verrebbe altrimenti stirato dal width/height 100% qui sopra, deformando
+// il frame di gioco invece di lasciarlo semplicemente letterboxato da Phaser.Scale.FIT.
+.dungeon-run-canvas--con-canvas {
+  aspect-ratio: 16 / 9;
+}
+
+// position:absolute + justify-content:center ha un problema noto quando il contenuto supera
+// l'altezza del box: l'overflow "sopra" il centro resta fuori dall'area scrollabile in molti
+// browser (raggiungibile solo quello "sotto" il centro) — è esattamente il bug appena
+// riscontrato in selezione-classe (sprite del Mago invisibile, Guerriero raggiungibile solo
+// scrollando giù). position:absolute serve SOLO per sovrapporsi a un canvas Phaser già
+// montato dietro (vedi .dungeon-run-overlay--fluttuante sotto, applicata insieme a
+// .dungeon-run-canvas--con-canvas in dungeon-run.html): senza un canvas da coprire, l'overlay
+// resta nel flusso normale del documento, quindi la sua altezza è quella del contenuto e non
+// c'è nulla da centrare né da tagliare.
 .dungeon-run-overlay {
-  position: absolute;
-  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
   background: rgba(10, 10, 12, 0.85);
   backdrop-filter: blur(2px);
   animation: dungeon-run-overlay-in 0.2s ease-out;
+}
+
+.dungeon-run-overlay--fluttuante {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  overflow-y: auto;
 }
 
 @keyframes dungeon-run-overlay-in {

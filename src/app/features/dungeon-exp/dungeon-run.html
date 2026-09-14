@@ -11,7 +11,11 @@
   </div>
 
   <div class="relative">
-    <div class="dungeon-run-canvas relative rounded overflow-hidden bg-forge-obsidian" #canvasContainer>
+    <div
+      class="dungeon-run-canvas relative rounded overflow-hidden bg-forge-obsidian"
+      [class.dungeon-run-canvas--con-canvas]="statoConCanvas()"
+      #canvasContainer
+    >
       @if (stato() === 'caricamento') {
         <div class="dungeon-run-overlay">
           <p class="text-forge-text-sub">Si apre il dungeon...</p>
@@ -27,14 +31,14 @@
         <div class="dungeon-run-overlay p-4">
           <p class="text-forge-text-main font-display text-lg shrink-0">Scegli la tua classe</p>
           <p class="text-[11px] text-forge-text-sub mb-3 shrink-0">Livello del giorno: {{ nomeLivelloOggi }}</p>
-          <div class="grid grid-cols-2 gap-4 w-full max-w-lg">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
             @for (classe of classi; track classe.id) {
               <button
                 type="button"
                 (click)="selezionaClasse(classe.id)"
                 class="flex flex-col items-center text-center panel-forge rounded-lg p-4 hover:border-gold transition-colors"
               >
-                <img [src]="classe.spritePreview" [alt]="classe.nome" class="h-16 w-auto [image-rendering:pixelated]" />
+                <img [src]="classe.spritePreview" [alt]="classe.nome" class="h-20 w-auto [image-rendering:pixelated]" />
                 <p class="font-display text-base text-gold mt-2">{{ classe.icona }} {{ classe.nome }}</p>
                 <p class="text-[11px] text-forge-text-sub mt-1">{{ classe.descrizioneClasse }}</p>
                 <p class="text-[11px] text-forge-text-main mt-2 font-semibold">{{ classe.abilita }} (F)</p>
@@ -45,7 +49,7 @@
         </div>
       }
       @if (stato() === 'terminata' && risultato(); as r) {
-        <div class="dungeon-run-overlay text-center space-y-3 p-6">
+        <div class="dungeon-run-overlay dungeon-run-overlay--fluttuante text-center space-y-3 p-6">
           <p class="text-2xl">{{ r.vittoria ? '🏆' : '💀' }}</p>
           <p class="text-forge-text-main">
             {{ r.vittoria ? 'COMPLIMENTI PER AVER SUPERATO IL DUNGEON!' : (r.tempoScaduto ? 'Tempo scaduto nel dungeon!' : 'Sei caduto nel dungeon...') }}
@@ -73,7 +77,7 @@
 
     @if (stato() === 'gioco') {
       <app-dungeon-touch-controls
-        class="lg:hidden absolute bottom-3 right-3 z-20 portrait:static portrait:bottom-auto portrait:right-auto portrait:z-auto portrait:flex portrait:justify-center portrait:mt-3"
+        class="lg:hidden block mt-3 landscape:mt-0"
         (move)="onMovimentoTattile($event)"
         (jump)="onSaltoTattile()"
         (ability)="onAbilitaTattile()"
@@ -92,7 +96,7 @@
       <div class="flex items-center justify-between gap-3">
         <p class="text-xs text-forge-text-sub">
           <span class="hidden lg:inline">Frecce/WASD, Spazio salta, F abilità.</span>
-          <span class="lg:hidden">Joystick: trascina per muoverti e saltare, tocca per il potere.</span>
+          <span class="lg:hidden">D-pad per muoverti e saltare, F per il potere.</span>
         </p>
         <div class="flex gap-2 shrink-0">
           @if (stato() === 'gioco') {

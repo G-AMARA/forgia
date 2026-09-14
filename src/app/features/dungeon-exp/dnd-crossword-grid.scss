@@ -7,6 +7,16 @@
 // anch'essa !important. Le celle del cruciverba sono un caso speciale (griglia di gioco, non
 // un form): qui si esce deliberatamente da quella regola universale con lo stesso pattern
 // !important già usato altrove nel progetto per lo stesso motivo (vedi dungeon-run.scss).
+// Cella bloccata (nessuna lettera): prima non aveva alcuno sfondo, quindi si confondeva sia
+// col contenitore (bg-forge-obsidian) sia con lo sfondo della pagina (quasi lo stesso nero),
+// rendendo illeggibile la forma del cruciverba su schermi piccoli (le celle con lettera
+// sembravano isole sparse). Un overlay chiaro trasparente la rende un terzo livello visivo
+// distinto sia dal gap fra celle (resta il nero del contenitore) sia dalla cella-lettera
+// (più chiara, con bordo).
+.cella-nera {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
 .cella-lettera {
   background-color: #2b282e !important; // = --color-forge-iron
   border: 2px solid #374151 !important;

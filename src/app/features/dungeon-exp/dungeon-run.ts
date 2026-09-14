@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, inject, output, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, output, signal, viewChild } from '@angular/core';
 import type { default as PhaserType } from 'phaser';
 import { DungeonRun } from '../../core/dungeon-run';
 import { Modal } from '../../core/modal';
@@ -43,6 +43,16 @@ export class DungeonRunGame implements AfterViewInit, OnDestroy {
   protected readonly cooldownPronto = signal(1);
   protected readonly tempoRimanente = signal(LIVELLO_OGGI.durataSecondi);
   protected readonly risultato = signal<RisultatoLivello | null>(null);
+
+  // Vero solo quando un <canvas> Phaser è realmente montato dietro l'overlay (vedi
+  // avviaGioco(): il game nasce solo dopo selezionaClasse()): controlla il modifier CSS
+  // .dungeon-run-canvas--con-canvas in dungeon-run.scss che applica l'aspect-ratio 16:9,
+  // necessaria solo per non deformare un canvas esistente, mai per le schermate di
+  // selezione/attesa che non ne hanno ancora uno.
+  protected readonly statoConCanvas = computed(() => {
+    const s = this.stato();
+    return s === 'gioco' || s === 'pausa' || s === 'terminata';
+  });
 
   private game: PhaserType.Game | null = null;
   private scenaAttiva: DungeonRunScene | null = null;

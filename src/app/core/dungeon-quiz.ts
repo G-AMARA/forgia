@@ -40,6 +40,6 @@ export class DungeonQuiz {
       return { xpAwarded: 0, error: { message: error.message } };
     }
 
-    return { xpAwarded: correctAnswers * 5 + 20, error: null };
+    return { xpAwarded: correctAnswers * 5, error: null };
   }
 }

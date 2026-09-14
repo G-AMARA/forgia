@@ -1,11 +1,61 @@
-<div class="flex flex-col items-center gap-1 select-none">
+<!--
+  Vedi il commento in dungeon-touch-controls.ts: due schemi alternativi, uno solo visibile per
+  volta in base all'orientamento (landscape: / assenza di prefisso = portrait).
+-->
+<div class="flex items-center justify-between w-full max-w-xs mx-auto select-none landscape:hidden">
+  <div class="grid grid-cols-3 grid-rows-3 gap-1 w-28 h-28 touch-none">
+    <div></div>
+    <button
+      type="button"
+      class="col-start-2 row-start-1 rounded bg-forge-iron border border-gold/40 text-gold text-lg flex items-center justify-center active:bg-forge-iron-light"
+      (pointerdown)="premiSu()"
+    >
+      ▲
+    </button>
+    <div></div>
+    <button
+      type="button"
+      class="col-start-1 row-start-2 rounded bg-forge-iron border border-gold/40 text-gold text-lg flex items-center justify-center active:bg-forge-iron-light"
+      (pointerdown)="premiSinistra()"
+      (pointerup)="rilasciaOrizzontale()"
+      (pointercancel)="rilasciaOrizzontale()"
+      (pointerleave)="rilasciaOrizzontale()"
+    >
+      ◀
+    </button>
+    <div class="col-start-2 row-start-2 rounded bg-forge-obsidian/60"></div>
+    <button
+      type="button"
+      class="col-start-3 row-start-2 rounded bg-forge-iron border border-gold/40 text-gold text-lg flex items-center justify-center active:bg-forge-iron-light"
+      (pointerdown)="premiDestra()"
+      (pointerup)="rilasciaOrizzontale()"
+      (pointercancel)="rilasciaOrizzontale()"
+      (pointerleave)="rilasciaOrizzontale()"
+    >
+      ▶
+    </button>
+    <div></div>
+    <div class="col-start-2 row-start-3 rounded bg-forge-iron/40 border border-gold/10 text-gold/30 text-lg flex items-center justify-center">▼</div>
+    <div></div>
+  </div>
+
+  <button
+    type="button"
+    class="w-16 h-16 rounded-full bg-forge-amber text-forge-obsidian font-display text-xl border-2 border-forge-amber-glow active:scale-95 transition-transform touch-none"
+    (pointerdown)="premiAbilita()"
+  >
+    F
+  </button>
+</div>
+
+<div class="hidden landscape:flex landscape:absolute landscape:bottom-3 landscape:right-3 landscape:z-20 flex-col items-center gap-1 select-none">
   <div
     #base
     class="relative w-24 h-24 rounded-full bg-fantasy-black/30 border border-gold/40 backdrop-blur-sm touch-none"
-    (pointerdown)="onPointerDown($event)"
-    (pointermove)="onPointerMove($event)"
-    (pointerup)="onPointerUp($event)"
-    (pointercancel)="onPointerUp($event)"
+    (pointerdown)="onStickPointerDown($event)"
+    (pointermove)="onStickPointerMove($event)"
+    (pointerup)="onStickPointerUp($event)"
+    (pointercancel)="onStickPointerUp($event)"
   >
     <div
       class="absolute top-1/2 left-1/2 w-10 h-10 rounded-full bg-fantasy-gold/60 border border-gold pointer-events-none"

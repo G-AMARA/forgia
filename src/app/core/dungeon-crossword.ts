@@ -11,9 +11,10 @@ export interface CrosswordAwardResult {
 // features/dungeon-exp/dnd-crossword.ts): stessa architettura di DungeonQuiz/DungeonRun
 // (core/dungeon-quiz.ts, core/dungeon-run.ts). La griglia è verificata interamente lato
 // client (le risposte vivono nel bundle JS, dnd-crossword-data.ts), quindi qui non si fida
-// un punteggio libero: si accredita +2 xp per parola corretta, -1 xp per ogni parola
-// sbagliata o non completata (mai sotto 0), e il limite "1 volta al giorno" è imposto dalla
-// RPC award_dungeon_crossword_xp (sql/2026-09-09_dungeon_crossword_xp.sql) lato server.
+// un punteggio libero: si accreditano 5 xp per ogni parola corretta (stesso valore di una
+// risposta corretta nel quiz, vedi DungeonQuiz), nessuna penalità per le sbagliate, e il
+// limite "1 volta al giorno" è imposto dalla RPC award_dungeon_crossword_xp
+// (sql/2026-09-14_dungeon_crossword_xp_per_word.sql) lato server.
 @Injectable({ providedIn: 'root' })
 export class DungeonCrossword {
   private supabase = inject(Supabase);
@@ -37,7 +38,8 @@ export class DungeonCrossword {
   // paroleCorrette può essere minore di totaleParole (partita conclusa senza completare la
   // griglia, vedi DdCrossword.guardaRisultato()): la RPC ricalcola l'XP in autonomia da
   // questi due bound (stessa formula qui e sul server), non si fida di un XP calcolato dal
-  // client.
+  // client. totaleParole non entra più nel calcolo (nessuna penalità), resta come parametro
+  // solo per il bound di validazione lato server.
   async awardResult(paroleCorrette: number, totaleParole: number): Promise<CrosswordAwardResult> {
     const { error } = await this.supabase.client.rpc('award_dungeon_crossword_xp', {
       p_parole_corrette: paroleCorrette,
@@ -48,8 +50,6 @@ export class DungeonCrossword {
       return { xpAwarded: 0, error: { message: error.message } };
     }
 
-    const paroleSbagliate = totaleParole - paroleCorrette;
-    const xpAwarded = Math.max(0, paroleCorrette * 2 - paroleSbagliate);
-    return { xpAwarded, error: null };
+    return { xpAwarded: paroleCorrette * 5, error: null };
   }
 }
