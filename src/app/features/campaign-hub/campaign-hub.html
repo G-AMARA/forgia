@@ -85,7 +85,7 @@
                   {{ localeService.t('play_disabled_wait_master') }}
                 </span>
               }
-            } @else {
+            } @else if (canJoinCampaign()) {
               <button
                 (click)="openAddHeroModal()"
                 class="text-sm px-4 py-2 bg-fantasy-gold text-fantasy-black rounded border border-gold hover:bg-fantasy-moonstone transition-colors"
@@ -93,6 +93,8 @@
                 {{ localeService.t('add_hero_button') }}
               </button>
             }
+            <!-- Campagna privata, mai invitato: nessun pulsante d'azione, solo scheda
+            campagna + roster (vedi sotto), coerente con "solo consultazione". -->
           </div>
         </div>
       </div>

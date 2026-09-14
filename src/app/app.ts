@@ -19,6 +19,8 @@ import { Profile } from './features/profile/profile';
 import { DungeonExp } from './features/dungeon-exp/dungeon-exp';
 import { Araldica } from './features/araldica/araldica';
 import { Adventurers } from './features/adventurers/adventurers';
+import { NotificationBell } from './features/notification-bell/notification-bell';
+import { Inbox } from './features/inbox/inbox';
 import { GenericModalComponent } from './shared/modal/generic-adviser-modal/generic-adviser-modal';
 import { LocaleService, Locale } from './core/locale';
 import { Auth } from './core/auth';
@@ -50,6 +52,8 @@ import { DiceRoller } from './shared/dice-roller/dice-roller';
     DungeonExp,
     Araldica,
     Adventurers,
+    NotificationBell,
+    Inbox,
     GenericModalComponent,
     DiceRoller,
   ],

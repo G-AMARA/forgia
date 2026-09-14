@@ -11,7 +11,8 @@ export type Tab =
   | 'play'
   | 'manage'
   | 'profile'
-  | 'dungeon-exp';
+  | 'dungeon-exp'
+  | 'inbox';
 
 // 'character-sheet' e 'play' non vengono persistite: sono derivate dall'URL
 // (/scheda-personaggio/:id, /gioca/:campaignId), che app.ts già ripristina autonomamente

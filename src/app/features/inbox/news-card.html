@@ -1,0 +1,19 @@
+<div
+  role="button"
+  tabindex="0"
+  (click)="open()"
+  (keydown.enter)="open()"
+  class="panel-forge rounded-lg p-4 flex gap-3 relative overflow-hidden cursor-pointer transition-colors hover:border-forge-bronze"
+  [class.border-l-4]="news().unread"
+  [class.border-l-forge-amber]="news().unread"
+>
+  @if (news().unread) {
+    <span class="absolute top-3 right-3 w-2 h-2 rounded-full bg-forge-amber glow-ember" aria-hidden="true"></span>
+  }
+
+  <div class="min-w-0">
+    <p class="font-display text-forge-text-main pr-4" [class.font-bold]="news().unread">{{ news().title }}</p>
+    <p class="text-[11px] text-forge-text-sub mb-2">{{ news().date }}</p>
+    <p class="text-sm text-forge-text-main/80">{{ news().body }}</p>
+  </div>
+</div>

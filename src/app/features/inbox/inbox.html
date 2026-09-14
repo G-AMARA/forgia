@@ -1,0 +1,49 @@
+<section class="flex flex-col gap-4 h-full">
+  <h2 class="font-display text-2xl text-fantasy-gold">{{ localeService.t('tab_inbox') }}</h2>
+
+  <div class="flex gap-1 border-b border-forge-iron-light">
+    <button
+      type="button"
+      (click)="selectTab('invites')"
+      class="px-3 sm:px-4 py-2 text-sm font-display border-b-2 transition-colors"
+      [class]="activeTab() === 'invites'
+        ? 'border-fantasy-gold text-fantasy-gold'
+        : 'border-transparent text-forge-text-sub hover:text-forge-text-main'"
+    >
+      {{ localeService.t('inbox_tab_invites') }}
+      @if (inboxStore.invites().length > 0) {
+        <span class="ml-1 text-[10px] align-top text-forge-amber-glow">({{ inboxStore.invites().length }})</span>
+      }
+    </button>
+    <button
+      type="button"
+      (click)="selectTab('news')"
+      class="px-3 sm:px-4 py-2 text-sm font-display border-b-2 transition-colors"
+      [class]="activeTab() === 'news'
+        ? 'border-fantasy-gold text-fantasy-gold'
+        : 'border-transparent text-forge-text-sub hover:text-forge-text-main'"
+    >
+      {{ localeService.t('inbox_tab_news') }}
+    </button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto space-y-3 pb-4">
+    @if (activeTab() === 'invites') {
+      @if (inboxStore.invites().length === 0) {
+        <p class="text-sm text-slate-arcane italic">{{ localeService.t('inbox_no_invites') }}</p>
+      } @else {
+        @for (invite of inboxStore.invites(); track invite.id) {
+          <app-campaign-invite-card [invite]="invite" (accept)="accept($event)" (decline)="decline($event)" />
+        }
+      }
+    } @else {
+      @if (inboxStore.news().length === 0) {
+        <p class="text-sm text-slate-arcane italic">{{ localeService.t('inbox_no_news') }}</p>
+      } @else {
+        @for (item of inboxStore.news(); track item.id) {
+          <app-news-card [news]="item" (read)="markRead($event)" />
+        }
+      }
+    }
+  </div>
+</section>

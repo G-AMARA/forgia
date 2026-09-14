@@ -71,7 +71,8 @@
       <!-- Menu utente: araldica (avatar+EXP+rango, apre la modale ranghi al tocco) e nome
       (apre impostazioni/note legali/logout) restano due trigger distinti ma visivamente
       un unico gruppo compatto a destra. -->
-      <div class="flex items-center gap-2 min-w-0">
+      <div class="flex items-center gap-1 min-w-0">
+        <app-notification-bell></app-notification-bell>
         <app-araldica></app-araldica>
         <app-auth-form variant="header"></app-auth-form>
       </div>
@@ -83,13 +84,13 @@
   <!-- ===== DESKTOP (>= lg): header unico, navigazione unificata su una sola riga, nessun
   posizionamento assoluto — solo flex items-center justify-between fra il blocco di
   sinistra (logo+link) e quello di destra (azioni). -->
-  <header class="relative bg-header-portal text-fantasy-moonstone border-b-4 border-forge-bronze shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
-    <div class="w-full max-w-full px-6 py-3 flex items-center justify-between flex-nowrap gap-4">
+  <header class="relative h-20 bg-header-portal text-fantasy-moonstone border-b-4 border-forge-bronze shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+    <div class="w-full max-w-full h-full px-6 flex items-center justify-between flex-nowrap gap-4">
       <!-- min-w-0: senza, un contenitore flex non si restringe mai sotto la larghezza del
       suo contenuto (default min-width:auto) — con 7 tab su una riga sola questo bastava a
       spingere il blocco azioni (IT/EN, avatar, araldica) fuori dal viewport, dove veniva
       tagliato dall'overflow-x:hidden globale. -->
-      <div class="flex items-center gap-4 min-w-0 shrink">
+      <div class="flex items-center gap-4 min-w-0 h-full shrink">
         <button type="button" (click)="goToBoard()" title="Torna alla Dashboard" class="flex items-center shrink-0 group">
           <img
             src="themes/logoForgia.png" alt="Forgia"
@@ -97,44 +98,46 @@
           />
         </button>
 
-        <!-- Lista link: min-w-0 + overflow-x-auto, non flex-nowrap "rigido" — se le 7 tab
-        non ci stanno tutte, scorrono qui dentro invece di sfondare la larghezza dell'header
-        (a differenza del blocco azioni qui sotto, che è shrink-0: quello non deve MAI
-        perdere spazio, contiene l'unico accesso al menu utente). -->
-        <div class="flex items-center flex-nowrap gap-1.5 min-w-0 shrink overflow-x-auto">
+        <!-- Tab verticali (icona sopra, etichetta sotto, come la bottom nav mobile): a
+        parità di leggibilità occupano molta meno larghezza delle vecchie tab icona+testo
+        in linea, che con 7 voci sforavano la larghezza dell'header e obbligavano allo
+        scroll orizzontale qui dentro (con relativa scrollbar che "rubava" altezza,
+        percepita come uno scroll verticale dell'intero header). overflow-x-auto resta come
+        rete di sicurezza sotto i 1024px esatti di soglia "lg", non più il caso normale. -->
+        <div class="flex items-stretch flex-nowrap gap-0.5 min-w-0 h-full shrink overflow-x-auto">
           <button
-            class="nav-tab relative px-2.5 py-2 flex items-center gap-1.5 whitespace-nowrap font-display text-sm rounded transition-all"
+            class="nav-tab relative px-2.5 flex flex-col items-center justify-center gap-0.5 font-display rounded transition-all"
             [class]="appNav.activeTab() === 'board'
               ? 'nav-tab-active'
               : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
             (click)="goToBoard()"
           >
             <!-- Pergamena srotolata, come nella bottom nav mobile (era lo scudo). -->
-            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4" />
               <path d="M19 17V5a2 2 0 0 0-2-2H4" />
             </svg>
-            {{ localeService.t('tab_board') }}
+            <span class="text-[10px] uppercase tracking-wide leading-none whitespace-nowrap">{{ localeService.t('tab_board') }}</span>
             @if (appNav.activeTab() === 'board') { <span class="nav-crack"></span> }
           </button>
           @if (auth.isMaster()) {
             <button
-              class="nav-tab relative px-2.5 py-2 flex items-center gap-1.5 whitespace-nowrap font-display text-sm rounded transition-all"
+              class="nav-tab relative px-2.5 flex flex-col items-center justify-center gap-0.5 font-display rounded transition-all"
               [class]="appNav.activeTab() === 'campaign'
                 ? 'nav-tab-active'
                 : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
               (click)="appNav.setTab('campaign')"
             >
-              <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z" />
                 <path d="M9 4v14M15 6v14" />
               </svg>
-              {{ localeService.t('tab_campaign') }}
+              <span class="text-[10px] uppercase tracking-wide leading-none whitespace-nowrap">{{ localeService.t('tab_campaign_short') }}</span>
               @if (appNav.activeTab() === 'campaign') { <span class="nav-crack"></span> }
             </button>
           }
           <button
-            class="nav-tab relative px-2.5 py-2 flex items-center gap-1.5 whitespace-nowrap font-display text-sm rounded transition-all"
+            class="nav-tab relative px-2.5 flex flex-col items-center justify-center gap-0.5 font-display rounded transition-all"
             [class]="appNav.activeTab() === 'characters'
               ? 'nav-tab-active'
               : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
@@ -145,31 +148,31 @@
             si legge come una vite) + manico con fascia di impugnatura, come nella bottom
             nav mobile. Al posto del vecchio martello da fabbro, troppo sottile per "Fucina
             degli Eroi". -->
-            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <g transform="rotate(35 12 12)">
                 <rect x="5" y="2" width="14" height="7" rx="1.5" fill="currentColor" stroke="none" />
                 <path d="M12 9v12" stroke-width="2" />
               </g>
             </svg>
-            {{ localeService.t('tab_characters') }}
+            <span class="text-[10px] uppercase tracking-wide leading-none whitespace-nowrap">{{ localeService.t('tab_characters_short') }}</span>
             @if (appNav.activeTab() === 'characters') { <span class="nav-crack"></span> }
           </button>
           <button
-            class="nav-tab relative px-2.5 py-2 flex items-center gap-1.5 whitespace-nowrap font-display text-sm rounded transition-all"
+            class="nav-tab relative px-2.5 flex flex-col items-center justify-center gap-0.5 font-display rounded transition-all"
             [class]="appNav.activeTab() === 'catalog'
               ? 'nav-tab-active'
               : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
             (click)="appNav.setTab('catalog')"
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3z" />
               <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" />
             </svg>
-            {{ localeService.t('tab_catalog') }}
+            <span class="text-[10px] uppercase tracking-wide leading-none whitespace-nowrap">{{ localeService.t('tab_catalog_short') }}</span>
             @if (appNav.activeTab() === 'catalog') { <span class="nav-crack"></span> }
           </button>
           <button
-            class="nav-tab relative px-2.5 py-2 flex items-center gap-1.5 whitespace-nowrap font-display text-sm rounded transition-all"
+            class="nav-tab relative px-2.5 flex flex-col items-center justify-center gap-0.5 font-display rounded transition-all"
             [class]="appNav.activeTab() === 'dungeon-exp'
               ? 'nav-tab-active'
               : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
@@ -177,50 +180,52 @@
           >
             <!-- Spade incrociate, ereditate qui dalla vecchia icona di "Fucina degli Eroi"
             (ora un martello, coerente con la bottom nav mobile). -->
-            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
               <path d="M13 19l6-6M16 16l4 4M19 21l2-2" />
               <path d="M9.5 17.5L21 6V3h-3L6.5 14.5" />
               <path d="M11 19l-6-6M8 16l-4 4M5 21l-2-2" />
             </svg>
-            Dungeon EXP
+            <span class="text-[10px] uppercase tracking-wide leading-none whitespace-nowrap">Dungeon EXP</span>
             @if (appNav.activeTab() === 'dungeon-exp') { <span class="nav-crack"></span> }
           </button>
           <button
-            class="nav-tab relative px-2.5 py-2 flex items-center gap-1.5 whitespace-nowrap font-display text-sm rounded text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px transition-all"
+            class="nav-tab relative px-2.5 flex flex-col items-center justify-center gap-0.5 font-display text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px rounded transition-all"
             (click)="openAdventurers()"
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 00-3-3.87" />
               <path d="M16 3.13a4 4 0 010 7.75" />
             </svg>
-            {{ localeService.t('adventurers_button') }}
+            <span class="text-[10px] uppercase tracking-wide leading-none whitespace-nowrap">{{ localeService.t('adventurers_button') }}</span>
           </button>
           @if (auth.isAdmin()) {
             <button
-              class="nav-tab relative px-2.5 py-2 flex items-center gap-1.5 whitespace-nowrap font-display text-sm rounded transition-all"
+              class="nav-tab relative px-2.5 flex flex-col items-center justify-center gap-0.5 font-display rounded transition-all"
               [class]="appNav.activeTab() === 'manage'
                 ? 'nav-tab-active'
                 : 'text-forge-text-sub hover:text-[#f0ebd8] hover:-translate-y-px'"
               (click)="appNav.setTab('manage')"
             >
-              <svg viewBox="0 0 24 24" width="16" height="16" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" class="shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
               </svg>
-              {{ localeService.t('tab_manage') }}
+              <span class="text-[10px] uppercase tracking-wide leading-none whitespace-nowrap">{{ localeService.t('tab_manage') }}</span>
               @if (appNav.activeTab() === 'manage') { <span class="nav-crack"></span> }
             </button>
           }
         </div>
       </div>
 
-      <!-- Azioni: dado (rettangolare, in linea) -> campagna attiva -> lingua -> utente.
-      shrink-0: a differenza della lista link, questo blocco non deve MAI restringersi —
-      contiene l'unico accesso al menu utente (impostazioni/logout), deve restare sempre
-      per intero visibile. -->
+      <!-- Azioni: dado (rettangolare, in linea) -> utente. Campagna attiva e IT/EN sono
+      dentro il menu a scomparsa di app-auth-form (showCampaignAndLocale), non più pulsanti
+      sempre visibili qui: con 7 tab + dado l'header era sovraffollato. shrink-0: a
+      differenza della lista link, questo blocco non deve MAI restringersi — contiene
+      l'unico accesso al menu utente (impostazioni/logout), deve restare sempre per intero
+      visibile. -->
       <div class="flex items-center gap-3 shrink-0">
         <button
           (click)="openDiceRollerModal()"
@@ -231,35 +236,10 @@
           {{ localeService.t('tab_dice_roller') }}
         </button>
 
-        @if (activeCampaign.current()) {
-          <button
-            (click)="appNav.setTab('hub')"
-            class="text-xs px-3 py-1 border border-gold rounded-full hover:bg-gold hover:text-fantasy-black transition-colors flex items-center gap-1 whitespace-nowrap"
-          >
-            📍 {{ activeCampaign.current()?.name }}
-          </button>
-        }
-
-        <div class="flex border border-forge-iron-light rounded overflow-hidden text-sm shrink-0">
-          <button
-            class="px-3 py-1 transition-colors"
-            [class]="localeService.locale() === 'it' ? 'bg-forge-bronze text-forge-obsidian' : 'text-forge-text-sub hover:text-forge-text-main'"
-            (click)="setLocale('it')"
-          >
-            IT
-          </button>
-          <button
-            class="px-3 py-1 transition-colors"
-            [class]="localeService.locale() === 'en' ? 'bg-forge-bronze text-forge-obsidian' : 'text-forge-text-sub hover:text-forge-text-main'"
-            (click)="setLocale('en')"
-          >
-            EN
-          </button>
-        </div>
-
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1">
+          <app-notification-bell></app-notification-bell>
           <app-araldica></app-araldica>
-          <app-auth-form variant="header"></app-auth-form>
+          <app-auth-form variant="header" [showCampaignAndLocale]="true"></app-auth-form>
         </div>
       </div>
     </div>
@@ -504,6 +484,9 @@
         }
         @case ('dungeon-exp') {
           <app-dungeon-exp></app-dungeon-exp>
+        }
+        @case ('inbox') {
+          <app-inbox></app-inbox>
         }
       }
     </main>

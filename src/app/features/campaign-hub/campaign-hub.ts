@@ -1,9 +1,10 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed, signal, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { ActiveCampaign } from '../../core/active-campaign';
 import { CharacterStore, CharacterSummary } from '../../core/character-store';
 import { Auth } from '../../core/auth';
 import { AppNav } from '../../core/app-nav';
+import { InboxStore } from '../../core/inbox-store';
 import { LocaleService } from '../../core/locale';
 import { getCover, getCoverImagePath } from '../../core/campaign-covers';
 import { CHARACTER_CARDS, getCardImagePath } from '../../core/character-cards';
@@ -34,6 +35,7 @@ export class CampaignHub {
   protected characterStore = inject(CharacterStore);
   protected auth = inject(Auth);
   protected appNav = inject(AppNav);
+  private inboxStore = inject(InboxStore);
   protected localeService = inject(LocaleService);
   private router = inject(Router);
 
@@ -67,6 +69,35 @@ export class CampaignHub {
     if (!userId) return false;
     return this.characterStore.characters().some((c) => c.owner_id === userId);
   });
+
+  // Casi che si decidono senza round-trip al DB: owner/admin, già membro (ha un personaggio
+  // qui), o campagna pubblica (sempre aperta a chiunque, comportamento invariato).
+  private readonly canJoinCampaignSync = computed(() => {
+    const campaign = this.campaignStore.current();
+    if (!campaign) return false;
+    return this.isOwner() || this.auth.isAdmin() || this.hasOwnCharacter() || campaign.is_public;
+  });
+
+  // Solo per campagna PRIVATA + utente senza personaggio: serve sapere se ha un invito già
+  // accettato (vedi InboxStore.hasAcceptedInvite). null = non ancora verificato/non
+  // applicabile (uno dei casi sincroni sopra copre già tutto).
+  private hasAcceptedInvite = signal<boolean | null>(null);
+
+  // "Aggiungi il tuo Eroe"/"Gioca" per chi non ha ancora un personaggio: su una campagna
+  // privata, un utente MAI invitato deve vedere solo la scheda campagna e il roster, non
+  // questi pulsanti (vedi template).
+  canJoinCampaign = computed(() => this.canJoinCampaignSync() || this.hasAcceptedInvite() === true);
+
+  constructor() {
+    effect(() => {
+      const campaign = this.campaignStore.current();
+      if (!campaign || this.canJoinCampaignSync()) {
+        this.hasAcceptedInvite.set(null);
+        return;
+      }
+      this.inboxStore.hasAcceptedInvite(campaign.id).then((accepted) => this.hasAcceptedInvite.set(accepted));
+    });
+  }
 
   // Picker "Aggiungi il tuo Eroe": mostra i PG del parco personale non ancora assegnati
   // a una campagna (vedi AddHeroModal), invece di creare un PG nuovo direttamente qui.

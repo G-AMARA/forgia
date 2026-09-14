@@ -7,18 +7,21 @@ import { Modal } from '../../core/modal';
 import { toDatetimeLocalValue, fromDatetimeLocalValue } from '../../core/datetime-local';
 import { CampaignCoverPicker } from '../../shared/campaign-cover-picker/campaign-cover-picker';
 import { CampaignSettingsPanel } from '../../shared/campaign-settings-panel/campaign-settings-panel';
+import { CampaignInvitesPanel } from './campaign-invites-panel';
 
 // Form "Modifica campagna" (CampaignEdit): non naviga da sé, emette saved/cancelled e lascia
 // al genitore decidere dove andare (torna al Campaign Hub in entrambi i casi, vedi
-// CampaignEdit.goToHub), stesso pattern di CharacterCreateForm.
+// CampaignEdit.goToHub), stesso pattern di CharacterCreateForm. Ospita anche il pannello
+// Inviti (sotto la card "Impostazioni & Regole", dentro la stessa card di gestione campagna,
+// non come sezione separata).
 @Component({
   selector: 'app-campaign-edit-form',
   standalone: true,
-  imports: [FormsModule, CampaignCoverPicker, CampaignSettingsPanel],
+  imports: [FormsModule, CampaignCoverPicker, CampaignSettingsPanel, CampaignInvitesPanel],
   templateUrl: './campaign-edit-form.html',
 })
 export class CampaignEditForm implements OnInit {
-  private campaignStore = inject(ActiveCampaign);
+  protected campaignStore = inject(ActiveCampaign);
   protected auth = inject(Auth);
   protected localeService = inject(LocaleService);
   private modal = inject(Modal);

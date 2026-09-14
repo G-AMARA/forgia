@@ -42,6 +42,36 @@
             >
               {{ localeService.t('logout_button') }}
             </button>
+
+            @if (showCampaignAndLocale) {
+              @if (activeCampaign.current(); as campaign) {
+                <button
+                  type="button"
+                  (click)="goToActiveCampaign()"
+                  class="w-full flex items-center gap-1.5 text-left px-3 py-2 text-xs uppercase tracking-wide font-display border-t border-gold/30 hover:bg-gold hover:text-fantasy-black transition-colors"
+                >
+                  📍 <span class="truncate">{{ campaign.name }}</span>
+                </button>
+              }
+              <div class="flex border-t border-gold/30">
+                <button
+                  type="button"
+                  (click)="setLocale('it')"
+                  class="flex-1 py-2 text-xs transition-colors"
+                  [class]="localeService.locale() === 'it' ? 'bg-forge-bronze text-forge-obsidian' : 'text-forge-text-sub hover:text-forge-text-main'"
+                >
+                  IT
+                </button>
+                <button
+                  type="button"
+                  (click)="setLocale('en')"
+                  class="flex-1 py-2 text-xs transition-colors"
+                  [class]="localeService.locale() === 'en' ? 'bg-forge-bronze text-forge-obsidian' : 'text-forge-text-sub hover:text-forge-text-main'"
+                >
+                  EN
+                </button>
+              </div>
+            }
           </div>
         }
       </span>

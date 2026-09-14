@@ -1,8 +1,9 @@
 import { Component, inject, signal, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../../core/auth';
-import { LocaleService } from '../../core/locale';
+import { LocaleService, Locale } from '../../core/locale';
 import { AppNav } from '../../core/app-nav';
+import { ActiveCampaign } from '../../core/active-campaign';
 import { Modal } from '../../core/modal';
 
 @Component({
@@ -16,7 +17,13 @@ export class AuthForm {
   protected localeService = inject(LocaleService);
   protected authService = this.auth;
   private appNav = inject(AppNav);
+  protected activeCampaign = inject(ActiveCampaign);
   private modal = inject(Modal);
+
+  // Header desktop: campagna di riferimento + IT/EN vivono qui dentro (invece che come
+  // pulsanti sempre visibili in header) per non sovraffollarlo. Header mobile non lo passa
+  // (resta false): ha già entrambi nel proprio pannello "Menu" della bottom nav.
+  @Input() showCampaignAndLocale = false;
 
   protected userMenuOpen = signal(false);
 
@@ -36,6 +43,15 @@ export class AuthForm {
   showLegalNotice() {
     this.userMenuOpen.set(false);
     this.modal.notice(this.localeService.t('footer_disclaimer'), this.localeService.t('legal_notice_title'));
+  }
+
+  goToActiveCampaign() {
+    this.userMenuOpen.set(false);
+    this.appNav.setTab('hub');
+  }
+
+  setLocale(locale: Locale) {
+    this.localeService.setLocale(locale);
   }
 
   @Input() variant: 'header' | 'landing' = 'header';

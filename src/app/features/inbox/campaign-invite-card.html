@@ -1,0 +1,59 @@
+<div class="rounded-lg overflow-hidden panel-forge">
+  <div
+    class="relative bg-cover bg-center flex items-end p-4"
+    [style.background-image]="'url(' + coverImagePath() + ')'"
+  >
+    <div class="absolute inset-0 bg-linear-to-t from-gray-900/90 via-gray-900/75 to-gray-900/60"></div>
+
+    <div class="relative min-w-0 w-full py-2">
+      <div class="flex items-start justify-between gap-2">
+        <p class="font-display text-lg text-forge-amber-glow truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+          {{ invite().campaignName }}
+        </p>
+        <span
+          class="shrink-0 font-display text-[0.6rem] uppercase tracking-wide px-1.5 py-0.5 rounded border bg-forge-obsidian/70"
+          [class]="invite().isPublic ? 'border-forest text-forest' : 'border-forge-bronze text-forge-bronze'"
+        >
+          {{ localeService.t(invite().isPublic ? 'campaign_public_label' : 'campaign_private_label') }}
+        </span>
+      </div>
+
+      <p class="text-xs text-forge-text-sub">
+        {{ localeService.t('inbox_invite_dm_label') }}: <span class="text-forge-text-main">{{ invite().dmNickname }}</span>
+      </p>
+
+      @if (invite().description) {
+        <p class="mt-1 text-xs italic text-forge-text-main/80 line-clamp-2">{{ invite().description }}</p>
+      }
+
+      <p class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-forge-text-sub">
+        <span class="px-1.5 py-0.5 rounded bg-forge-obsidian/70 border border-forge-bronze/40">
+          {{ localeService.t('level_label') }} {{ invite().level }}
+        </span>
+        <span class="px-1.5 py-0.5 rounded bg-forge-obsidian/70 border border-forge-bronze/40">
+          {{ invite().currentPlayers }}@if (invite().maxPlayers) {/{{ invite().maxPlayers }}} {{ localeService.t('inbox_invite_players_label') }}
+        </span>
+        @if (nextSession(); as session) {
+          <span class="px-1.5 py-0.5 rounded bg-forge-obsidian/70 border border-forge-bronze/40">📅 {{ session }}</span>
+        }
+      </p>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-2 sm:gap-3 px-4 py-3">
+    <button
+      type="button"
+      (click)="decline.emit(invite())"
+      class="px-4 py-1.5 text-sm rounded border border-fantasy-red text-fantasy-red hover:bg-fantasy-red/10 transition-colors"
+    >
+      {{ localeService.t('inbox_decline_button') }}
+    </button>
+    <button
+      type="button"
+      (click)="accept.emit(invite())"
+      class="px-4 py-1.5 text-sm font-bold rounded bg-linear-to-r from-orange-600 via-amber-500 to-orange-600 text-forge-obsidian glow-ember hover:scale-[1.03] active:scale-95 transition-transform"
+    >
+      {{ localeService.t('inbox_accept_button') }}
+    </button>
+  </div>
+</div>

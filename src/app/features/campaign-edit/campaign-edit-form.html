@@ -24,17 +24,21 @@
         </div>
       </div>
 
-      <!-- Colonna destra: impostazioni e regole -->
-      <app-campaign-settings-panel
-        [(status)]="status"
-        [(nextSessionAtLocal)]="nextSessionAtLocal"
-        [(maxPlayers)]="maxPlayers"
-        [(startingLevel)]="startingLevel"
-        [(isPublic)]="isPublic"
-        [(ownerId)]="ownerId"
-        [showGmSelector]="auth.isAdmin()"
-        [gmOptions]="gmOptions()"
-      ></app-campaign-settings-panel>
+      <!-- Colonna destra: impostazioni e regole + inviti, impilate -->
+      <div class="space-y-6">
+        <app-campaign-settings-panel
+          [(status)]="status"
+          [(nextSessionAtLocal)]="nextSessionAtLocal"
+          [(maxPlayers)]="maxPlayers"
+          [(startingLevel)]="startingLevel"
+          [(isPublic)]="isPublic"
+          [(ownerId)]="ownerId"
+          [showGmSelector]="auth.isAdmin()"
+          [gmOptions]="gmOptions()"
+        ></app-campaign-settings-panel>
+
+        <app-campaign-invites-panel [campaignId]="campaignStore.current()!.id"></app-campaign-invites-panel>
+      </div>
     </div>
 
     <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">

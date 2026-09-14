@@ -1,0 +1,73 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-fantasy-black/70 backdrop-blur-sm"
+  (click)="cancel()"
+>
+  <div
+    class="relative w-full max-w-md max-h-[80vh] flex flex-col panel-forge rounded-lg p-6 text-fantasy-moonstone"
+    (click)="$event.stopPropagation()"
+  >
+    <h3 class="font-display text-lg mb-4 text-fantasy-gold">{{ localeService.t('invite_adventurer_title') }}</h3>
+
+    <input
+      type="search"
+      [(ngModel)]="searchTerm"
+      [placeholder]="localeService.t('invite_search_placeholder')"
+      class="w-full px-3 py-2 rounded input-forge text-sm mb-4 shrink-0"
+    />
+
+    @if (loading()) {
+      <p class="text-sm text-center text-slate-arcane">{{ localeService.t('loading') }}</p>
+    } @else if (filteredAdventurers().length === 0) {
+      <p class="text-sm text-center text-slate-arcane italic">{{ localeService.t('invite_no_results') }}</p>
+    } @else {
+      <ul class="flex-1 overflow-y-auto space-y-1.5 pr-1">
+        @for (adventurer of filteredAdventurers(); track adventurer.id) {
+          <li>
+            <button
+              type="button"
+              (click)="toggle(adventurer.id)"
+              class="w-full flex items-center gap-2 text-sm rounded px-2 py-1.5 transition-colors text-left border"
+              [class]="selectedIds().has(adventurer.id)
+                ? 'bg-forge-ember-select/20 border-forge-ember-select text-forge-text-main'
+                : 'border-transparent hover:bg-fantasy-gold/10 text-forge-text-main'"
+            >
+              <img [src]="rankIcon(adventurer.navigation_seconds)" alt="" class="w-6 h-6 rounded-full shrink-0" />
+              <span class="flex-1 truncate">{{ adventurer.nickname ?? '???' }}</span>
+              <span
+                class="w-4 h-4 shrink-0 rounded border flex items-center justify-center"
+                [class]="selectedIds().has(adventurer.id) ? 'bg-forge-amber border-forge-amber' : 'border-forge-bronze'"
+              >
+                @if (selectedIds().has(adventurer.id)) {
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="#1a1006" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                }
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    <div class="flex justify-end gap-2 mt-6 shrink-0">
+      <button
+        type="button"
+        (click)="cancel()"
+        class="px-4 py-2 text-sm rounded border border-slate-arcane text-slate-arcane hover:bg-slate-arcane/10 transition-colors"
+      >
+        {{ localeService.t('cancel_button') }}
+      </button>
+      <button
+        type="button"
+        [disabled]="selectedIds().size === 0 || sending()"
+        (click)="sendInvites()"
+        class="px-4 py-2 text-sm font-bold rounded bg-fantasy-gold text-fantasy-black border border-gold hover:bg-fantasy-moonstone transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {{ localeService.t('invite_send_button') }}
+        @if (selectedIds().size > 0) {
+          ({{ selectedIds().size }})
+        }
+      </button>
+    </div>
+  </div>
+</div>

@@ -5,9 +5,9 @@ import { LocaleService } from '../../core/locale';
 import { Modal } from '../../core/modal';
 import { CampaignEditForm } from './campaign-edit-form';
 
-// "Modifica Campagna": intestazione con rientro al Campaign Hub + form (CampaignEditForm) +
-// Zona Pericolosa. L'eliminazione resta qui (non nel form) perché è un'azione distinta dal
-// salvataggio, con la propria conferma via Modal.
+// "Modifica Campagna": intestazione con rientro al Campaign Hub + form (CampaignEditForm,
+// che ospita anche il pannello Inviti) + Zona Pericolosa. L'eliminazione resta qui (non nel
+// form) perché è un'azione distinta dal salvataggio, con la propria conferma via Modal.
 @Component({
   selector: 'app-campaign-edit',
   standalone: true,
