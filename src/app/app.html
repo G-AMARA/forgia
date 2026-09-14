@@ -61,8 +61,11 @@
   subscribe(). Con @if/@else ne esiste sempre una sola (vedi isDesktopLayout in app.ts). -->
   @if (!isDesktopLayout()) {
   <!-- ===== MOBILE (< lg): header fisso minimale — solo logo + menu utente. La
-  navigazione vive nella bottom bar qui sotto, non qui: niente tab da affollare in alto. -->
-  <header class="fixed top-0 left-0 w-full z-40 bg-[#111] border-b border-forge-bronze/50">
+  navigazione vive nella bottom bar qui sotto, non qui: niente tab da affollare in alto.
+  Nascosto in landscape (landscape:hidden) per lo stesso motivo della bottom nav qui sotto:
+  altezza già scarsa su mobile ruotato, va tutta al contenuto. Logo/notifiche/araldica/menu
+  restano raggiungibili tornando in verticale. -->
+  <header class="fixed top-0 left-0 w-full z-40 bg-[#111] border-b border-forge-bronze/50 landscape:hidden">
     <div class="h-14 px-4 flex items-center justify-between gap-3">
       <button type="button" (click)="goToBoard()" title="Torna alla Dashboard" class="flex items-center shrink-0">
         <img src="themes/logoForgia.png" alt="Forgia" class="h-8 w-auto drop-shadow-[0_0_10px_rgba(255,107,0,0.45)]" />
@@ -247,8 +250,11 @@
   }
 
   @if (!isDesktopLayout()) {
-  <!-- ===== MOBILE (< lg): bottom navigation con FAB centrale sporgente. -->
-  <nav class="fixed bottom-0 left-0 w-full z-50 bg-[#111]/40 backdrop-blur-sm border-t border-gray-800 pb-[env(safe-area-inset-bottom)]">
+  <!-- ===== MOBILE (< lg): bottom navigation con FAB centrale sporgente. Nascosta in
+  landscape (landscape:hidden): su mobile ruotato l'altezza disponibile è già scarsa (vedi
+  Dungeon Run, dove finiva addirittura sopra questa barra) e la navigazione a schede non è
+  essenziale quanto lo spazio verticale recuperato; resta raggiungibile tornando in verticale. -->
+  <nav class="fixed bottom-0 left-0 w-full z-50 bg-[#111]/40 backdrop-blur-sm border-t border-gray-800 pb-[env(safe-area-inset-bottom)] landscape:hidden">
     <div class="relative grid grid-cols-5 items-stretch h-16">
       <button
         type="button" (click)="goToBoard()"
@@ -419,8 +425,10 @@
   <div class="relative flex-1 overflow-hidden">
     <!-- pt-16/pb-32 solo su mobile: compensano l'header e la bottom nav fissi (altrimenti
     coprirebbero l'inizio/la fine del contenuto). Da lg: in su header e nav sono in flusso
-    normale, quindi tornano ai margini standard. -->
-    <main class="relative max-w-5xl mx-auto px-4 pt-16 pb-32 lg:pt-6 lg:pb-6 space-y-8 w-full">
+    normale, quindi tornano ai margini standard. landscape:pt-6/pb-6: sia l'header che la
+    bottom nav sono nascosti in landscape (vedi landscape:hidden su entrambi qui sopra), quindi
+    non c'è più nulla da compensare né in cima né in fondo alla pagina. -->
+    <main class="relative max-w-5xl mx-auto px-4 pt-16 pb-32 landscape:pt-6 landscape:pb-6 lg:pt-6 lg:pb-6 space-y-8 w-full">
       @switch (appNav.activeTab()) {
         @case ('board') {
           <router-outlet />

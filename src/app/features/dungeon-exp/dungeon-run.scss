@@ -2,16 +2,18 @@
 // può raggiungere il <canvas> che Phaser inietta a runtime: non esiste nel template al
 // momento della compilazione, quindi non riceve mai l'attributo di scoping di Angular.
 // ::ng-deep resta la via pragmatica per questo caso specifico (stile libreria esterna).
-// Niente aspect-ratio fisso qui: prima di scegliere la classe (stati caricamento/bloccato/
-// selezione-classe) non esiste ancora nessun <canvas> Phaser (vedi avviaGioco() in
-// dungeon-run.ts, il game nasce solo dopo selezionaClasse()), quindi forzare un rettangolo
-// 16:9 in quella fase serviva solo a tagliare con overflow-hidden il contenuto della
-// schermata di selezione ogni volta che superava quell'altezza — su mobile, con la griglia a
-// 2 colonne di card classe, capitava quasi sempre (sprite/testo delle card visibilmente
-// troncati). min-height evita solo che il box collassi mentre lo stato 'caricamento' mostra
-// una singola riga di testo.
+// aspect-ratio SEMPRE fisso (mai legato allo stato del componente): Phaser legge la
+// dimensione di questo contenitore una sola volta, in avviaGioco() -> new Phaser.Game({parent:
+// ...}) -> Scale.FIT calcola subito il rapporto di scala iniziale, e quella chiamata avviene
+// PRIMA che this.stato.set('gioco') scatti (vedi dungeon-run.ts). Un aspect-ratio condizionato
+// allo stato ("si applica solo a canvas già montato") cambiava quindi la forma di questo box
+// esattamente a cavallo del boot di Phaser: a seconda di micro-timing del browser, Phaser
+// poteva leggere ancora la vecchia forma (schermata di selezione) e non riscalarsi mai più,
+// perché nessun resize reale della finestra segue quel cambio di classe CSS — risultato:
+// canvas nero o scalato in modo scorretto, capitato in modo non deterministico. Con
+// l'aspect-ratio sempre uguale, la dimensione che Phaser legge al boot è sempre quella giusta.
 .dungeon-run-canvas {
-  min-height: 11rem;
+  aspect-ratio: 16 / 9;
 
   ::ng-deep canvas {
     display: block;
@@ -20,38 +22,27 @@
   }
 }
 
-// Applicata solo quando un <canvas> Phaser è realmente montato dietro l'overlay (stati
-// gioco/pausa/terminata, vedi binding in dungeon-run.html): qui il 16:9 va rispettato perché
-// il canvas esistente verrebbe altrimenti stirato dal width/height 100% qui sopra, deformando
-// il frame di gioco invece di lasciarlo semplicemente letterboxato da Phaser.Scale.FIT.
-.dungeon-run-canvas--con-canvas {
-  aspect-ratio: 16 / 9;
-}
-
-// position:absolute + justify-content:center ha un problema noto quando il contenuto supera
-// l'altezza del box: l'overflow "sopra" il centro resta fuori dall'area scrollabile in molti
-// browser (raggiungibile solo quello "sotto" il centro) — è esattamente il bug appena
-// riscontrato in selezione-classe (sprite del Mago invisibile, Guerriero raggiungibile solo
-// scrollando giù). position:absolute serve SOLO per sovrapporsi a un canvas Phaser già
-// montato dietro (vedi .dungeon-run-overlay--fluttuante sotto, applicata insieme a
-// .dungeon-run-canvas--con-canvas in dungeon-run.html): senza un canvas da coprire, l'overlay
-// resta nel flusso normale del documento, quindi la sua altezza è quella del contenuto e non
-// c'è nulla da centrare né da tagliare.
+// position:absolute + inset:0 SEMPRE (mai legato allo stato, per lo stesso motivo del
+// contenitore sopra: nessuna variazione di layout a cavallo del boot di Phaser). Il contenuto
+// della schermata di selezione classe (più alto del box a 16:9 su mobile, specie in
+// landscape) non viene più tagliato da overflow-hidden del contenitore grazie a overflow-y:
+// auto qui sotto — scorre PROPRIO dentro l'overlay, che riempie esattamente il box. justify-
+// content:flex-start (non center): con "center" il contenuto che eccede resta centrato sul
+// box e la porzione che sborda IN ALTO diventa irraggiungibile anche con overflow:auto in
+// diversi browser (bug noto flexbox) — con flex-start parte sempre dall'alto, tutto il resto
+// è raggiungibile scrollando in basso.
 .dungeon-run-overlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.5rem;
+  overflow-y: auto;
   background: rgba(10, 10, 12, 0.85);
   backdrop-filter: blur(2px);
   animation: dungeon-run-overlay-in 0.2s ease-out;
-}
-
-.dungeon-run-overlay--fluttuante {
-  position: absolute;
-  inset: 0;
-  justify-content: center;
-  overflow-y: auto;
 }
 
 @keyframes dungeon-run-overlay-in {
